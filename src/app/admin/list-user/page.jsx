@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
-
+import { BASE_URL } from "@/configs";
 const ListUser = () => {
   const router = useRouter();
   const [profile, setProfile] = useState([]);
@@ -62,7 +62,7 @@ const ListUser = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      await axios.post("https://be-student-manager.onrender.com/commander/student", addFormData, {
+      await axios.post(`${BASE_URL}/commander/student`, addFormData, {
         headers: {
           token: `Bearer ${token}`,
         },
@@ -96,7 +96,7 @@ const ListUser = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/student?page=${currentPage}`,
+          `${BASE_URL}/commander/student?page=${currentPage}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -116,7 +116,7 @@ const ListUser = () => {
 
     if (token) {
       axios
-        .delete(`https://be-student-manager.onrender.com/commander/student/${id}`, {
+        .delete(`${BASE_URL}/commander/student/${id}`, {
           headers: {
             token: `Bearer ${token}`,
           },
@@ -133,8 +133,57 @@ const ListUser = () => {
   };
 
   const editStudent = async (studentId) => {
-    setSelectedStudentId(studentId);
-    setShowForm(true);
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/commander/student/${studentId}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setFormData({
+          studentId: res.data.studentId || "",
+          fullName: res.data.fullName || "",
+          phoneNumber: res.data.phoneNumber || "",
+          gender: res.data.gender || "Nam",
+          unit: res.data.unit || "",
+          birthday: res.data.birthday ? new Date(res.data.birthday) : null,
+          rank: res.data.rank || "Binh nhì",
+          enrollment: res.data.enrollment || 2017,
+          positionGovernment: res.data.positionGovernment || "Học viên",
+          educationLevel: res.data.educationLevel || "Đại học đại trà",
+          dateOfEnlistment: res.data.dateOfEnlistment
+            ? new Date(res.data.dateOfEnlistment)
+            : null,
+          classUniversity: res.data.classUniversity || "",
+          probationaryPartyMember: res.data.probationaryPartyMember
+            ? new Date(res.data.probationaryPartyMember)
+            : null,
+          organization: res.data.organization || "Viện ngoại ngữ",
+          fullPartyMember: res.data.fullPartyMember
+            ? new Date(res.data.fullPartyMember)
+            : null,
+          university: res.data.university || "Đại học Bách Khoa Hà Nội",
+          positionParty: res.data.positionParty || "Không",
+          email: res.data.email || "",
+          hometown: res.data.hometown || "",
+          avatar:
+            res.data.avatar ||
+            "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+        });
+
+        setSelectedStudentId(studentId);
+        setShowForm(true);
+      } catch (error) {
+        console.log(error);
+        handleNotify("danger", "Lỗi!", "Không thể tải thông tin học viên");
+      }
+    }
   };
 
   const handleSubmit = async (e, selectedStudentId, profile) => {
@@ -142,7 +191,7 @@ const ListUser = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.put(
-        `https://be-student-manager.onrender.com/commander/student/${selectedStudentId}`,
+        `${BASE_URL}/commander/student/${selectedStudentId}`,
         formData,
         {
           headers: {
@@ -207,7 +256,7 @@ const ListUser = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/student/${studentId}`,
+          `${BASE_URL}/commander/student/${studentId}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -230,7 +279,7 @@ const ListUser = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}`,
+          `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -250,7 +299,7 @@ const ListUser = () => {
   return (
     <>
       <ReactNotifications />
-      <div className="flex">
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <SideBar />
         {showProfileDetail && (
           <>
@@ -396,7 +445,7 @@ const ListUser = () => {
             </div>
           </>
         )}
-        <div className="w-full ml-64">
+        <div className="flex-1 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
@@ -434,7 +483,7 @@ const ListUser = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                    <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                       Danh sách học viên
                     </div>
                   </div>
@@ -664,9 +713,9 @@ const ListUser = () => {
                                   birthday: date,
                                 })
                               }
-                              dateFormat="yyyy-MM-dd"
+                              dateFormat="dd/MM/yyyy"
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Năm-Tháng-Ngày"
+                              placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
                             />
                           </div>
@@ -789,9 +838,9 @@ const ListUser = () => {
                                   dateOfEnlistment: date,
                                 })
                               }
-                              dateFormat="yyyy-MM-dd"
+                              dateFormat="dd/MM/yyyy"
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Năm-Tháng-Ngày"
+                              placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
                             />
                           </div>
@@ -834,9 +883,9 @@ const ListUser = () => {
                                   probationaryPartyMember: date,
                                 })
                               }
-                              dateFormat="yyyy-MM-dd"
+                              dateFormat="dd/MM/yyyy"
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Năm-Tháng-Ngày"
+                              placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
                             />
                           </div>
@@ -893,9 +942,9 @@ const ListUser = () => {
                                   fullPartyMember: date,
                                 })
                               }
-                              dateFormat="yyyy-MM-dd"
+                              dateFormat="dd/MM/yyyy"
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Năm-Tháng-Ngày"
+                              placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
                             />
                           </div>
@@ -1026,7 +1075,7 @@ const ListUser = () => {
             </>
           )}
           <div className="w-full pt-8 pb-5 pl-5 pr-6">
-            <div className="bg-white rounded-lg w-full pr-5">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full pr-5 shadow-lg">
               {showConfirm && (
                 <div className="fixed top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
                   <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -1087,8 +1136,10 @@ const ListUser = () => {
                   </div>
                 </div>
               )}
-              <div className="font-bold pt-5 pl-5 pb-5 flex justify-between">
-                <div>DANH SÁCH HỌC VIÊN</div>
+              <div className="font-bold pt-5 pl-5 pb-5 flex justify-between border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white">
+                  DANH SÁCH HỌC VIÊN
+                </div>
                 <div
                   onClick={() => setShowFormAdd(true)}
                   className="mr-6 flex hover:text-blue-700 cursor-pointer"
@@ -1118,7 +1169,7 @@ const ListUser = () => {
                     <div>
                       <label
                         htmlFor="fullName"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Nhập tên
                       </label>
@@ -1127,14 +1178,14 @@ const ListUser = () => {
                         id="fullName"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                         placeholder="vd: Nguyễn Văn X"
                       />
                     </div>
                     <div className="ml-4">
                       <label
                         htmlFor="unit"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn đơn vị
                       </label>
@@ -1142,7 +1193,7 @@ const ListUser = () => {
                         id="unit"
                         value={unit}
                         onChange={(e) => setUnit(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                       >
                         <option value="">Tất cả</option>
                         <option value="L1 - H5">L1 - H5</option>
@@ -1157,154 +1208,190 @@ const ListUser = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
                   </div>
                 </form>
-                <table className="table-auto w-full divide-y border border-gray-200 divide-gray-200 overflow-x-auto">
-                  <thead className="bg-sky-100">
-                    <tr className="border border-gray-200">
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase"
-                      >
-                        họ và tên
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm text-center uppercase"
-                      >
-                        Cấp bậc
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm text-center uppercase"
-                      >
-                        chức vụ
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm text-center uppercase"
-                      >
-                        lớp
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm text-center uppercase"
-                      >
-                        Số điện thoại
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-2 border py-3 text-sm text-center uppercase"
-                      >
-                        Tùy chọn
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {profile?.students?.map((item) => (
-                      <tr
-                        className="hover:cursor-pointer hover:bg-gray-50"
-                        key={item._id}
-                      >
-                        <td
-                          onClick={() => handleRowClick(item._id)}
-                          className="px-6 border py-4 whitespace-nowrap"
+                <div className="overflow-x-auto mt-4">
+                  <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={item.avatar}
-                                alt="avatar"
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-bold">
-                                {item.fullName}
-                              </div>
-                              <div className="text-sm">
-                                Mã HV: {item.studentId}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item._id)}
-                          className="px-6 border py-3 whitespace-nowrap text-center"
+                          Họ và tên
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
-                          <div className="text-sm ">{item.rank}</div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item._id)}
-                          className="px-6 border py-3 whitespace-nowrap text-center"
+                          Cấp bậc
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
-                          <div className="text-sm ">
-                            {item.positionGovernment}
-                          </div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item._id)}
-                          className="px-6 border py-3 whitespace-nowrap text-center"
+                          Chức vụ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
-                          <div className="text-sm ">{item.unit}</div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item._id)}
-                          className="px-6 border py-3 whitespace-nowrap text-center"
+                          Lớp
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
-                          <div className="text-sm ">{item.phoneNumber}</div>
-                        </td>
-                        <td className="px-2 py-3 whitespace-nowrap text-sm flex ml-8">
-                          <button
-                            data-modal-target="authentication-modal"
-                            data-modal-toggle="authentication-modal"
-                            type="button"
-                            onClick={() => editStudent(item._id)}
-                            className="text-indigo-600 hover:text-indigo-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item._id)}
-                            className="ml-2 text-red-600 hover:text-red-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                              />
-                            </svg>
-                          </button>
-                        </td>
+                          Số điện thoại
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Tùy chọn
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {profile?.students && profile.students.length > 0 ? (
+                        profile.students.map((item) => (
+                          <tr
+                            className="hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                            key={item._id}
+                          >
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600"
+                            >
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <img
+                                    className="h-10 w-10 rounded-full"
+                                    src={item.avatar}
+                                    alt="avatar"
+                                  />
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                    {item.fullName}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Mã HV: {item.studentId}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
+                            >
+                              <div className="text-sm">{item.rank}</div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
+                            >
+                              <div className="text-sm">
+                                {item.positionGovernment}
+                              </div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
+                            >
+                              <div className="text-sm">{item.unit}</div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
+                            >
+                              <div className="text-sm">{item.phoneNumber}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                              <div className="flex justify-center space-x-2">
+                                <button
+                                  data-modal-target="authentication-modal"
+                                  data-modal-toggle="authentication-modal"
+                                  type="button"
+                                  onClick={() => editStudent(item._id)}
+                                  className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(item._id)}
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có dữ liệu
+                              </p>
+                              <p className="text-sm">
+                                Không tìm thấy học viên nào
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
               <div className="flex justify-center mr-5 pb-5 mt-2">
                 <nav aria-label="Page navigation example">
@@ -1552,9 +1639,9 @@ const ListUser = () => {
                             onChange={(date) =>
                               handleChangeDate("birthday", date)
                             }
-                            dateFormat="yyyy-MM-dd"
+                            dateFormat="dd/MM/yyyy"
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Năm-Tháng-Ngày"
+                            placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
                           />
                         </div>
@@ -1653,9 +1740,9 @@ const ListUser = () => {
                             onChange={(date) =>
                               handleChangeDate("dateOfEnlistment", date)
                             }
-                            dateFormat="yyyy-MM-dd"
+                            dateFormat="dd/MM/yyyy"
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Năm-Tháng-Ngày"
+                            placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
                           />
                         </div>
@@ -1690,9 +1777,9 @@ const ListUser = () => {
                             onChange={(date) =>
                               handleChangeDate("probationaryPartyMember", date)
                             }
-                            dateFormat="yyyy-MM-dd"
+                            dateFormat="dd/MM/yyyy"
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Năm-Tháng-Ngày"
+                            placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
                           />
                         </div>
@@ -1741,9 +1828,9 @@ const ListUser = () => {
                             onChange={(date) =>
                               handleChangeDate("fullPartyMember", date)
                             }
-                            dateFormat="yyyy-MM-dd"
+                            dateFormat="dd/MM/yyyy"
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Năm-Tháng-Ngày"
+                            placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
                           />
                         </div>

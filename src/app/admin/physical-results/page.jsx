@@ -8,6 +8,7 @@ import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
+import { BASE_URL } from "@/configs";
 const PhysicalResults = () => {
   const router = useRouter();
   const [physicalResults, setPhysicalResults] = useState(null);
@@ -21,10 +22,41 @@ const PhysicalResults = () => {
   const [editFormData, setEditFormData] = useState({});
   const [addFormData, setAddFormData] = useState({});
 
-  const handleShowFormUpdate = (studentId, id) => {
-    setPhysicalResultId(id);
-    setStudentId(studentId);
-    setShowFormEdit(true);
+  const handleShowFormUpdate = async (studentId, id) => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/commander/${studentId}/physicalResult/${id}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setEditFormData({
+          semester: res.data.semester || "",
+          run3000m: res.data.run3000m || "",
+          run100m: res.data.run100m || "",
+          pullUpBar: res.data.pullUpBar || "",
+          swimming100m: res.data.swimming100m || "",
+          practise: res.data.practise || "",
+        });
+
+        setPhysicalResultId(id);
+        setStudentId(studentId);
+        setShowFormEdit(true);
+      } catch (error) {
+        console.log(error);
+        handleNotify(
+          "danger",
+          "Lỗi!",
+          "Không thể tải thông tin kết quả thể lực"
+        );
+      }
+    }
   };
 
   const handleUpdate = async (e, studentId, id) => {
@@ -34,7 +66,7 @@ const PhysicalResults = () => {
     if (token) {
       try {
         await axios.put(
-          `https://be-student-manager.onrender.com/commander/${studentId}/physicalResult/${id}`,
+          `${BASE_URL}/commander/${studentId}/physicalResult/${id}`,
           editFormData,
           {
             headers: {
@@ -61,7 +93,7 @@ const PhysicalResults = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.post(
-        `https://be-student-manager.onrender.com/commander/physicalResult`,
+        `${BASE_URL}/commander/physicalResult`,
         addFormData,
         {
           headers: {
@@ -88,14 +120,11 @@ const PhysicalResults = () => {
 
     if (token) {
       try {
-        const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/physicalResults`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/commander/physicalResults`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         setPhysicalResults(res.data);
       } catch (error) {
@@ -116,7 +145,7 @@ const PhysicalResults = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/physicalResults?semester=${semester}&unit=${unit}`,
+          `${BASE_URL}/commander/physicalResults?semester=${semester}&unit=${unit}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -145,7 +174,7 @@ const PhysicalResults = () => {
     if (token) {
       axios
         .delete(
-          `https://be-student-manager.onrender.com/commander/physicalResult/${studentId}/${physicalResultId}`,
+          `${BASE_URL}/commander/physicalResult/${studentId}/${physicalResultId}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -181,7 +210,7 @@ const PhysicalResults = () => {
     if (token) {
       try {
         const response = await axios.get(
-          `https://be-student-manager.onrender.com/commander/physicalResult/pdf?semester=${semester}`,
+          `${BASE_URL}/commander/physicalResult/pdf?semester=${semester}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -212,18 +241,16 @@ const PhysicalResults = () => {
   return (
     <>
       <ReactNotifications />
-      <div className="flex">
-        <div>
-          <SideBar />
-        </div>
-        <div className="w-full ml-64">
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+        <SideBar />
+        <div className="flex-1 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                 <li className="inline-flex items-center">
                   <Link
                     href="/admin"
-                    className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       className="w-3 h-3 me-2.5"
@@ -254,7 +281,7 @@ const PhysicalResults = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                    <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                       Kết quả thể lực
                     </div>
                   </div>
@@ -265,10 +292,10 @@ const PhysicalResults = () => {
           {showFormEdit ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12">
                 <button
                   onClick={() => setShowFormEdit(false)}
-                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
+                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   <svg
                     className="h-6 w-6"
@@ -290,14 +317,14 @@ const PhysicalResults = () => {
                   className="px-6 pt-6 pb-3 z-10 grid grid-cols-2 gap-4"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4 col-span-full">
+                  <h2 className="text-xl font-semibold mb-4 col-span-full text-gray-900 dark:text-white">
                     Chỉnh sửa kết quả kiểm tra thể lực của học viên
                   </h2>
 
                   <div className="mb-4">
                     <label
                       htmlFor="semester3"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Học kỳ
                     </label>
@@ -313,14 +340,14 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: 2023.2"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="run3000m2"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Chạy 3000m
                     </label>
@@ -336,14 +363,14 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: 14p30"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="run100m2"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Chạy 100m
                     </label>
@@ -359,14 +386,14 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: 15s01"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="pullUpBar2"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Xà đơn
                     </label>
@@ -382,14 +409,14 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: 20"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="swimming100m2"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Bơi 100m
                     </label>
@@ -405,14 +432,14 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: 45s01"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="practise2"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Xếp loại
                     </label>
@@ -428,21 +455,21 @@ const PhysicalResults = () => {
                         })
                       }
                       placeholder="vd: Khá"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="col-span-full flex justify-end">
                     <button
                       type="button"
-                      className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-gray-100 mr-2 transition-colors duration-200"
                       onClick={() => setShowFormEdit(false)}
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors duration-200"
                     >
                       Cập nhật
                     </button>
@@ -454,14 +481,14 @@ const PhysicalResults = () => {
             ""
           )}
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-            <div className="bg-white rounded-lg w-full">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
-                <div className="fixed top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                  <div className="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                <div className="fixed top-0 left-0 z-20 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
+                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow sm:p-5">
                     <button
                       onClick={handleCancelDelete}
                       type="button"
-                      className="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                      className="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:text-white"
                       data-modal-toggle="deleteModal"
                     >
                       <svg
@@ -480,7 +507,7 @@ const PhysicalResults = () => {
                       <span className="sr-only">Close modal</span>
                     </button>
                     <svg
-                      className="w-11 h-11 mb-3.5 mx-auto"
+                      className="w-11 h-11 mb-3.5 mx-auto text-red-600 dark:text-red-400"
                       aria-hidden="true"
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -492,7 +519,7 @@ const PhysicalResults = () => {
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                    <p className="mb-4 dark:text-gray-300">
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">
                       Bạn có chắc chắn muốn xóa?
                     </p>
                     <div className="flex justify-center items-center space-x-4">
@@ -500,7 +527,7 @@ const PhysicalResults = () => {
                         onClick={handleCancelDelete}
                         data-modal-toggle="deleteModal"
                         type="button"
-                        className="py-2 px-3 text-sm font-medium bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                        className="py-2 px-3 text-sm font-medium bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 dark:hover:text-white focus:z-10"
                       >
                         Hủy
                       </button>
@@ -517,24 +544,54 @@ const PhysicalResults = () => {
                   </div>
                 </div>
               )}
-              <div className="font-bold p-5 flex justify-between">
-                <div>KẾT QUẢ THỂ LỰC HỌC VIÊN</div>
-                <div className="flex">
+              <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white text-lg">
+                  KẾT QUẢ THỂ LỰC HỌC VIÊN
+                </div>
+                <div className="flex space-x-2">
                   <button
-                    class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded mr-2"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={(e) => handleExportFilePdf(e, semester)}
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-4 h-4 mr-2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                      />
+                    </svg>
                     Xuất
                   </button>
                   <button
                     onClick={() => setShowFormAdd(true)}
-                    class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-4 h-4 mr-2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    </svg>
                     Thêm
                   </button>
                 </div>
               </div>
-              <div className="w-full pl-5 pb-5 pr-5">
+              <div className="w-full p-5">
                 <form
                   className="flex items-end"
                   onSubmit={(e) => handleSubmit(e)}
@@ -543,7 +600,7 @@ const PhysicalResults = () => {
                     <div>
                       <label
                         htmlFor="semester"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn học kỳ
                       </label>
@@ -551,7 +608,7 @@ const PhysicalResults = () => {
                         id="semester"
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                       >
                         <option value="">Tất cả</option>
                         <option value="2022.1">2022.1</option>
@@ -565,7 +622,7 @@ const PhysicalResults = () => {
                     <div className="ml-4">
                       <label
                         htmlFor="unit"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn đơn vị
                       </label>
@@ -573,7 +630,7 @@ const PhysicalResults = () => {
                         id="unit"
                         value={unit}
                         onChange={(e) => setUnit(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                       >
                         <option value="">Tất cả</option>
                         <option value="L1 - H5">L1 - H5</option>
@@ -588,146 +645,200 @@ const PhysicalResults = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
                   </div>
                 </form>
               </div>
-              <div className="w-full pl-5 pb-5 pr-5">
-                <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                  <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                    <tr>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Học kỳ
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-2"
-                      >
-                        Họ và tên
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Đơn vị
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Chạy 100m
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-4 px-2"
-                      >
-                        Chạy 3000m
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Xà đơn
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-4 px-2"
-                      >
-                        Bơi 100m
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Xếp loại
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Tùy chọn
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {physicalResults?.map((item) => (
-                      <tr
-                        key={item._id}
-                        className="border-b border-neutral-200 dark:border-white/10"
-                      >
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {item.semester}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.fullName}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {item.unit}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {item.run100m}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {item.run3000m}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.pullUpBar} cái
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.swimming100m}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.practise}
-                        </td>
-                        <td className="justify-center text-sm flex">
-                          <button
-                            data-modal-target="authentication-modal"
-                            data-modal-toggle="authentication-modal"
-                            type="button"
-                            onClick={() =>
-                              handleShowFormUpdate(item.studentId, item._id)
-                            }
-                            className="text-indigo-600 hover:text-indigo-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDelete(item._id, item.studentId)
-                            }
-                            className="ml-2 text-red-600 hover:text-red-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                              />
-                            </svg>
-                          </button>
-                        </td>
+              <div className="w-full p-5">
+                <div className="overflow-x-auto">
+                  <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          HỌC KỲ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          HỌ VÀ TÊN
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          ĐƠN VỊ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          CHẠY 100M
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          CHẠY 3000M
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          XÀ ĐƠN
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          BƠI 100M
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          XẾP LOẠI
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          TÙY CHỌN
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {physicalResults && physicalResults.length > 0 ? (
+                        physicalResults.map((item) => (
+                          <tr
+                            key={item._id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.semester}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.fullName}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.unit}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.run100m}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.run3000m}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.pullUpBar} cái
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.swimming100m}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.practise}
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                              <div className="flex justify-center space-x-2">
+                                <button
+                                  onClick={() =>
+                                    handleShowFormUpdate(
+                                      item.studentId,
+                                      item._id
+                                    )
+                                  }
+                                  className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDelete(item._id, item.studentId)
+                                  }
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="9"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có dữ liệu
+                              </p>
+                              <p className="text-sm">
+                                Không tìm thấy kết quả thể lực nào
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
           {showFormAdd ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12">
                 <button
                   onClick={() => setShowFormAdd(false)}
-                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
+                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   <svg
                     className="h-6 w-6"
@@ -749,12 +860,15 @@ const PhysicalResults = () => {
                   className="px-6 pt-6 pb-3 z-10 grid grid-cols-2 gap-4"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4 col-span-full">
+                  <h2 className="text-xl font-semibold mb-4 col-span-full text-gray-900 dark:text-white">
                     Thêm kết quả kiểm tra thể lực của học viên
                   </h2>
 
                   <div className="mb-4 col-span-full">
-                    <label htmlFor="name" className="block text-sm font-medium">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
                       Học viên
                     </label>
                     <input
@@ -770,14 +884,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: Nguyễn Văn A"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="semester"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Học kỳ
                     </label>
@@ -794,14 +908,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: 2023.2"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="run3000m"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Chạy 3000m
                     </label>
@@ -818,14 +932,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: 14p30"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="run100m"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Chạy 100m
                     </label>
@@ -842,14 +956,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: 15s01"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="pullUpBar"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Xà đơn
                     </label>
@@ -866,14 +980,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: 20"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="swimming100m"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Bơi 100m
                     </label>
@@ -890,14 +1004,14 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: 45s01"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="mb-4">
                     <label
                       htmlFor="practise"
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Xếp loại
                     </label>
@@ -914,21 +1028,21 @@ const PhysicalResults = () => {
                       }
                       required
                       placeholder="vd: Khá"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                     />
                   </div>
 
                   <div className="col-span-full flex justify-end">
                     <button
                       type="button"
-                      className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-gray-100 mr-2 transition-colors duration-200"
                       onClick={() => setShowFormAdd(false)}
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors duration-200"
                     >
                       Thêm
                     </button>

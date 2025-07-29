@@ -5,10 +5,10 @@ export const metadata = {
   description: "Đổi mật khẩu",
 };
 
-export default function RootLayout({ children }) {
+export default function ChangePasswordLayout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text">
+      {children}
+    </div>
   );
 }

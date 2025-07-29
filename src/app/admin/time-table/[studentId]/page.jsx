@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
 
+import { BASE_URL } from "@/configs";
 const TimeTableDetail = ({ params }) => {
   const [timeTable, setTimeTable] = useState([]);
 
@@ -14,7 +15,7 @@ const TimeTableDetail = ({ params }) => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/${params.studentId}/timeTable`,
+          `${BASE_URL}/commander/${params.studentId}/timeTable`,
           {
             headers: {
               token: `Bearer ${token}`,

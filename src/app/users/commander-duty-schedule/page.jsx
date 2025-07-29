@@ -6,6 +6,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BASE_URL } from "@/configs";
 
 const CommanderDutySchedule = () => {
   const router = useRouter();
@@ -27,7 +28,7 @@ const CommanderDutySchedule = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/commanderDutySchedule?page=${currentPage}&year=${year}&month=${parseInt(
+          `${BASE_URL}/user/commanderDutySchedule?page=${currentPage}&year=${year}&month=${parseInt(
             month
           )}`,
           {
@@ -56,7 +57,7 @@ const CommanderDutySchedule = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/commanderDutySchedule?page=${currentPage}&year=${year}&month=${parseInt(
+          `${BASE_URL}/user/commanderDutySchedule?page=${currentPage}&year=${year}&month=${parseInt(
             month
           )}`,
           {

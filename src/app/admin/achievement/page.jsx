@@ -8,6 +8,7 @@ import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
+import { BASE_URL } from "@/configs";
 const Achievement = () => {
   const router = useRouter();
   const [achievement, setAchievement] = useState(null);
@@ -34,7 +35,7 @@ const Achievement = () => {
     if (token) {
       try {
         await axios.put(
-          `https://be-student-manager.onrender.com/commander/${studentId}/achievement/${id}`,
+          `${BASE_URL}/commander/${studentId}/achievement/${id}`,
           editFormData,
           {
             headers: {
@@ -61,7 +62,7 @@ const Achievement = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.post(
-        `https://be-student-manager.onrender.com/commander/achievement`,
+        `${BASE_URL}/commander/achievement`,
         addFormData,
         {
           headers: {
@@ -100,7 +101,7 @@ const Achievement = () => {
     if (token) {
       axios
         .delete(
-          `https://be-student-manager.onrender.com/commander/achievement/${studentId}/${achievementId}`,
+          `${BASE_URL}/commander/achievement/${studentId}/${achievementId}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -131,14 +132,11 @@ const Achievement = () => {
 
     if (token) {
       try {
-        const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/achievements`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/commander/achievements`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         setAchievement(res.data);
       } catch (error) {
@@ -159,7 +157,7 @@ const Achievement = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/achievements?year=${schoolYear}&semester=${semester}`,
+          `${BASE_URL}/commander/achievements?year=${schoolYear}&semester=${semester}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -183,14 +181,14 @@ const Achievement = () => {
         <div>
           <SideBar />
         </div>
-        <div className="w-full ml-64">
+        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                 <li className="inline-flex items-center">
                   <Link
                     href="/admin"
-                    className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                    className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       className="w-3 h-3 me-2.5"
@@ -221,7 +219,7 @@ const Achievement = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                    <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                       Khen thưởng học viên
                     </div>
                   </div>
@@ -230,135 +228,137 @@ const Achievement = () => {
             </nav>
           </div>
           {showFormEdit ? (
-            <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
-              <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
-                <button
-                  onClick={() => setShowFormEdit(false)}
-                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
-                <form
-                  onSubmit={(e) => handleUpdate(e, studentId, achievementId)}
-                  className="px-6 pt-6 pb-3 z-10"
-                  id="infoForm"
-                >
-                  <h2 className="text-xl font-semibold mb-4">
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-20">
+              <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white pr-12">
                     Chỉnh sửa khen thưởng học viên
                   </h2>
+                  <button
+                    onClick={() => setShowFormEdit(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                  <form
+                    onSubmit={(e) => handleUpdate(e, studentId, achievementId)}
+                    className="p-6"
+                    id="infoForm"
+                  >
+                    <div className="mb-4">
+                      <label
+                        htmlFor="semester2"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Học kỳ
+                      </label>
+                      <input
+                        type="text"
+                        id="semester2"
+                        name="semester2"
+                        value={editFormData.semester}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            semester: e.target.value,
+                          })
+                        }
+                        placeholder="vd: 2"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-4">
-                    <label
-                      htmlFor="semester2"
-                      className="block text-sm font-medium"
-                    >
-                      Học kỳ
-                    </label>
-                    <input
-                      type="text"
-                      id="semester2"
-                      name="semester2"
-                      value={editFormData.semester}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          semester: e.target.value,
-                        })
-                      }
-                      placeholder="vd: 2"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                    />
-                  </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="schoolYear2"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Năm học
+                      </label>
+                      <input
+                        type="text"
+                        id="schoolYear2"
+                        name="schoolYear2"
+                        value={editFormData.schoolYear}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            schoolYear: e.target.value,
+                          })
+                        }
+                        placeholder="vd: 2023 - 2024"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-4">
-                    <label
-                      htmlFor="schoolYear2"
-                      className="block text-sm font-medium"
-                    >
-                      Năm học
-                    </label>
-                    <input
-                      type="text"
-                      id="schoolYear2"
-                      name="schoolYear2"
-                      value={editFormData.schoolYear}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          schoolYear: e.target.value,
-                        })
-                      }
-                      placeholder="vd: 2023 - 2024"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                    />
-                  </div>
+                    <div className="mb-6">
+                      <label
+                        htmlFor="content4"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Nội dung
+                      </label>
+                      <textarea
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-32 resize-none transition-colors duration-200"
+                        id="content4"
+                        name="content4"
+                        value={editFormData.content}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            content: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập nội dung khen thưởng..."
+                      />
+                    </div>
 
-                  <div className="mb-4">
-                    <label
-                      htmlFor="content4"
-                      className="block text-sm font-medium"
-                    >
-                      Nội dung
-                    </label>
-                    <textarea
-                      className="h-32 px-3 py-2 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                      id="content4"
-                      name="content4"
-                      value={editFormData.content}
-                      onChange={(e) =>
-                        setEditFormData({
-                          ...editFormData,
-                          content: e.target.value,
-                        })
-                      }
-                      placeholder="Nhập nội dung khen thưởng..."
-                    />
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
-                      onClick={() => setShowFormEdit(false)}
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    >
-                      Cập nhật
-                    </button>
-                  </div>
-                </form>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-200"
+                        onClick={() => setShowFormEdit(false)}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        Cập nhật
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           ) : (
             ""
           )}
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-            <div className="bg-white rounded-lg w-full">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
-                <div className="fixed top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                  <div className="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                <div className="fixed top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow-lg sm:p-5">
                     <button
                       onClick={handleCancelDelete}
                       type="button"
-                      className="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                      className="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:text-gray-300 dark:hover:text-white"
                       data-modal-toggle="deleteModal"
                     >
                       <svg
@@ -377,7 +377,7 @@ const Achievement = () => {
                       <span className="sr-only">Close modal</span>
                     </button>
                     <svg
-                      className="w-11 h-11 mb-3.5 mx-auto"
+                      className="w-11 h-11 mb-3.5 mx-auto text-red-500"
                       aria-hidden="true"
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -389,15 +389,15 @@ const Achievement = () => {
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                    <p className="mb-4 dark:text-gray-300">
-                      Bạn có chắc chắn muốn xóa?
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">
+                      Bạn có chắc chắn muốn xóa khen thưởng này?
                     </p>
                     <div className="flex justify-center items-center space-x-4">
                       <button
                         onClick={handleCancelDelete}
                         data-modal-toggle="deleteModal"
                         type="button"
-                        className="py-2 px-3 text-sm font-medium bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                        className="py-2 px-3 text-sm font-medium bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 dark:hover:text-white focus:z-10"
                       >
                         Hủy
                       </button>
@@ -414,25 +414,40 @@ const Achievement = () => {
                   </div>
                 </div>
               )}
-              <div className="font-bold p-5 flex justify-between hover:text-blue-700 cursor-pointer">
-                <div>KHEN THƯỞNG</div>
+              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 pt-2 dark:text-white text-lg">
+                  KHEN THƯỞNG HỌC VIÊN
+                </div>
                 <button
                   onClick={() => setShowFormAdd(true)}
-                  className="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                 >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
                   Thêm
                 </button>
               </div>
-              <div className="w-full pl-5 pb-5 pr-5">
+              <div className="w-full pt-2 pl-5 pb-5 pr-5">
                 <form
-                  className="flex items-end"
+                  className="flex items-end mb-4"
                   onSubmit={(e) => handleSubmit(e)}
                 >
                   <div className="flex">
                     <div>
                       <label
                         htmlFor="semester"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn học kỳ
                       </label>
@@ -440,7 +455,7 @@ const Achievement = () => {
                         id="semester"
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-44 p-1.5 transition-colors duration-200"
                       >
                         <option value="">Tất cả</option>
                         <option value="1">Học kỳ 1</option>
@@ -450,7 +465,7 @@ const Achievement = () => {
                     <div className="ml-4">
                       <label
                         htmlFor="schoolYear"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn năm học
                       </label>
@@ -458,7 +473,7 @@ const Achievement = () => {
                         id="schoolYear"
                         value={schoolYear}
                         onChange={(e) => setSchoolYear(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-44 p-1.5 transition-colors duration-200"
                       >
                         <option value="">Tất cả</option>
                         <option value="2020 - 2021">2020 - 2021</option>
@@ -473,7 +488,7 @@ const Achievement = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
@@ -481,256 +496,306 @@ const Achievement = () => {
                 </form>
               </div>
               <div className="w-full pl-5 pb-5 pr-5">
-                <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                  <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                    <tr>
-                      <th scope="col" className="border-e border-neutral-200">
-                        STT
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Học kỳ
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Năm học
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-2"
-                      >
-                        Họ và tên
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-4 px-2"
-                      >
-                        Lớp
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Nội dung
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Tùy chọn
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {achievement?.map((item, index) => (
-                      <tr
-                        key={item._id}
-                        className="border-b border-neutral-200 dark:border-white/10"
-                      >
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {index + 1}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          Học kỳ {item.semester}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.schoolYear}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.fullName}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {unitMapping[item.unit] || ""}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          {item.content}
-                        </td>
-                        <td className="justify-center text-sm flex">
-                          <button
-                            data-modal-target="authentication-modal"
-                            data-modal-toggle="authentication-modal"
-                            type="button"
-                            onClick={() =>
-                              handleShowFormUpdate(item.studentId, item._id)
-                            }
-                            className="text-indigo-600 hover:text-indigo-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDelete(item.studentId, item._id)
-                            }
-                            className="ml-2 text-red-600 hover:text-red-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                              />
-                            </svg>
-                          </button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          STT
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Học kỳ
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Năm học
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Họ và tên
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Lớp
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Nội dung
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Tùy chọn
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800">
+                      {achievement && achievement.length > 0 ? (
+                        achievement.map((item, index) => (
+                          <tr
+                            key={item._id}
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                          >
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {index + 1}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Học kỳ {item.semester}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.schoolYear}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.fullName}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {unitMapping[item.unit] || ""}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.content}
+                            </td>
+                            <td className="flex justify-center items-center space-x-2 py-4 px-4">
+                              <button
+                                data-modal-target="authentication-modal"
+                                data-modal-toggle="authentication-modal"
+                                type="button"
+                                onClick={() =>
+                                  handleShowFormUpdate(item.studentId, item._id)
+                                }
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDelete(item.studentId, item._id)
+                                }
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="7" className="py-12 text-center">
+                            <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                              <svg
+                                className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có khen thưởng nào
+                              </p>
+                              <p className="text-sm">
+                                Hãy thêm khen thưởng đầu tiên để bắt đầu
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
           {showFormAdd ? (
-            <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
-              <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
-                <button
-                  onClick={() => setShowFormAdd(false)}
-                  className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                </button>
-                <form
-                  onSubmit={handleAddFormData}
-                  className="px-6 pt-6 pb-3 z-10"
-                  id="infoForm"
-                >
-                  <h2 className="text-xl font-semibold mb-4">
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-16">
+              <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white pr-12">
                     Thêm khen thưởng học viên
                   </h2>
-
-                  <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium">
-                      Học viên
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={addFormData.fullName}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          fullName: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: Nguyễn Văn A"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label
-                      htmlFor="semester1"
-                      className="block text-sm font-medium"
+                  <button
+                    onClick={() => setShowFormAdd(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+                  >
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      Học kỳ
-                    </label>
-                    <input
-                      type="text"
-                      id="semester1"
-                      name="semester1"
-                      value={addFormData.semester}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          semester: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 2"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                    />
-                  </div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
+                  <form
+                    onSubmit={handleAddFormData}
+                    className="p-4"
+                    id="infoForm"
+                  >
+                    <div className="mb-4">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Học viên
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={addFormData.fullName}
+                        onChange={(e) =>
+                          setAddFormData({
+                            ...addFormData,
+                            fullName: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="vd: Nguyễn Văn A"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-4">
-                    <label
-                      htmlFor="schoolYear1"
-                      className="block text-sm font-medium"
-                    >
-                      Năm học
-                    </label>
-                    <input
-                      type="text"
-                      id="schoolYear1"
-                      name="schoolYear1"
-                      value={addFormData.schoolYear}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          schoolYear: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 2023 - 2024"
-                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                    />
-                  </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="semester1"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Học kỳ
+                      </label>
+                      <input
+                        type="text"
+                        id="semester1"
+                        name="semester1"
+                        value={addFormData.semester}
+                        onChange={(e) =>
+                          setAddFormData({
+                            ...addFormData,
+                            semester: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="vd: 2"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                      />
+                    </div>
 
-                  <div className="mb-4">
-                    <label
-                      htmlFor="content"
-                      className="block text-sm font-medium"
-                    >
-                      Nội dung
-                    </label>
-                    <textarea
-                      className="h-32 px-3 py-2 bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 mt-1"
-                      id="content"
-                      name="content"
-                      value={addFormData.content}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          content: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="Nhập nội dung khen thưởng..."
-                    />
-                  </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="schoolYear1"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Năm học
+                      </label>
+                      <input
+                        type="text"
+                        id="schoolYear1"
+                        name="schoolYear1"
+                        value={addFormData.schoolYear}
+                        onChange={(e) =>
+                          setAddFormData({
+                            ...addFormData,
+                            schoolYear: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="vd: 2023 - 2024"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                      />
+                    </div>
 
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
-                      onClick={() => setShowFormAdd(false)}
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                    >
-                      Thêm
-                    </button>
-                  </div>
-                </form>
+                    <div className="mb-6">
+                      <label
+                        htmlFor="content"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Nội dung
+                      </label>
+                      <textarea
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 h-32 resize-none transition-colors duration-200"
+                        id="content"
+                        name="content"
+                        value={addFormData.content}
+                        onChange={(e) =>
+                          setAddFormData({
+                            ...addFormData,
+                            content: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="Nhập nội dung khen thưởng..."
+                      />
+                    </div>
+
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-200"
+                        onClick={() => setShowFormAdd(false)}
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                      >
+                        Thêm
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           ) : (

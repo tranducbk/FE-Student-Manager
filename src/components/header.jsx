@@ -6,7 +6,37 @@ import dayjs from "dayjs";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import {
+  BellOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  MenuOutlined,
+  CloseOutlined,
+  DownOutlined,
+} from "@ant-design/icons";
+import {
+  Layout,
+  Avatar,
+  Dropdown,
+  Badge,
+  Button,
+  Menu,
+  Typography,
+  Space,
+  Divider,
+  Card,
+  Tag,
+  theme,
+  Drawer,
+} from "antd";
 import TabNotification from "./tabNotification";
+import { ThemeToggle } from "./ThemeToggle";
+import { useThemeContext } from "./ThemeProvider";
+import { BASE_URL } from "@/configs";
+
+const { Header: AntHeader } = Layout;
+const { Text, Title } = Typography;
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -14,8 +44,11 @@ const Header = () => {
   const [userDetail, setUserDetail] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
   const frameRef = useRef(null);
+  const { token: themeToken } = theme.useToken();
+  const { theme: currentTheme } = useThemeContext();
 
   useEffect(() => {
     fetchDocuments();
@@ -29,9 +62,7 @@ const Header = () => {
     const token = localStorage.getItem("token");
     try {
       const res = await axios.get(
-        `https://be-student-manager.onrender.com/commander/studentNotifications/${
-          jwtDecode(token).id
-        }`,
+        `${BASE_URL}/commander/studentNotifications/${jwtDecode(token).id}`,
         {
           headers: {
             token: `Bearer ${token}`,
@@ -71,7 +102,7 @@ const Header = () => {
         const decodedToken = jwtDecode(token);
         if (decodedToken.admin === true) {
           const res = await axios.get(
-            `https://be-student-manager.onrender.com/commander/${decodedToken.id}`,
+            `${BASE_URL}/commander/${decodedToken.id}`,
             {
               headers: {
                 token: `Bearer ${token}`,
@@ -82,7 +113,7 @@ const Header = () => {
           setUserDetail(res.data);
         } else {
           const res = await axios.get(
-            `https://be-student-manager.onrender.com/student/${decodedToken.id}`,
+            `${BASE_URL}/student/${decodedToken.id}`,
             {
               headers: {
                 token: `Bearer ${token}`,
@@ -104,14 +135,11 @@ const Header = () => {
       try {
         const decodedToken = jwtDecode(token);
 
-        const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/${decodedToken.id}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/user/${decodedToken.id}`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         setUser(res.data);
       } catch (error) {
@@ -124,7 +152,7 @@ const Header = () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await axios.post("https://be-student-manager.onrender.com/user/logout", null, {
+        await axios.post(`${BASE_URL}/user/logout`, null, {
           headers: {
             token: `Bearer ${token}`,
           },
@@ -158,7 +186,7 @@ const Header = () => {
       try {
         const decodedToken = jwtDecode(token);
         await axios.put(
-          `https://be-student-manager.onrender.com/commander/notification/${decodedToken.id}/${notificationId}`,
+          `${BASE_URL}/commander/notification/${decodedToken.id}/${notificationId}`,
           { isRead: true },
           {
             headers: {
@@ -182,187 +210,301 @@ const Header = () => {
   const unreadCount = Array.isArray(documents)
     ? documents.filter((doc) => !doc.isRead).length
     : 0;
+
+  const userMenuItems = [
+    {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: (
+        <Link
+          href={
+            user?.isAdmin === true
+              ? `/admin/${user?._id}`
+              : `/users/${user?._id}`
+          }
+        >
+          <Space direction="vertical" size={0}>
+            <Text strong>{userDetail?.fullName || "Thông tin cá nhân"}</Text>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              {userDetail?.email}
+            </Text>
+          </Space>
+        </Link>
+      ),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: <Link href="/change-password">Đổi mật khẩu</Link>,
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng xuất",
+      onClick: handleLogout,
+    },
+  ];
+
+  const notificationItems = documents?.map((doc) => ({
+    key: doc._id,
+    label: (
+      <Card
+        size="small"
+        style={{
+          margin: "4px 0",
+          backgroundColor: doc.isRead
+            ? "transparent"
+            : themeToken.colorPrimaryBg,
+          border: `1px solid ${themeToken.colorBorder}`,
+        }}
+        onClick={(e) => handleUpdateIsRead(e, doc._id)}
+      >
+        <Space direction="vertical" size={4} style={{ width: "100%" }}>
+          <Space>
+            <Text strong>[{doc.author}]</Text>
+            {!doc.isRead && (
+              <Tag color="blue" size="small">
+                Mới
+              </Tag>
+            )}
+          </Space>
+          <Text>{doc.title}</Text>
+          <Text type="secondary" style={{ fontSize: "12px" }}>
+            {dayjs(doc.dateIssued).format("DD/MM/YYYY")}
+          </Text>
+        </Space>
+      </Card>
+    ),
+  }));
+
+  const mobileMenuItems = [
+    {
+      key: "profile",
+      icon: <UserOutlined />,
+      label: (
+        <Link
+          href={
+            user?.isAdmin === true
+              ? `/admin/${user?._id}`
+              : `/users/${user?._id}`
+          }
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <Space direction="vertical" size={0}>
+            <Text strong>{userDetail?.fullName || "Thông tin cá nhân"}</Text>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              {userDetail?.email}
+            </Text>
+          </Space>
+        </Link>
+      ),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "settings",
+      icon: <SettingOutlined />,
+      label: (
+        <Link href="/change-password" onClick={() => setMobileMenuOpen(false)}>
+          Đổi mật khẩu
+        </Link>
+      ),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng xuất",
+      onClick: () => {
+        handleLogout();
+        setMobileMenuOpen(false);
+      },
+    },
+  ];
+
+  // Reusable button components
+  const NotificationButton = ({ className = "" }) => (
+    <Button
+      type="text"
+      icon={<BellOutlined />}
+      size="large"
+      className={`theme-button-primary ${className}`}
+    />
+  );
+
+  const UserMenuButton = () => (
+    <Button
+      type="text"
+      onClick={() => toggleDropdown()}
+      className="theme-button-secondary"
+    >
+      <Avatar
+        src={userDetail?.avatar}
+        size="small"
+        icon={<UserOutlined />}
+        style={{ marginRight: 8 }}
+      />
+      <div className="flex flex-col items-start mr-2">
+        <Text strong className="text-sm leading-tight theme-text-primary">
+          {user?.username}
+        </Text>
+        <Text
+          type="secondary"
+          className="text-xs leading-tight theme-text-secondary"
+        >
+          {user?.isAdmin ? "Quản trị viên" : "Học viên"}
+        </Text>
+      </div>
+      <DownOutlined className="text-xs theme-icon" />
+    </Button>
+  );
+
+  const MobileMenuButton = () => (
+    <Button
+      type="text"
+      icon={mobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      className="theme-button-primary"
+    />
+  );
+
   return (
-    <header className="fixed z-50 shadow-md w-full">
-      <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
-        <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
+    <>
+      <AntHeader className="theme-header">
+        {/* Logo and Brand */}
+        <div className="flex items-center">
           <Link
             href={`/${user?.isAdmin ? "admin" : "users"}`}
             className="flex items-center"
           >
-            <img
-              src="http://localhost:3000/logo.png"
-              className="mr-3 h-9 md:h-12"
-              alt="H5 Logo"
-            />
-            <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">
+            <img src="/logo.png" className="h-8 md:h-10 mr-3" alt="H5 Logo" />
+            <Title level={4} className="theme-title">
               HỆ HỌC VIÊN 5
-            </span>
+            </Title>
           </Link>
-          <div className="flex items-center lg:order-2">
-            {user?.isAdmin ? (
-              ""
-            ) : (
-              <div className="mr-4">
-                <div onClick={handleDropdownClick}>
-                  <TabNotification count={unreadCount} />
-                </div>
-                {dropdownOpen && (
-                  <>
-                    <div
-                      onClick={handleOutsideClick}
-                      className="fixed inset-0 h-full w-full z-10"
-                    ></div>
+        </div>
 
-                    <div
-                      className="absolute right-11 mt-2 border rounded-lg bg-white shadow-lg overflow-hidden overflow-y-auto z-30 w-96 h-120"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div>
-                        <div className="text-center font-bold py-3 rounded-tl-lg">
-                          Thông báo
-                        </div>
-                        {documents?.map((doc) => (
-                          <div
-                            key={doc._id}
-                            onClick={(e) => handleUpdateIsRead(e, doc._id)}
-                            className="flex items-center mx-2 my-1 cursor-pointer"
-                          >
-                            <p
-                              className={
-                                doc.isRead
-                                  ? `text-base p-2 w-full border rounded-lg hover:bg-gray-100`
-                                  : `text-base p-2 w-full border rounded-lg bg-blue-50`
-                              }
-                            >
-                              <span className="font-bold">[{doc.author}]</span>{" "}
-                              {doc.title}{" "}
-                              <div className="mt-1 text-rose-600 text-sm">
-                                {dayjs(doc.dateIssued).format("DD/MM/YYYY")}
-                              </div>
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      <a href="#" className="block text-center text-sm py-2">
-                        Xem tất cả thông báo
-                      </a>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+        {/* Desktop Actions */}
+        <div className="hidden md:flex items-center space-x-4">
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
-            <button
-              id="dropdownAvatarNameButton"
-              data-dropdown-toggle="dropdownAvatarName"
-              className="flex items-center text-md pe-1 font-medium  rounded-full hover:text-blue-600 dark:hover:text-blue-500 md:me-0 dark:text-white"
-              type="button"
-              onClick={toggleDropdown}
+          {/* Notifications - Only for non-admin users */}
+          {!user?.isAdmin && (
+            <Dropdown
+              menu={{
+                items: notificationItems,
+                style: {
+                  maxHeight: "400px",
+                  overflowY: "auto",
+                  width: "320px",
+                },
+              }}
+              open={dropdownOpen}
+              onOpenChange={setDropdownOpen}
+              placement="bottomRight"
+              trigger={["click"]}
             >
-              <img
-                className="w-8 h-8 me-2 rounded-full"
-                src={userDetail?.avatar}
-                alt="user photo"
-              />
-              {user?.username}
-              <svg
-                className="w-2.5 h-2.5 ms-3"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 10 6"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 1 4 4 4-4"
-                />
-              </svg>
-            </button>
-            <div ref={frameRef} className="relative">
-              {isOpen && (
-                <div className="z-10 absolute top-5 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-56 dark:bg-gray-700 dark:divide-gray-600">
-                  <div className="px-4 py-3 text-base hover:text-blue-600 dark:text-white cursor-pointer">
-                    <Link
-                      href={
-                        user?.isAdmin === true
-                          ? `/admin/${user?._id}`
-                          : `/users/${user?._id}`
-                      }
-                    >
-                      <div className="font-medium ">
-                        {userDetail?.fullName
-                          ? userDetail?.fullName
-                          : "Thông tin cá nhân"}
-                      </div>
-                      <div className="truncate text-sm">
-                        {userDetail?.email}
-                      </div>
-                    </Link>
-                  </div>
-                  <ul className="py-2 px-1.5 text-sm dark:text-gray-200">
-                    <li>
-                      <Link
-                        href="/change-password"
-                        className="flex items-center hover:text-blue-600 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                      >
-                        <div className="px-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                            />
-                          </svg>
-                        </div>
-                        <div> Đổi mật khẩu</div>
-                      </Link>
-                    </li>
-                  </ul>
-                  <div className="py-2 px-1.5">
-                    <div
-                      onClick={handleLogout}
-                      className="flex cursor-pointer items-center hover:text-blue-600 hover:bg-gray-100"
-                    >
-                      <div className="px-2 py-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-                          />
-                        </svg>
-                      </div>
+              <Badge count={unreadCount} size="small">
+                <NotificationButton />
+              </Badge>
+            </Dropdown>
+          )}
 
-                      <div className="text-sm dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">
-                        Đăng xuất
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+          {/* User Menu */}
+          <Dropdown
+            menu={{ items: userMenuItems }}
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            placement="bottomRight"
+            trigger={["click"]}
+          >
+            <UserMenuButton />
+          </Dropdown>
+        </div>
+
+        {/* Mobile Actions */}
+        <div className="flex md:hidden items-center space-x-2">
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Notifications - Only for non-admin users */}
+          {!user?.isAdmin && (
+            <Dropdown
+              menu={{
+                items: notificationItems,
+                style: {
+                  maxHeight: "300px",
+                  overflowY: "auto",
+                  width: "280px",
+                },
+              }}
+              open={dropdownOpen}
+              onOpenChange={setDropdownOpen}
+              placement="bottomRight"
+              trigger={["click"]}
+            >
+              <Badge count={unreadCount} size="small">
+                <NotificationButton />
+              </Badge>
+            </Dropdown>
+          )}
+
+          {/* Mobile Menu Button */}
+          <MobileMenuButton />
+        </div>
+      </AntHeader>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center">
+            <Avatar
+              src={userDetail?.avatar}
+              size="large"
+              icon={<UserOutlined />}
+              style={{ marginRight: 12 }}
+            />
+            <div>
+              <Text strong style={{ color: themeToken.colorText }}>
+                {userDetail?.fullName || "Thông tin cá nhân"}
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                {userDetail?.email}
+              </Text>
             </div>
           </div>
-        </div>
-      </nav>
-    </header>
+        }
+        placement="right"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        width={280}
+        bodyStyle={{ padding: 0 }}
+        headerStyle={{
+          background: themeToken.colorBgContainer,
+          borderBottom: `1px solid ${themeToken.colorBorder}`,
+        }}
+      >
+        <Menu
+          mode="inline"
+          items={mobileMenuItems}
+          style={{
+            border: "none",
+            background: "transparent",
+          }}
+        />
+      </Drawer>
+    </>
   );
 };
 

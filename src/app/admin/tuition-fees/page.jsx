@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 
+import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
   const router = useRouter();
   const [tuitionFees, setTuitionFees] = useState(null);
@@ -18,7 +19,7 @@ const TuitionFees = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/tuitionFees?semester=${semester}`,
+          `${BASE_URL}/commander/tuitionFees?semester=${semester}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -45,7 +46,7 @@ const TuitionFees = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/tuitionFees?semester=${semester}`,
+          `${BASE_URL}/commander/tuitionFees?semester=${semester}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -87,7 +88,7 @@ const TuitionFees = () => {
     if (token) {
       try {
         const response = await axios.get(
-          `https://be-student-manager.onrender.com/commander/tuitionFee/pdf?semester=${semester}`,
+          `${BASE_URL}/commander/tuitionFee/pdf?semester=${semester}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -112,18 +113,16 @@ const TuitionFees = () => {
   };
 
   return (
-    <div className="flex">
-      <div>
-        <SideBar />
-      </div>
-      <div className="w-full ml-64">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      <SideBar />
+      <div className="flex-1 ml-64">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
               <li className="inline-flex items-center">
                 <Link
                   href="/admin"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 me-2.5"
@@ -154,7 +153,7 @@ const TuitionFees = () => {
                       d="m1 9 4-4-4-4"
                     />
                   </svg>
-                  <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
                     Học phí học viên
                   </div>
                 </div>
@@ -163,135 +162,205 @@ const TuitionFees = () => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold p-5 flex justify-between">
-              <div>HỌC PHÍ HỌC VIÊN</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+            <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+              <div className="text-gray-900 dark:text-white text-lg">
+                HỌC PHÍ HỌC VIÊN
+              </div>
               <button
-                class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                 onClick={(e) => handleExportFilePdf(e, semester)}
               >
-                Xuất
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="w-4 h-4 mr-2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                  />
+                </svg>
+                Xuất PDF
               </button>
             </div>
-            <div className="w-full pl-5 pb-5 pr-5">
-              <div className="w-full">
-                <form
-                  className="flex items-end"
-                  onSubmit={(e) => handleSubmit(e)}
-                >
-                  <div className="flex">
-                    <div>
-                      <label
-                        htmlFor="semester"
-                        className="block mb-1 text-sm font-medium dark:text-white"
-                      >
-                        Chọn học kỳ
-                      </label>
-                      <select
-                        id="semester"
-                        value={semester}
-                        onChange={(e) => setSemester(e.target.value)}
-                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                      >
-                        <option value="2020.1">2020.1</option>
-                        <option value="2020.2">2020.2</option>
-                        <option value="2021.1">2021.1</option>
-                        <option value="2021.2">2021.2</option>
-                        <option value="2022.1">2022.1</option>
-                        <option value="2022.2">2022.2</option>
-                        <option value="2023.1">2023.1</option>
-                        <option value="2023.2">2023.2</option>
-                        <option value="2024.1">2024.1</option>
-                        <option value="2024.2">2024.2</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            <div className="w-full p-5">
+              <form
+                className="flex items-end"
+                onSubmit={(e) => handleSubmit(e)}
+              >
+                <div className="flex">
+                  <div>
+                    <label
+                      htmlFor="semester"
+                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Tìm kiếm
-                    </button>
+                      Chọn học kỳ
+                    </label>
+                    <select
+                      id="semester"
+                      value={semester}
+                      onChange={(e) => setSemester(e.target.value)}
+                      className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
+                    >
+                      <option value="2020.1">2020.1</option>
+                      <option value="2020.2">2020.2</option>
+                      <option value="2021.1">2021.1</option>
+                      <option value="2021.2">2021.2</option>
+                      <option value="2022.1">2022.1</option>
+                      <option value="2022.2">2022.2</option>
+                      <option value="2023.1">2023.1</option>
+                      <option value="2023.2">2023.2</option>
+                      <option value="2024.1">2024.1</option>
+                      <option value="2024.2">2024.2</option>
+                    </select>
                   </div>
-                </form>
+                </div>
+                <div className="ml-4">
+                  <button
+                    type="submit"
+                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
+                  >
+                    Tìm kiếm
+                  </button>
+                </div>
+              </form>
+            </div>
+            {tuitionFees?.tuitionFees && tuitionFees.tuitionFees.length > 0 && (
+              <div className="w-full px-5 pb-3">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <div className="text-blue-800 dark:text-blue-200 font-semibold text-sm">
+                    Tổng học phí của học viên trong học kỳ{" "}
+                    <span className="font-bold">
+                      {tuitionFees?.tuitionFees[0]?.semester}
+                    </span>{" "}
+                    là:{" "}
+                    <span className="font-bold text-lg">
+                      {formatNumberWithCommas(tuitionFees?.totalAmountSum)}đ
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="w-full pl-5 pb-1 font-bold pr-5 text-sm  dark:text-white">
-              Tổng học phí của học viên trong học kỳ{" "}
-              {tuitionFees?.tuitionFees[0]?.semester} là:{" "}
-              {formatNumberWithCommas(tuitionFees?.totalAmountSum)}đ
-            </div>
-            <div className="w-full pl-5 pb-5 pr-5">
-              <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200"
-                    >
-                      Học kỳ
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200"
-                    >
-                      Họ và tên
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200"
-                    >
-                      Trường
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200"
-                    >
-                      Loại tiền phải đóng
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200"
-                    >
-                      Số tiền phải đóng
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e py-4 px-2 border-neutral-200 dark:border-white/10"
-                    >
-                      Trạng thái
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tuitionFees?.tuitionFees?.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="border-b border-neutral-200 dark:border-white/10"
-                    >
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.semester}
-                      </td>
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.fullName}
-                      </td>
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.university}
-                      </td>
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.content}
-                      </td>
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.totalAmount}đ
-                      </td>
-                      <td className="whitespace-nowrap py-4 px-2 font-medium border-e border-neutral-200 dark:border-white/10">
-                        {item.status}
-                      </td>
+            )}
+            <div className="w-full p-5">
+              <div className="overflow-x-auto">
+                <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        HỌC KỲ
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        HỌ VÀ TÊN
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        TRƯỜNG
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        LOẠI TIỀN
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        SỐ TIỀN
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        TRẠNG THÁI
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {tuitionFees?.tuitionFees &&
+                    tuitionFees.tuitionFees.length > 0 ? (
+                      tuitionFees.tuitionFees.map((item) => (
+                        <tr
+                          key={item._id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.semester}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.fullName}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.university}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.content}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center font-medium">
+                            {formatNumberWithCommas(item.totalAmount)}đ
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.status === "Đã đóng"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                  : item.status === "Chưa đóng"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="6"
+                          className="text-center py-8 text-gray-500 dark:text-gray-400"
+                        >
+                          <div className="flex flex-col items-center">
+                            <svg
+                              className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                              />
+                            </svg>
+                            <p className="text-lg font-medium">
+                              Không có dữ liệu
+                            </p>
+                            <p className="text-sm">
+                              Không tìm thấy thông tin học phí nào
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

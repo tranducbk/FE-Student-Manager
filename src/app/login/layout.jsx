@@ -1,3 +1,4 @@
+import { ThemeProvider } from "../../components/ThemeProvider";
 import "./globals.css";
 
 export const metadata = {
@@ -5,10 +6,12 @@ export const metadata = {
   description: "Đăng nhập vào hệ thống",
 };
 
-export default function RootLayout({ children }) {
+export default function LoginLayout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <ThemeProvider>
+      <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text">
+        {children}
+      </div>
+    </ThemeProvider>
   );
 }

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
+import { BASE_URL } from "@/configs";
 
 const CutRice = () => {
   const [cutRice, setCutRice] = useState(null);
@@ -38,7 +39,7 @@ const CutRice = () => {
       try {
         const decodedToken = jwtDecode(token);
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/student/${decodedToken.id}/cut-rice`,
+          `${BASE_URL}/student/${decodedToken.id}/cut-rice`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -61,7 +62,7 @@ const CutRice = () => {
       try {
         const decodedToken = jwtDecode(token);
         const response = await axios.put(
-          `https://be-student-manager.onrender.com/student/${decodedToken.id}/cut-rice/${cutRiceId}`,
+          `${BASE_URL}/student/${decodedToken.id}/cut-rice/${cutRiceId}`,
           formUpdateData,
           {
             headers: {
@@ -97,9 +98,8 @@ const CutRice = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-
         const response = await axios.post(
-          `https://be-student-manager.onrender.com/student/${decodedToken.id}/cut-rice`,
+          `${BASE_URL}/student/${decodedToken.id}/cut-rice`,
           formUpdateData,
           {
             headers: {
@@ -118,7 +118,7 @@ const CutRice = () => {
             "Đã xảy ra lỗi, vui lòng thử lại sau."
           );
         }
-        handleNotify("success", "Thành công!", "Thêm lịch cắt cơm thành công");
+        handleNotify("success", "Thành công!", "Tạo lịch cắt cơm thành công");
       } catch (error) {
         handleNotify("danger", "Lỗi!", error.response.data);
       }
@@ -136,14 +136,14 @@ const CutRice = () => {
         <div>
           <SideBar />
         </div>
-        <div className="w-full ml-64">
+        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                 <li className="inline-flex items-center">
                   <Link
                     href="/users"
-                    className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                    className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       className="w-3 h-3 me-2.5"
@@ -174,8 +174,8 @@ const CutRice = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
-                      Lịch cắt cơm
+                    <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
+                      Cắt cơm
                     </div>
                   </div>
                 </li>
@@ -183,1372 +183,407 @@ const CutRice = () => {
             </nav>
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-            <div className="bg-white rounded-lg w-full">
-              <div className="font-bold pt-5 pl-5 pb-5 pr-5 flex justify-between">
-                <div>LỊCH CẮT CƠM CÁ NHÂN</div>
-                {cutRice?.length === 0 ? (
-                  <button
-                    onClick={() => setShowForm(true)}
-                    class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
-                  >
-                    Thêm
-                  </button>
-                ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+              {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-20">
+                  <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+                  <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white pr-12">
+                        Chỉnh sửa lịch cắt cơm
+                      </h2>
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <svg
+                          className="h-6 w-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                      <form
+                        onSubmit={(e) => handleUpdate(e, cutRice?._id)}
+                        className="p-6"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {Object.entries(formUpdateData).map(
+                            ([day, meals]) => (
+                              <div
+                                key={day}
+                                className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
+                              >
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 capitalize">
+                                  {day === "monday"
+                                    ? "Thứ 2"
+                                    : day === "tuesday"
+                                    ? "Thứ 3"
+                                    : day === "wednesday"
+                                    ? "Thứ 4"
+                                    : day === "thursday"
+                                    ? "Thứ 5"
+                                    : day === "friday"
+                                    ? "Thứ 6"
+                                    : day === "saturday"
+                                    ? "Thứ 7"
+                                    : "Chủ nhật"}
+                                </h3>
+                                <div className="space-y-3">
+                                  {Object.entries(meals).map(
+                                    ([meal, checked]) => (
+                                      <label
+                                        key={meal}
+                                        className="flex items-center space-x-3"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={(e) => {
+                                            setFormUpdateData((prev) => ({
+                                              ...prev,
+                                              [day]: {
+                                                ...prev[day],
+                                                [meal]: e.target.checked,
+                                              },
+                                            }));
+                                          }}
+                                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        />
+                                        <span className="text-gray-900 dark:text-white">
+                                          {meal === "breakfast"
+                                            ? "Bữa sáng"
+                                            : meal === "lunch"
+                                            ? "Bữa trưa"
+                                            : "Bữa tối"}
+                                        </span>
+                                      </label>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <div className="flex justify-end mt-6">
+                          <button
+                            type="button"
+                            className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
+                            onClick={() => setShowModal(false)}
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          >
+                            Cập nhật
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showForm && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-20">
+                  <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+                  <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white pr-12">
+                        Tạo lịch cắt cơm
+                      </h2>
+                      <button
+                        onClick={() => setShowForm(false)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <svg
+                          className="h-6 w-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+                      <form onSubmit={handleCreate} className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {Object.entries(formUpdateData).map(
+                            ([day, meals]) => (
+                              <div
+                                key={day}
+                                className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
+                              >
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 capitalize">
+                                  {day === "monday"
+                                    ? "Thứ 2"
+                                    : day === "tuesday"
+                                    ? "Thứ 3"
+                                    : day === "wednesday"
+                                    ? "Thứ 4"
+                                    : day === "thursday"
+                                    ? "Thứ 5"
+                                    : day === "friday"
+                                    ? "Thứ 6"
+                                    : day === "saturday"
+                                    ? "Thứ 7"
+                                    : "Chủ nhật"}
+                                </h3>
+                                <div className="space-y-3">
+                                  {Object.entries(meals).map(
+                                    ([meal, checked]) => (
+                                      <label
+                                        key={meal}
+                                        className="flex items-center space-x-3"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={(e) => {
+                                            setFormUpdateData((prev) => ({
+                                              ...prev,
+                                              [day]: {
+                                                ...prev[day],
+                                                [meal]: e.target.checked,
+                                              },
+                                            }));
+                                          }}
+                                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        />
+                                        <span className="text-gray-900 dark:text-white">
+                                          {meal === "breakfast"
+                                            ? "Bữa sáng"
+                                            : meal === "lunch"
+                                            ? "Bữa trưa"
+                                            : "Bữa tối"}
+                                        </span>
+                                      </label>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <div className="flex justify-end mt-6">
+                          <button
+                            type="button"
+                            className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
+                            onClick={() => setShowForm(false)}
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          >
+                            Tạo
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white text-lg">
+                  LỊCH CẮT CƠM
+                </div>
+                <div className="flex space-x-3">
                   <button
                     onClick={() => setShowModal(true)}
-                    class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
-                    Sửa
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Chỉnh sửa
                   </button>
-                )}
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Thêm
+                  </button>
+                </div>
               </div>
-              <div className="w-full pl-5 pb-5 pr-5">
-                <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                  <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-2"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 2</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 3</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 4</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 5</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 6</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 7</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Chủ nhật</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cutRice?.map((item) => (
-                      <tr
-                        key={item._id}
-                        className="border-b border-neutral-200 dark:border-white/10"
-                      >
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.monday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.monday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.monday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.tuesday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.tuesday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.tuesday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.wednesday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.wednesday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.wednesday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.thursday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.thursday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.thursday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.friday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.friday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.friday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.saturday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.saturday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.saturday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.sunday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.sunday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.sunday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
+              <div className="w-full pl-6 pb-6 pr-6 mt-4">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Thứ
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Bữa sáng
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Bữa trưa
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          Bữa tối
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800">
+                      {cutRice && (
+                        <>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 2
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.monday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.monday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.monday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 3
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.tuesday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.tuesday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.tuesday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 4
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.wednesday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.wednesday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.wednesday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 5
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.thursday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.thursday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.thursday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 6
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.friday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.friday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.friday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Thứ 7
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.saturday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.saturday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.saturday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Chủ nhật
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.sunday?.breakfast ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.sunday?.lunch ? "Có" : "Không"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {cutRice.sunday?.dinner ? "Có" : "Không"}
+                            </td>
+                          </tr>
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              {showModal ? (
-                <div className="bg-slate-400 z-10 opacity-50 absolute top-0 left-0 right-0 bottom-0"></div>
-              ) : (
-                ""
-              )}
-              {showModal ? (
-                <div
-                  id="authentication-modal"
-                  tabIndex="-1"
-                  aria-hidden="true"
-                  onClick={handleAuthenticationModalClick}
-                  className="overflow-y-auto overflow-x-hidden absolute top-0 right-0 left-0 z-10 justify-center items-center max-h-full"
-                >
-                  <div className="bg-white rounded-lg relative mt-32 mx-auto max-w-xl max-h-full">
-                    <div className="relative z-20 bg-white rounded-lg shadow dark:bg-gray-700">
-                      <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
-                        <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                          THAY ĐỔI LỊCH CẮT CƠM
-                        </h3>
-                        <button
-                          type="button"
-                          onClick={() => setShowModal(false)}
-                          className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                          data-modal-hide="authentication-modal"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 14 14"
-                          >
-                            <path
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                            />
-                          </svg>
-                          <span className="sr-only">Close modal</span>
-                        </button>
-                      </div>
-
-                      <div className="w-full max-w-xl p-5 mb-5">
-                        <div className="w-full">
-                          <form
-                            onSubmit={(e) =>
-                              handleUpdate(
-                                e,
-                                cutRice?.map((item) => item._id)
-                              )
-                            }
-                          >
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 2</div>
-                              <div>
-                                <label
-                                  htmlFor="monday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="monday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="monday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 3</div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 4</div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 5</div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 6</div>
-                              <div>
-                                <label
-                                  htmlFor="friday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="friday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="friday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 7</div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-6 w-full justify-around">
-                              <div className="w-1/4">Chủ nhật</div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="w-full flex justify-center">
-                              <div>
-                                <button
-                                  type="submit"
-                                  className="bg-transparent hover:bg-blue-700 font-semibold hover:text-white py-1 px-4 border border-custom hover:border-transparent rounded"
-                                >
-                                  Cập nhật
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                ""
-              )}
-              {showForm ? (
-                <div className="bg-slate-400 z-10 opacity-50 absolute top-0 left-0 right-0 bottom-0"></div>
-              ) : (
-                ""
-              )}
-              {showForm ? (
-                <div
-                  id="authentication-modal1"
-                  tabIndex="-1"
-                  aria-hidden="true"
-                  onClick={handleAuthenticationModalClick}
-                  className="overflow-y-auto overflow-x-hidden absolute top-0 right-0 left-0 z-10 justify-center items-center max-h-full"
-                >
-                  <div className="bg-white rounded-lg relative mt-32 mx-auto max-w-xl max-h-full">
-                    <div className="relative z-20 bg-white rounded-lg shadow dark:bg-gray-700">
-                      <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
-                        <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                          THÊM LỊCH CẮT CƠM
-                        </h3>
-                        <button
-                          type="button"
-                          onClick={() => setShowForm(false)}
-                          className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                          data-modal-hide="authentication-modal"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 14 14"
-                          >
-                            <path
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                            />
-                          </svg>
-                          <span className="sr-only">Close modal</span>
-                        </button>
-                      </div>
-
-                      <div className="w-full max-w-xl p-5 mb-5">
-                        <div className="w-full">
-                          <form onSubmit={(e) => handleCreate(e)}>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 2</div>
-                              <div>
-                                <label
-                                  htmlFor="monday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="monday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="monday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="monday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.monday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        monday: {
-                                          ...prevState.monday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 3</div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="tuesday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="tuesday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.tuesday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        tuesday: {
-                                          ...prevState.tuesday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 4</div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="wednesday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="wednesday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.wednesday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        wednesday: {
-                                          ...prevState.wednesday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 5</div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="thursday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="thursday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.thursday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        thursday: {
-                                          ...prevState.thursday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 6</div>
-                              <div>
-                                <label
-                                  htmlFor="friday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="friday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="friday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="friday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.friday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        friday: {
-                                          ...prevState.friday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-4 w-full justify-around">
-                              <div className="w-1/4">Thứ 7</div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="saturday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="saturday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.saturday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        saturday: {
-                                          ...prevState.saturday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="flex mb-6 w-full justify-around">
-                              <div className="w-1/4">Chủ nhật</div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-breakfast"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-breakfast"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.breakfast}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          breakfast: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Sáng</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-lunch"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-lunch"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.lunch}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          lunch: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Trưa</span>
-                                </label>
-                              </div>
-                              <div>
-                                <label
-                                  htmlFor="sunday-dinner"
-                                  className="flex items-center"
-                                >
-                                  <input
-                                    id="sunday-dinner"
-                                    type="checkbox"
-                                    checked={formUpdateData.sunday.dinner}
-                                    onChange={(e) =>
-                                      setFormUpdateData((prevState) => ({
-                                        ...prevState,
-                                        sunday: {
-                                          ...prevState.sunday,
-                                          dinner: e.target.checked,
-                                        },
-                                      }))
-                                    }
-                                    className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
-                                  />
-                                  <span className="ml-2">Tối</span>
-                                </label>
-                              </div>
-                            </div>
-                            <div className="w-full flex justify-center">
-                              <div>
-                                <button
-                                  type="submit"
-                                  className="bg-transparent hover:bg-blue-700 font-semibold hover:text-white py-1 px-4 border border-custom hover:border-transparent rounded"
-                                >
-                                  Thêm
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                ""
-              )}
             </div>
           </div>
         </div>

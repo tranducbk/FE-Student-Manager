@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import { BASE_URL } from "@/configs";
 
 const VacationSchedule = () => {
   const [vacationSchedule, setVacationSchedule] = useState(null);
@@ -17,7 +18,7 @@ const VacationSchedule = () => {
       const decodedToken = jwtDecode(token);
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/vacationSchedule/${decodedToken.id}`,
+          `${BASE_URL}/commander/vacationSchedule/${decodedToken.id}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -41,14 +42,14 @@ const VacationSchedule = () => {
       <div>
         <SideBar />
       </div>
-      <div className="w-full ml-64">
+      <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
               <li className="inline-flex items-center">
                 <Link
                   href="/users"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 me-2.5"
@@ -79,7 +80,7 @@ const VacationSchedule = () => {
                       d="m1 9 4-4-4-4"
                     />
                   </svg>
-                  <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                     Tranh thủ
                   </div>
                 </div>
@@ -88,69 +89,75 @@ const VacationSchedule = () => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold pt-5 pl-5 pb-5">TRANH THỦ CÁ NHÂN</div>
-            <div className="w-full pl-5 pb-5 pr-5">
-              <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-2 py-1 dark:border-white/10"
-                    >
-                      STT
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Lý do
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Địa chỉ
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Thời gian
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Ngày
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vacationSchedule?.map((item, index) => (
-                    <tr
-                      key={item._id}
-                      className="border-b border-neutral-200 dark:border-white/10"
-                    >
-                      <td className="whitespace-nowrap border-e border-neutral-200 font-medium dark:border-white/10">
-                        {index + 1}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.reason}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.address}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.time}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {dayjs(item.dayoff).format("DD/MM/YYYY")}
-                      </td>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+            <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+              <div className="text-gray-900 dark:text-white text-lg">
+                TRANH THỦ CÁ NHÂN
+              </div>
+            </div>
+            <div className="w-full pl-6 pb-6 pr-6 mt-4">
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                  <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        STT
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        Ngày tranh thủ
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        Lý do
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        Địa điểm
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        Thời gian về
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800">
+                    {vacationSchedule?.map((item, index) => (
+                      <tr
+                        key={item._id}
+                        className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      >
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {index + 1}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {dayjs(item.dayoff).format("DD/MM/YYYY")}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.reason}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.address}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {dayjs(item.timeBack).format("DD/MM/YYYY")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

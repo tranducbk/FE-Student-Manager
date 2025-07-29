@@ -11,6 +11,7 @@ import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
+import { BASE_URL } from "@/configs";
 const ListGuard = () => {
   const router = useRouter();
   const [listGuard, setListGuard] = useState([]);
@@ -46,15 +47,11 @@ const ListGuard = () => {
 
     if (token) {
       try {
-        await axios.put(
-          `https://be-student-manager.onrender.com/user/guard/${guardId}`,
-          editFormData,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        await axios.put(`${BASE_URL}/user/guard/${guardId}`, editFormData, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
         handleNotify(
           "success",
           "Thành công!",
@@ -73,15 +70,11 @@ const ListGuard = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.post(
-        `https://be-student-manager.onrender.com/user/guard`,
-        addFormData,
-        {
-          headers: {
-            token: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${BASE_URL}/user/guard`, addFormData, {
+        headers: {
+          token: `Bearer ${token}`,
+        },
+      });
       handleNotify("success", "Thành công!", "Thêm ca gác đêm thành công");
       setListGuard([...listGuard, response.data]);
       setShowFormAdd(false);
@@ -108,7 +101,7 @@ const ListGuard = () => {
 
     if (token) {
       axios
-        .delete(`https://be-student-manager.onrender.com/user/guard/${date}`, {
+        .delete(`${BASE_URL}/user/guard/${date}`, {
           headers: {
             token: `Bearer ${token}`,
           },
@@ -136,7 +129,7 @@ const ListGuard = () => {
 
     if (token) {
       try {
-        const res = await axios.get(`https://be-student-manager.onrender.com/user/listGuard`, {
+        const res = await axios.get(`${BASE_URL}/user/listGuard`, {
           headers: {
             token: `Bearer ${token}`,
           },
@@ -156,14 +149,11 @@ const ListGuard = () => {
 
     if (token) {
       try {
-        const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/listGuard?date=${date}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/user/listGuard?date=${date}`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         if (res.status === 404) setListGuard([]);
 
@@ -185,14 +175,14 @@ const ListGuard = () => {
         <div>
           <SideBar />
         </div>
-        <div className="w-full ml-64">
+        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                 <li className="inline-flex items-center">
                   <Link
                     href="/admin"
-                    className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                    className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       className="w-3 h-3 me-2.5"
@@ -223,7 +213,7 @@ const ListGuard = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                    <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                       Danh sách gác đêm
                     </div>
                   </div>
@@ -271,7 +261,7 @@ const ListGuard = () => {
                       </label>
                       <DatePicker
                         id="dayGuard1"
-                        dateFormat="yyyy-MM-dd"
+                        dateFormat="dd/MM/yyyy"
                         selected={editFormData.dayGuard}
                         onChange={(date) =>
                           setEditFormData({
@@ -280,7 +270,7 @@ const ListGuard = () => {
                           })
                         }
                         className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholderText="Năm-Tháng-Ngày"
+                        placeholderText="Ngày/Tháng/Năm"
                         wrapperClassName="w-full"
                       />
                     </div>
@@ -514,26 +504,42 @@ const ListGuard = () => {
                 </div>
               </div>
             )}
-            <div className="bg-white rounded-lg w-full">
-              <div className="font-bold p-5 flex justify-between">
-                <div>LỊCH GÁC ĐÊM</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+              <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white text-lg">
+                  LỊCH GÁC ĐÊM
+                </div>
                 <button
                   onClick={() => setShowFormAdd(true)}
-                  className="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                 >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
                   Thêm
                 </button>
               </div>
               <div className="w-full pl-5 pb-5 pr-5">
                 <form
-                  className="flex items-end"
+                  className="flex items-end mb-4"
                   onSubmit={(e) => handleSubmit(e, date)}
                 >
                   <div className="flex">
                     <div className="">
                       <label
                         htmlFor="date"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn ngày
                       </label>
@@ -542,9 +548,9 @@ const ListGuard = () => {
                         id="date"
                         selected={date}
                         onChange={(date) => setDate(date)}
-                        dateFormat="yyyy-MM-dd"
+                        dateFormat="dd/MM/yyyy"
                         className="bg-gray-50 border z-20 w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholderText="Năm-Tháng-Ngày"
+                        placeholderText="Ngày/Tháng/Năm"
                         wrapperClassName="w-56"
                       />
                     </div>
@@ -552,115 +558,154 @@ const ListGuard = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
                   </div>
                 </form>
-                <table className="table-auto w-full mt-4 divide-y border border-gray-200 divide-gray-200 overflow-x-auto">
-                  <thead className="bg-sky-100">
-                    <tr className="border border-gray-200">
-                      <th
-                        scope="col"
-                        className="border py-3 text-sm uppercase "
-                      >
-                        Ngày gác
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm uppercase"
-                      >
-                        Hỏi
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 border py-3 text-sm uppercase"
-                      >
-                        Đáp
-                      </th>
-                      <th scope="col" className="border-e border-neutral-200">
-                        Tùy chọn
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {listGuard?.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="hover:cursor-pointer hover:bg-gray-50"
-                      >
-                        <td
-                          onClick={() => handleRowClick(item.dayGuard)}
-                          className="border py-4 text-center"
+                <div className="overflow-x-auto">
+                  <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr className="border border-gray-200 dark:border-gray-600">
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                         >
-                          <div className="text-sm ">
-                            {dayjs(item?.dayGuard).format("DD/MM/YYYY")}
-                          </div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item.dayGuard)}
-                          className="px-6 border py-4 text-center"
+                          NGÀY GÁC
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                         >
-                          <div className="text-sm ">
-                            {item?.guardPassword?.question}
-                          </div>
-                        </td>
-                        <td
-                          onClick={() => handleRowClick(item.dayGuard)}
-                          className="px-6 border py-4 text-center"
+                          HỎI
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                         >
-                          <div className="text-sm ">
-                            {item?.guardPassword?.answer}
-                          </div>
-                        </td>
-                        <td className="justify-center text-sm flex">
-                          <button
-                            data-modal-target="authentication-modal"
-                            data-modal-toggle="authentication-modal"
-                            type="button"
-                            onClick={() => handleShowFormUpdate(item._id)}
-                            className="text-indigo-600 hover:text-indigo-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item?.dayGuard)}
-                            className="text-red-600 hover:text-red-900 mt-2 mb-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth="1.5"
-                              stroke="currentColor"
-                              className="w-6 h-6"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                              />
-                            </svg>
-                          </button>
-                        </td>
+                          ĐÁP
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          TÙY CHỌN
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {listGuard && listGuard.length > 0 ? (
+                        listGuard.map((item, index) => (
+                          <tr
+                            key={index}
+                            className="hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <td
+                              onClick={() => handleRowClick(item.dayGuard)}
+                              className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                            >
+                              <div className="text-sm text-gray-900 dark:text-white whitespace-nowrap">
+                                {dayjs(item?.dayGuard).format("DD/MM/YYYY")}
+                              </div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item.dayGuard)}
+                              className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                            >
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {item?.guardPassword?.question}
+                              </div>
+                            </td>
+                            <td
+                              onClick={() => handleRowClick(item.dayGuard)}
+                              className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                            >
+                              <div className="text-sm text-gray-900 dark:text-white">
+                                {item?.guardPassword?.answer}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <div className="flex justify-center space-x-2">
+                                <button
+                                  data-modal-target="authentication-modal"
+                                  data-modal-toggle="authentication-modal"
+                                  type="button"
+                                  onClick={() => handleShowFormUpdate(item._id)}
+                                  className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-6 h-6"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(item?.dayGuard)}
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="w-6 h-6"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="4"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có dữ liệu
+                              </p>
+                              <p className="text-sm">
+                                Không tìm thấy lịch gác đêm nào
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -704,7 +749,7 @@ const ListGuard = () => {
                       </label>
                       <DatePicker
                         id="dayGuard"
-                        dateFormat="yyyy-MM-dd"
+                        dateFormat="dd/MM/yyyy"
                         selected={addFormData.dayGuard}
                         onChange={(date) =>
                           setAddFormData({
@@ -714,7 +759,7 @@ const ListGuard = () => {
                         }
                         required
                         className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholderText="Năm-Tháng-Ngày"
+                        placeholderText="Ngày/Tháng/Năm"
                         wrapperClassName="w-full"
                       />
                     </div>

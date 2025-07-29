@@ -9,6 +9,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import SideBar from "@/components/sidebar";
 
+import { BASE_URL } from "@/configs";
 const ListGuardDetail = ({ params }) => {
   const [listGuardDetail, setListGuardDetail] = useState([]);
 
@@ -32,14 +33,11 @@ const ListGuardDetail = ({ params }) => {
 
     if (token) {
       try {
-        const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/guard/${params.date}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${BASE_URL}/user/guard/${params.date}`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
         console.log(res.data);
         setListGuardDetail(res.data);
       } catch (error) {
@@ -53,14 +51,14 @@ const ListGuardDetail = ({ params }) => {
       <div>
         <SideBar />
       </div>
-      <div className="w-full ml-64">
+      <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
               <li className="inline-flex items-center">
                 <Link
                   href="/admin"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 me-2.5"
@@ -77,7 +75,7 @@ const ListGuardDetail = ({ params }) => {
               <li className="inline-flex items-center">
                 <Link
                   href="/admin/list-guard"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="rtl:rotate-180 w-3 h-3 mx-1"
@@ -114,7 +112,7 @@ const ListGuardDetail = ({ params }) => {
                       d="m1 9 4-4-4-4"
                     />
                   </svg>
-                  <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                     Chi tiết
                   </div>
                 </div>
@@ -123,100 +121,145 @@ const ListGuardDetail = ({ params }) => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold pt-5 pl-5 pb-5">
-              CHI TIẾT DANH SÁCH GÁC ĐÊM
-            </div>
-            <div className="w-full pl-5 pb-5 pr-5">
-              <div className="text-sm flex font-medium">
-                Ngày:{" "}
-                <div className="pl-1 font-bold">
-                  {dayjs(
-                    listGuardDetail ? listGuardDetail[0]?.dayGuard : ""
-                  ).format("DD/MM/YYYY")}
-                </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+            <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+              <div className="text-gray-900 dark:text-white text-lg">
+                CHI TIẾT DANH SÁCH GÁC ĐÊM
               </div>
-
-              <div className="flex text-sm">
-                <div className="text-sm font-medium">Mật khẩu: </div>
-                <div className="flex font-medium pl-8">
-                  Hỏi:{" "}
-                  <div className="pl-1 font-bold">
-                    {listGuardDetail
-                      ? listGuardDetail[0]?.guardPassword?.question
-                      : ""}
-                  </div>
+            </div>
+            <div className="w-full pt-5 pl-5 pb-5 pr-5">
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="text-sm flex items-center mb-2">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Ngày:
+                  </span>
+                  <span className="pl-2 font-bold text-blue-800 dark:text-blue-200">
+                    {dayjs(
+                      listGuardDetail ? listGuardDetail[0]?.dayGuard : ""
+                    ).format("DD/MM/YYYY")}
+                  </span>
                 </div>
-                <div className="pl-8">
-                  <div className="flex font-medium">
-                    Đáp:{" "}
-                    <div className="pl-1 font-bold">
+
+                <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Mật khẩu:
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Hỏi:
+                    </span>
+                    <span className="pl-1 font-bold text-blue-800 dark:text-blue-200">
+                      {listGuardDetail
+                        ? listGuardDetail[0]?.guardPassword?.question
+                        : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                      Đáp:
+                    </span>
+                    <span className="pl-1 font-bold text-blue-800 dark:text-blue-200">
                       {listGuardDetail
                         ? listGuardDetail[0]?.guardPassword?.answer
                         : ""}
-                    </div>
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col">
-                <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
-                  <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                    <div className="overflow-hidden">
-                      <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                        <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                          <tr>
-                            <th
-                              scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
+              <div className="overflow-x-auto">
+                <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr className="border border-gray-200 dark:border-gray-600">
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        THỜI GIAN
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        VỌNG 1 (CẦU THANG TÒA S1)
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        VỌNG 2 (ĐỐI DIỆN TÒA S2)
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        VỌNG 3 (ĐẰNG SAU TÒA S3)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {listGuardDetail && listGuardDetail[0]?.location1 ? (
+                      listGuardDetail[0].location1.map((item, index) => (
+                        <tr
+                          key={listGuardDetail[0]._id + index}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                            <div className="text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">
+                              {time[index]}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {item}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {listGuardDetail[0].location2[index]}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {listGuardDetail[0].location3[index]}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center py-8 text-gray-500 dark:text-gray-400"
+                        >
+                          <div className="flex flex-col items-center">
+                            <svg
+                              className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
                             >
-                              Thời gian
-                            </th>
-                            <th
-                              scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                            >
-                              Vọng 1 (Cầu thang tòa S1)
-                            </th>
-                            <th
-                              scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                            >
-                              Vọng 2 (Đối diện tòa S2)
-                            </th>
-                            <th scope="col" className="px-6 py-4">
-                              Vọng 3 (Đằng sau tòa S3)
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {listGuardDetail
-                            ? listGuardDetail[0]?.location1?.map(
-                                (item, index) => (
-                                  <tr
-                                    key={listGuardDetail[0]._id + Math.random()}
-                                    className="border-b border-neutral-200 dark:border-white/10"
-                                  >
-                                    <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
-                                      {time[index]}
-                                    </td>
-                                    <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                                      {item}
-                                    </td>
-                                    <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                                      {listGuardDetail[0].location2[index]}
-                                    </td>
-                                    <td className="whitespace-nowrap font-medium px-6 py-4">
-                                      {listGuardDetail[0].location3[index]}
-                                    </td>
-                                  </tr>
-                                )
-                              )
-                            : ""}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              />
+                            </svg>
+                            <p className="text-lg font-medium">
+                              Không có dữ liệu
+                            </p>
+                            <p className="text-sm">
+                              Không tìm thấy thông tin gác đêm
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

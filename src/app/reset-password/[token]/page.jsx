@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
-
+import { BASE_URL } from "@/configs";
 const ResetPassword = ({ params }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,24 +19,18 @@ const ResetPassword = ({ params }) => {
         try {
           const decodedToken = jwtDecode(token);
           if (decodedToken.admin === true) {
-            await axios.get(
-              `https://be-student-manager.onrender.com/commander/${decodedToken.id}`,
-              {
-                headers: {
-                  token: `Bearer ${token}`,
-                },
-              }
-            );
+            await axios.get(`${BASE_URL}/commander/${decodedToken.id}`, {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            });
             router.push("/admin");
           } else {
-            await axios.get(
-              `https://be-student-manager.onrender.com/student/${decodedToken.id}`,
-              {
-                headers: {
-                  token: `Bearer ${token}`,
-                },
-              }
-            );
+            await axios.get(`${BASE_URL}/student/${decodedToken.id}`, {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            });
             router.push("/users");
           }
         } catch (error) {
@@ -51,13 +45,10 @@ const ResetPassword = ({ params }) => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        `https://be-student-manager.onrender.com/user/reset-password/${params.token}`,
-        {
-          newPassword,
-          confirmPassword,
-        }
-      );
+      await axios.post(`${BASE_URL}/user/reset-password/${params.token}`, {
+        newPassword,
+        confirmPassword,
+      });
       handleNotify("success", "Thành công!", "Đặt lại mật khẩu thành công");
       router.push("/login");
     } catch (error) {
@@ -76,7 +67,7 @@ const ResetPassword = ({ params }) => {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             className="mx-auto h-20 w-auto"
-            src="http://localhost:3000/logo.png"
+            src="/logo.png"
             alt="Hệ học viên X"
           />
           <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight">

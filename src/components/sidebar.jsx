@@ -2,13 +2,15 @@
 
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import "core-js/stable/atob";
 import axios from "axios";
 import Link from "next/link";
+import { BASE_URL } from "@/configs";
 
 const SideBar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [userDetail, setUserDetail] = useState(null);
   const [token, setToken] = useState(null);
 
@@ -25,7 +27,7 @@ const SideBar = () => {
         setToken(decodedToken);
         if (decodedToken.admin === true) {
           const res = await axios.get(
-            `https://be-student-manager.onrender.com/commander/${decodedToken.id}`,
+            `${BASE_URL}/commander/${decodedToken.id}`,
             {
               headers: {
                 token: `Bearer ${token}`,
@@ -36,7 +38,7 @@ const SideBar = () => {
           setUserDetail(res.data);
         } else {
           const res = await axios.get(
-            `https://be-student-manager.onrender.com/student/${decodedToken.id}`,
+            `${BASE_URL}/student/${decodedToken.id}`,
             {
               headers: {
                 token: `Bearer ${token}`,
@@ -53,12 +55,35 @@ const SideBar = () => {
     }
   };
 
+  // Function to check if a link is active
+  const isActive = (href) => {
+    if (href === "/admin" || href === "/users") {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  };
+
+  // Function to get link classes based on active state
+  const getLinkClasses = (href) => {
+    const baseClasses =
+      "flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm rounded-lg transition-colors duration-200";
+    const activeClasses =
+      "bg-gray-100 text-blue-600 dark:bg-gray-900 dark:text-white";
+    const inactiveClasses =
+      "hover:text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600";
+
+    return `${baseClasses} ${isActive(href) ? activeClasses : inactiveClasses}`;
+  };
+
   return (
     <div>
       {token?.admin ? (
         <div className="h-full fixed shadow-xl">
           <div className="h-full bg-white hidden pt-20 hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform z-40 w-64 border-gray-200 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500 dark:bg-gray-800 dark:border-gray-700">
-            <Link href={`/admin/${token.id}`} className="px-6 flex">
+            {/* <Link
+              href={`/users/${token ? token.id : ""}`}
+              className="px-6 flex"
+            >
               <img
                 className="mr-3 h-12 rounded-full"
                 src={userDetail?.avatar}
@@ -68,17 +93,14 @@ const SideBar = () => {
                 <div className="font-bold">{userDetail?.fullName}</div>
                 <div>Quản trị viên</div>
               </div>
-            </Link>
+            </Link> */}
             <nav
               className="hs-accordion-group p-4 w-full flex flex-col flex-wrap"
               data-hs-accordion-always-open
             >
               <ul className="space-y-1.5">
                 <li>
-                  <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:bg-gray-900 dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                    href="/admin"
-                  >
+                  <Link className={getLinkClasses("/admin")} href="/admin">
                     <svg
                       className="size-4"
                       xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +122,7 @@ const SideBar = () => {
 
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/commander-duty-schedule")}
                     href="/admin/commander-duty-schedule"
                   >
                     <svg
@@ -122,7 +144,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/list-user")}
                     href="/admin/list-user"
                   >
                     <svg
@@ -145,7 +167,7 @@ const SideBar = () => {
 
                 <li className="relative group">
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/time-table")}
                     href="/admin/time-table"
                   >
                     <svg
@@ -164,8 +186,8 @@ const SideBar = () => {
                     </svg>
                     Thông tin học tập
                   </Link>
-                  <ul className="absolute hidden w-full font-bold text-gray-600 bg-white rounded-lg border-1 shadow-lg z-20 group-hover:block">
-                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600">
+                  <ul className="absolute hidden w-full font-bold text-gray-600 bg-white rounded-lg border-1 shadow-lg z-20 group-hover:block overflow-hidden">
+                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600 first:rounded-t-lg">
                       <Link href="/admin/time-table" className="block text-sm">
                         Lịch học
                       </Link>
@@ -178,7 +200,7 @@ const SideBar = () => {
                         Kết quả học tập
                       </Link>
                     </li>
-                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600">
+                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600 last:rounded-b-lg">
                       <Link
                         href="/admin/tuition-fees"
                         className="block text-sm"
@@ -191,7 +213,7 @@ const SideBar = () => {
 
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/vacation-schedules")}
                     href="/admin/vacation-schedules"
                   >
                     <svg
@@ -214,7 +236,7 @@ const SideBar = () => {
 
                 <li className="relative group">
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/violation")}
                     href="/admin/violation"
                   >
                     <svg
@@ -233,13 +255,13 @@ const SideBar = () => {
                     </svg>
                     Rèn luyện học viên
                   </Link>
-                  <ul className="absolute hidden w-full font-bold text-gray-600 bg-white rounded-lg border-1 shadow-lg z-20 group-hover:block">
-                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600">
+                  <ul className="absolute hidden w-full font-bold text-gray-600 bg-white rounded-lg border-1 shadow-lg z-20 group-hover:block overflow-hidden">
+                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600 first:rounded-t-lg">
                       <Link href="/admin/violation" className="block text-sm">
                         Lỗi vi phạm
                       </Link>
                     </li>
-                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600">
+                    <li className="hover:bg-gray-100 py-2 px-4 hover:text-blue-600 last:rounded-b-lg">
                       <Link
                         href="/admin/physical-results"
                         className="block text-sm"
@@ -252,7 +274,7 @@ const SideBar = () => {
 
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/list-guard")}
                     href="/admin/list-guard"
                   >
                     <svg
@@ -276,7 +298,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/list-help-cooking")}
                     href="/admin/list-help-cooking"
                   >
                     <svg
@@ -300,7 +322,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/cut-rice")}
                     href="/admin/cut-rice"
                   >
                     <svg
@@ -322,7 +344,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/regulatory-documents")}
                     href="/admin/regulatory-documents"
                   >
                     <svg
@@ -344,7 +366,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/achievement")}
                     href="/admin/achievement"
                   >
                     <svg
@@ -366,7 +388,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/admin/statistical")}
                     href="/admin/statistical"
                   >
                     <svg
@@ -393,7 +415,7 @@ const SideBar = () => {
       ) : (
         <div className="h-screen fixed shadow-xl">
           <div className="h-screen hidden pt-20 hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform z-40 w-64 bg-white border-gray-200 pb-10 overflow-y-auto lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-500 dark:bg-gray-800 dark:border-gray-700">
-            <Link
+            {/* <Link
               href={`/users/${token ? token.id : ""}`}
               className="px-6 flex"
             >
@@ -406,17 +428,14 @@ const SideBar = () => {
                 <div className="font-bold">{userDetail?.fullName}</div>
                 <div>Học viên</div>
               </div>
-            </Link>
+            </Link> */}
             <nav
               className="hs-accordion-group p-4 w-full flex flex-col flex-wrap"
               data-hs-accordion-always-open
             >
               <ul className="space-y-1.5">
                 <li>
-                  <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 bg-gray-100 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:bg-gray-900 dark:text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                    href="/users"
-                  >
+                  <Link className={getLinkClasses("/users")} href="/users">
                     <svg
                       className="size-4"
                       xmlns="http://www.w3.org/2000/svg"
@@ -438,7 +457,7 @@ const SideBar = () => {
 
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/learning-information")}
                     href="/users/learning-information"
                   >
                     <svg
@@ -460,7 +479,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/cut-rice")}
                     href="/users/cut-rice"
                   >
                     <svg
@@ -482,7 +501,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/phisical-result")}
                     href="/users/phisical-result"
                   >
                     <svg
@@ -505,7 +524,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/vacation-schedule")}
                     href="/users/vacation-schedule"
                   >
                     <svg
@@ -527,7 +546,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/help-cooking")}
                     href="/users/help-cooking"
                   >
                     <svg
@@ -549,7 +568,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/commander-duty-schedule")}
                     href="/users/commander-duty-schedule"
                   >
                     <svg
@@ -571,7 +590,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/guard")}
                     href="/users/guard"
                   >
                     <svg
@@ -593,7 +612,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/regulatory-regime")}
                     href="/users/regulatory-regime"
                   >
                     <svg
@@ -615,7 +634,7 @@ const SideBar = () => {
                 </li>
                 <li>
                   <Link
-                    className="flex items-center gap-x-3.5 py-2 px-2.5 font-bold text-sm hover:text-blue-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 dark:text-slate-400 dark:hover:text-slate-300 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className={getLinkClasses("/users/achievement")}
                     href="/users/achievement"
                   >
                     <svg

@@ -6,6 +6,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BASE_URL } from "@/configs";
 
 const Guard = () => {
   const [guard, setGuard] = useState(null);
@@ -27,9 +28,7 @@ const Guard = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/guard?year=${year}&month=${parseInt(
-            month
-          )}`,
+          `${BASE_URL}/user/guard?year=${year}&month=${parseInt(month)}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -54,9 +53,7 @@ const Guard = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/guard?year=${year}&month=${parseInt(
-            month
-          )}`,
+          `${BASE_URL}/user/guard?year=${year}&month=${parseInt(month)}`,
           {
             headers: {
               token: `Bearer ${token}`,

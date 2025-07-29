@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import { BASE_URL } from "@/configs";
 
 export default function Home() {
   const [learningResult, setLearningResult] = useState(null);
@@ -22,7 +23,7 @@ export default function Home() {
       const decodedToken = jwtDecode(token);
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/student/${decodedToken.id}/learning-information`,
+          `${BASE_URL}/student/${decodedToken.id}/learning-information`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -44,7 +45,7 @@ export default function Home() {
       const decodedToken = jwtDecode(token);
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/physicalResult/${decodedToken.id}`,
+          `${BASE_URL}/commander/physicalResult/${decodedToken.id}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -66,7 +67,7 @@ export default function Home() {
       const decodedToken = jwtDecode(token);
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/vacationSchedule/${decodedToken.id}`,
+          `${BASE_URL}/commander/vacationSchedule/${decodedToken.id}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -88,7 +89,7 @@ export default function Home() {
       try {
         const decodedToken = jwtDecode(token);
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/student/${decodedToken.id}/achievement`,
+          `${BASE_URL}/student/${decodedToken.id}/achievement`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -110,7 +111,7 @@ export default function Home() {
       const decodedToken = jwtDecode(token);
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/helpCooking/${decodedToken.id}`,
+          `${BASE_URL}/commander/helpCooking/${decodedToken.id}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -131,7 +132,7 @@ export default function Home() {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/user/commanderDutyScheduleCurrent`,
+          `${BASE_URL}/user/commanderDutyScheduleCurrent`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -171,21 +172,23 @@ export default function Home() {
       <div>
         <SideBar />
       </div>
-      <div className="w-full ml-64">
+      <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
         <div className="w-full pt-20 pl-5 pr-6 mb-5">
           <div className="w-full">
             <div className="flex justify-between px-5 pt-5 pb-4">
               <Link href="/users/learning-information" className="w-80">
-                <div className="group relative h-60 rounded-3xl border bg-blue-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">HỌC TẬP</div>
-                  <div className="mt-10">
+                <div className="group relative h-60 rounded-3xl border bg-blue-100 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-blue-900 dark:text-blue-100">
+                    HỌC TẬP
+                  </div>
+                  <div className="mt-10 text-blue-800 dark:text-blue-200">
                     GPA:{" "}
                     {learningResult
                       ? learningResult[learningResult.length - 1]?.GPA
                       : ""}
                     /4.0
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-4 text-blue-800 dark:text-blue-200">
                     CPA:{" "}
                     {learningResult
                       ? learningResult[learningResult.length - 1]?.CPA
@@ -195,16 +198,18 @@ export default function Home() {
                 </div>
               </Link>
               <Link href="/users/phisical-result" className="w-80">
-                <div className="group relative mb-4 h-60 rounded-3xl border bg-orange-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">RÈN LUYỆN</div>
+                <div className="group relative mb-4 h-60 rounded-3xl border bg-orange-100 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-orange-900 dark:text-orange-100">
+                    RÈN LUYỆN
+                  </div>
                   <div className="mt-4">
-                    <div className="mt-10">
+                    <div className="mt-10 text-orange-800 dark:text-orange-200">
                       Học kỳ:{" "}
                       {phisicalResult
                         ? phisicalResult[phisicalResult.length - 1]?.semester
                         : ""}
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 text-orange-800 dark:text-orange-200">
                       Xếp loại:{" "}
                       {phisicalResult
                         ? phisicalResult[phisicalResult.length - 1]?.practise
@@ -214,14 +219,16 @@ export default function Home() {
                 </div>
               </Link>
               <Link href="/users/vacation-schedule" className="w-80">
-                <div className="group relative mb-4 h-60 rounded-3xl border bg-indigo-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">TRANH THỦ</div>
+                <div className="group relative mb-4 h-60 rounded-3xl border bg-indigo-100 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-indigo-900 dark:text-indigo-100">
+                    TRANH THỦ
+                  </div>
                   <div className="mt-4">
-                    <div className="mt-10">
+                    <div className="mt-10 text-indigo-800 dark:text-indigo-200">
                       Đã đi: {vacationSchedule ? vacationSchedule.length : ""}{" "}
                       lần
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 text-indigo-800 dark:text-indigo-200">
                       Lần gần nhất:{" "}
                       {vacationSchedule?.length === 0
                         ? " Chưa có"
@@ -236,15 +243,15 @@ export default function Home() {
             </div>
             <div className="flex justify-between px-5">
               <Link href="/users/achievement" className="w-80">
-                <div className="group relative h-60 rounded-3xl border bg-rose-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">
+                <div className="group relative h-60 rounded-3xl border bg-rose-100 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-rose-900 dark:text-rose-100">
                     KHEN THƯỞNG
                   </div>
                   <div className="mt-4">
-                    <div className="mt-10">
+                    <div className="mt-10 text-rose-800 dark:text-rose-200">
                       Đã nhận: {achievement ? achievement.length : ""} lần
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 text-rose-800 dark:text-rose-200">
                       Lần gần nhất:{" "}
                       {achievement.length !== 0
                         ? achievement[achievement.length - 1]?.schoolYear
@@ -254,18 +261,18 @@ export default function Home() {
                 </div>
               </Link>
               <Link href="/users/commander-duty-schedule" className="w-80">
-                <div className="group relative h-60 rounded-3xl border bg-purple-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">
+                <div className="group relative h-60 rounded-3xl border bg-purple-100 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-purple-900 dark:text-purple-100">
                     TRỰC CHỈ HUY
                   </div>
                   <div className="mt-4">
-                    <div className="mt-10">
+                    <div className="mt-10 text-purple-800 dark:text-purple-200">
                       Tên:{" "}
                       {commanderDutySchedule
                         ? commanderDutySchedule?.fullName
                         : ""}
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 text-purple-800 dark:text-purple-200">
                       Chức vụ:{" "}
                       {commanderDutySchedule
                         ? commanderDutySchedule?.position
@@ -275,13 +282,15 @@ export default function Home() {
                 </div>
               </Link>
               <Link href="/users/help-cooking" className="w-80">
-                <div className="group relative h-60 rounded-3xl border bg-green-100 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out">
-                  <div className="font-sans text-3xl font-bold">GIÚP BẾP</div>
+                <div className="group relative h-60 rounded-3xl border bg-green-100 dark:bg-green-900/20 border-green-200 dark:border-green-800 pt-8 px-8 shadow-lg transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105">
+                  <div className="font-sans text-3xl font-bold text-green-900 dark:text-green-100">
+                    GIÚP BẾP
+                  </div>
                   <div className="mt-4">
-                    <div className="mt-10">
+                    <div className="mt-10 text-green-800 dark:text-green-200">
                       Đã đi: {helpCooking ? helpCooking.length : ""} lần
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 text-green-800 dark:text-green-200">
                       Lần gần nhất:{" "}
                       {helpCooking?.length === 0
                         ? "Chưa có"

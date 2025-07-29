@@ -9,6 +9,7 @@ import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
+import { BASE_URL } from "@/configs";
 const CutRice = () => {
   const router = useRouter();
   const [cutRice, setCutRice] = useState(null);
@@ -28,7 +29,7 @@ const CutRice = () => {
 
     if (token) {
       try {
-        const res = await axios.get(`https://be-student-manager.onrender.com/commander/cutRice`, {
+        const res = await axios.get(`${BASE_URL}/commander/cutRice`, {
           headers: {
             token: `Bearer ${token}`,
           },
@@ -53,7 +54,7 @@ const CutRice = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `https://be-student-manager.onrender.com/commander/cutRice?unit=${unit}`,
+          `${BASE_URL}/commander/cutRice?unit=${unit}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -77,7 +78,7 @@ const CutRice = () => {
     if (token) {
       try {
         const response = await axios.get(
-          `https://be-student-manager.onrender.com/commander/cutRice/excel`,
+          `${BASE_URL}/commander/cutRice/excel`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -106,14 +107,14 @@ const CutRice = () => {
         <div>
           <SideBar />
         </div>
-        <div className="w-full ml-64">
+        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                 <li className="inline-flex items-center">
                   <Link
                     href="/admin"
-                    className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                    className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       className="w-3 h-3 me-2.5"
@@ -144,7 +145,7 @@ const CutRice = () => {
                         d="m1 9 4-4-4-4"
                       />
                     </svg>
-                    <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                    <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                       Cắt cơm học viên
                     </div>
                   </div>
@@ -153,27 +154,43 @@ const CutRice = () => {
             </nav>
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-            <div className="bg-white rounded-lg w-full">
-              <div className="font-bold p-5 flex justify-between">
-                <div>CẮT CƠM HỌC VIÊN</div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+              <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white text-lg">
+                  CẮT CƠM HỌC VIÊN
+                </div>
                 <button
-                  class="bg-transparent hover:bg-custom font-semibold hover:text-white py-0.5 px-2 border border-custom hover:border-transparent rounded"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                   onClick={handleExportFileExcel}
                 >
-                  Xuất
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Xuất Excel
                 </button>
               </div>
-              <div className="w-full pl-5 pb-5 pr-5">
+              <div className="w-full pt-2 pl-5 pb-5 pr-5">
                 <div className="w-full">
                   <form
-                    className="flex items-end"
+                    className="flex items-end mb-4"
                     onSubmit={(e) => handleSubmit(e)}
                   >
                     <div className="flex">
                       <div>
                         <label
                           htmlFor="unit"
-                          className="block mb-1 text-sm font-medium dark:text-white"
+                          className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                           Chọn lớp
                         </label>
@@ -196,7 +213,7 @@ const CutRice = () => {
                     <div className="ml-4">
                       <button
                         type="submit"
-                        className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                        className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                       >
                         Tìm kiếm
                       </button>
@@ -205,224 +222,314 @@ const CutRice = () => {
                 </div>
               </div>
               <div className="w-full pl-5 pb-5 pr-5">
-                <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                  <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-4 px-2"
-                      >
-                        Lớp
-                      </th>
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-2"
-                      >
-                        Họ và tên
-                      </th>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                    <thead className="border-b bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 font-medium">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-4 px-2 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          LỚP
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-2 text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        >
+                          HỌ VÀ TÊN
+                        </th>
 
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-2"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 2</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-2"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 2
+                            </div>
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </th>
+                        </th>
 
-                      <th
-                        scope="col"
-                        className="border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 3</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 4</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 5</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 6</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Thứ 7</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        scope="col"
-                        className=" border-e border-neutral-200 py-1"
-                      >
-                        <div className="flex flex-col">
-                          <div>Chủ nhật</div>
-                          <div className="grid grid-cols-3 gap-1 mt-2">
-                            <div className="w-full flex-1">Sáng</div>
-                            <div className="w-full flex-1">Trưa</div>
-                            <div className="w-full flex-1">Tối</div>
-                          </div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cutRice?.map((item) => (
-                      <tr
-                        key={item._id}
-                        className="border-b border-neutral-200 dark:border-white/10"
-                      >
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {unitMapping[item.unit] || ""}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e py-4 px-2 border-neutral-200 dark:border-white/10">
-                          {item.fullName}
-                        </td>
-
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.monday?.breakfast === true ? 1 : 0}
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 3
                             </div>
-                            <div className="w-full flex-1">
-                              {item.monday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.monday?.dinner === true ? 1 : 0}
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.tuesday?.breakfast === true ? 1 : 0}
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 4
                             </div>
-                            <div className="w-full flex-1">
-                              {item.tuesday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.tuesday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.wednesday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.wednesday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.wednesday?.dinner === true ? 1 : 0}
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.thursday?.breakfast === true ? 1 : 0}
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 5
                             </div>
-                            <div className="w-full flex-1">
-                              {item.thursday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.thursday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.friday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.friday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.friday?.dinner === true ? 1 : 0}
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.saturday?.breakfast === true ? 1 : 0}
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 6
                             </div>
-                            <div className="w-full flex-1">
-                              {item.saturday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.saturday?.dinner === true ? 1 : 0}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-e border-neutral-200 dark:border-white/10">
-                          <div className="grid grid-cols-3 gap-1">
-                            <div className="w-full flex-1">
-                              {item.sunday?.breakfast === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.sunday?.lunch === true ? 1 : 0}
-                            </div>
-                            <div className="w-full flex-1">
-                              {item.sunday?.dinner === true ? 1 : 0}
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
                             </div>
                           </div>
-                        </td>
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              THỨ 7
+                            </div>
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
+                            </div>
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-1"
+                        >
+                          <div className="flex flex-col">
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                              CHỦ NHẬT
+                            </div>
+                            <div className="grid grid-cols-3 gap-1 mt-2">
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Sáng
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Trưa
+                              </div>
+                              <div className="w-full flex-1 text-xs text-gray-500 dark:text-gray-300">
+                                Tối
+                              </div>
+                            </div>
+                          </div>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800">
+                      {cutRice && cutRice.length > 0 ? (
+                        cutRice.map((item) => (
+                          <tr
+                            key={item._id}
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <td className="whitespace-nowrap font-medium border-r py-4 px-2 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">
+                              {unitMapping[item.unit] || ""}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r py-4 px-2 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white">
+                              {item.fullName}
+                            </td>
+
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.monday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.monday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.monday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.tuesday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.tuesday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.tuesday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.wednesday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.wednesday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.wednesday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.thursday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.thursday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.thursday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.friday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.friday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.friday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.saturday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.saturday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.saturday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600">
+                              <div className="grid grid-cols-3 gap-1">
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.sunday?.breakfast === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.sunday?.lunch === true ? 1 : 0}
+                                </div>
+                                <div className="w-full flex-1 text-gray-900 dark:text-white">
+                                  {item.sunday?.dinner === true ? 1 : 0}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="8"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có dữ liệu
+                              </p>
+                              <p className="text-sm">
+                                Không tìm thấy thông tin cắt cơm nào
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

@@ -5,10 +5,10 @@ export const metadata = {
   description: "Quên mật khẩu hệ thống",
 };
 
-export default function RootLayout({ children }) {
+export default function ForgotPasswordLayout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text">
+      {children}
+    </div>
   );
 }

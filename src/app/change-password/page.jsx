@@ -6,6 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../components/notify";
+import { BASE_URL } from "@/configs";
 
 const changePassword = () => {
   const [password, setPassword] = useState("");
@@ -19,7 +20,7 @@ const changePassword = () => {
       const token = localStorage.getItem("token");
       const decodedToken = jwtDecode(token);
       await axios.put(
-        `https://be-student-manager.onrender.com/user/${decodedToken.id}`,
+        `${BASE_URL}/user/${decodedToken.id}`,
         {
           password,
           newPassword,
@@ -49,7 +50,7 @@ const changePassword = () => {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             className="mx-auto h-20 w-auto"
-            src="http://localhost:3000/logo.png"
+            src="/logo.png"
             alt="Hệ học viên X"
           />
           <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight">

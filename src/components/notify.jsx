@@ -13,7 +13,7 @@ export function handleNotify(type, title, message) {
     message: message,
     type: type,
     insert: "top",
-    container: "top-right",
+    container: "bottom-right",
     animationIn: ["animate__animated", "animate__fadeIn"],
     animationOut: ["animate__animated", "animate__fadeOut"],
     dismiss: {
