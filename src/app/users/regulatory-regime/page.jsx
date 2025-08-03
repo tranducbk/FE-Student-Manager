@@ -324,9 +324,9 @@ const RegulatoryRegime = () => {
                       <td className="border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                         Ra sức học tập nâng cao trình độ chính trị, quân sự, văn
                         hóa, khoa học kỹ thuật, nghiệp vụ, triệt để chấp hành
-                        điều lệnh, điều lệ, rèn luyện tính tổ chức, tính kỷ luật
-                        và tác phong chính quy, xây dựng quân đội ngày càng hùng
-                        mạnh, luôn luôn sẵn sàng chiến đấu. "Xin thề"
+                        điều lệnh, điều lệ, rèn luyện tính Khoa/Viện, tính kỷ
+                        luật và tác phong chính quy, xây dựng quân đội ngày càng
+                        hùng mạnh, luôn luôn sẵn sàng chiến đấu. "Xin thề"
                       </td>
                     </tr>
                     <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">

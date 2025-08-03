@@ -7,10 +7,9 @@ import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from "next/navigation";
-import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
+import { useModalScroll } from "@/hooks/useModalScroll";
 const ListUser = () => {
   const router = useRouter();
   const [profile, setProfile] = useState([]);
@@ -24,23 +23,32 @@ const ListUser = () => {
   const [id, setId] = useState(null);
   const [fullName, setFullName] = useState("");
   const [unit, setUnit] = useState("");
+  const [universities, setUniversities] = useState([]);
+  const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedOrganization, setSelectedOrganization] = useState("");
+  const [educationLevels, setEducationLevels] = useState([]);
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [addFormData, setAddFormData] = useState({
     username: "",
     password: "",
     studentId: "",
     fullName: "",
-    gender: "Nam",
+    gender: "",
     birthday: "",
     hometown: "",
     email: "",
     phoneNumber: "",
-    enrollment: 2017,
+    enrollment: "",
     classUniversity: "",
-    educationLevel: "Đại học đại trà",
-    organization: "Viện ngoại ngữ",
-    university: "Đại học Bách Khoa Hà Nội",
-    unit: "L1 - H5",
-    rank: "Binh nhì",
+    educationLevel: "",
+    organization: "",
+    university: "",
+    unit: "",
+    rank: "",
     positionGovernment: "Học viên",
     positionParty: "Không",
     fullPartyMember: "",
@@ -58,27 +66,89 @@ const ListUser = () => {
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
   });
 
+  // Disable scroll khi có modal mở
+  useModalScroll(showProfileDetail || showFormAdd || showForm || showConfirm);
+
   const handleAddFormData = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+
+    // Validation các trường bắt buộc
+    if (
+      !addFormData.username ||
+      !addFormData.password ||
+      !addFormData.studentId ||
+      !addFormData.fullName
+    ) {
+      handleNotify(
+        "warning",
+        "Cảnh báo!",
+        "Vui lòng điền đầy đủ thông tin bắt buộc"
+      );
+      return;
+    }
+
+    if (!selectedUniversity?._id) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn trường");
+      return;
+    }
+
+    if (!selectedOrganization) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn khoa/viện");
+      return;
+    }
+
+    if (!selectedLevel) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn trình độ đào tạo");
+      return;
+    }
+
+    if (!selectedClass) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn lớp");
+      return;
+    }
+
+    // Map giá trị từ select động vào form data
+    const submitData = {
+      ...addFormData,
+      university: selectedUniversity._id, // Sử dụng ObjectId của university đã chọn
+      organization: selectedOrganization, // Tên khoa/viện đã chọn
+      educationLevel: selectedLevel, // Trình độ đã chọn
+      classUniversity: selectedClass, // Lớp đã chọn
+    };
+
+    setIsLoading(true);
     try {
-      await axios.post(`${BASE_URL}/commander/student`, addFormData, {
+      await axios.post(`${BASE_URL}/commander/student`, submitData, {
         headers: {
           token: `Bearer ${token}`,
         },
       });
       handleNotify("success", "Thành công!", "Thêm học viên thành công");
       setShowFormAdd(false);
+      setAddFormData({});
+      // Reset các select động
+      setSelectedUniversity(null);
+      setSelectedOrganization("");
+      setSelectedLevel("");
+      setSelectedClass("");
       fetchProfile();
     } catch (error) {
       setShowFormAdd(false);
       handleNotify("danger", "Lỗi!", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const closeForm = () => {
     setShowForm(false);
     setShowFormAdd(false);
+    // Reset các select động khi đóng form
+    setSelectedUniversity(null);
+    setSelectedOrganization("");
+    setSelectedLevel("");
+    setSelectedClass("");
   };
 
   const handleAuthenticationModalClick = (event) => {
@@ -89,6 +159,7 @@ const ListUser = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchUniversities();
   }, [currentPage]);
 
   const fetchProfile = async () => {
@@ -109,6 +180,81 @@ const ListUser = () => {
         console.log(error);
       }
     }
+  };
+
+  const fetchUniversities = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await axios.get(`${BASE_URL}/university`, {
+          headers: { token: `Bearer ${token}` },
+        });
+
+        setUniversities(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const fetchOrganizations = async (universityId) => {
+    const token = localStorage.getItem("token");
+    if (token && universityId) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/university/${universityId}/organizations`,
+          {
+            headers: { token: `Bearer ${token}` },
+          }
+        );
+
+        return res.data;
+      } catch (error) {
+        console.log(error);
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const fetchEducationLevels = async (organizationId) => {
+    const token = localStorage.getItem("token");
+    if (token && organizationId) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/university/organizations/${organizationId}/education-levels`,
+          {
+            headers: { token: `Bearer ${token}` },
+          }
+        );
+
+        return res.data;
+      } catch (error) {
+        console.log(error);
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const fetchClasses = async (educationLevelId) => {
+    const token = localStorage.getItem("token");
+    if (token && educationLevelId) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/university/education-levels/${educationLevelId}/classes`,
+          {
+            headers: { token: `Bearer ${token}` },
+          }
+        );
+
+        return res.data;
+      } catch (error) {
+        console.log(error);
+        return [];
+      }
+    }
+    return [];
   };
 
   const handleConfirmDelete = (id) => {
@@ -137,6 +283,11 @@ const ListUser = () => {
 
     if (token) {
       try {
+        // Đảm bảo universities đã được load
+        if (universities.length === 0) {
+          await fetchUniversities();
+        }
+
         const res = await axios.get(
           `${BASE_URL}/commander/student/${studentId}`,
           {
@@ -145,6 +296,9 @@ const ListUser = () => {
             },
           }
         );
+
+        console.log("Student data for edit:", res.data);
+        console.log("Available universities:", universities);
 
         setFormData({
           studentId: res.data.studentId || "",
@@ -177,6 +331,44 @@ const ListUser = () => {
             "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
         });
 
+        // Khởi tạo các select động từ dữ liệu có sẵn
+        let foundUniversity = null;
+
+        if (res.data.university && typeof res.data.university === "object") {
+          // Nếu university là object (populated), sử dụng university object
+          foundUniversity = res.data.university;
+          console.log("University is object:", foundUniversity);
+        } else if (
+          res.data.university &&
+          typeof res.data.university === "string"
+        ) {
+          // Nếu university là string (university name), tìm university object
+          foundUniversity = universities.find(
+            (u) => u.universityName === res.data.university
+          );
+          console.log("University found by name:", foundUniversity);
+        } else if (
+          res.data.university &&
+          typeof res.data.university === "string" &&
+          res.data.university.length === 24
+        ) {
+          // Nếu university là ObjectId string, tìm university object
+          foundUniversity = universities.find(
+            (u) => u._id === res.data.university
+          );
+          console.log("University found by ObjectId:", foundUniversity);
+        }
+
+        if (foundUniversity) {
+          setSelectedUniversity(foundUniversity);
+          setSelectedOrganization(res.data.organization || "");
+          setSelectedLevel(res.data.educationLevel || "");
+          setSelectedClass(res.data.classUniversity || "");
+          console.log("Selected university set:", foundUniversity);
+        } else {
+          console.log("No university found for:", res.data.university);
+        }
+
         setSelectedStudentId(studentId);
         setShowForm(true);
       } catch (error) {
@@ -189,10 +381,51 @@ const ListUser = () => {
   const handleSubmit = async (e, selectedStudentId, profile) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+
+    // Validation các trường bắt buộc
+    if (!formData.studentId || !formData.fullName) {
+      handleNotify(
+        "warning",
+        "Cảnh báo!",
+        "Vui lòng điền đầy đủ thông tin bắt buộc"
+      );
+      return;
+    }
+
+    if (!selectedUniversity?._id) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn trường");
+      return;
+    }
+
+    if (!selectedOrganization) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn khoa/viện");
+      return;
+    }
+
+    if (!selectedLevel) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn trình độ đào tạo");
+      return;
+    }
+
+    if (!selectedClass) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn lớp");
+      return;
+    }
+
+    // Map giá trị từ select động vào form data
+    const submitData = {
+      ...formData,
+      university: selectedUniversity._id, // Sử dụng ObjectId của university đã chọn
+      organization: selectedOrganization, // Tên khoa/viện đã chọn
+      educationLevel: selectedLevel, // Trình độ đã chọn
+      classUniversity: selectedClass, // Lớp đã chọn
+    };
+
+    setIsLoading(true);
     try {
       const response = await axios.put(
         `${BASE_URL}/commander/student/${selectedStudentId}`,
-        formData,
+        submitData,
         {
           headers: {
             token: `Bearer ${token}`,
@@ -211,10 +444,17 @@ const ListUser = () => {
       }
       handleNotify("success", "Thành công!", "Chỉnh sửa học viên thành công");
       setShowForm(false);
+      // Reset các select động
+      setSelectedUniversity(null);
+      setSelectedOrganization("");
+      setSelectedLevel("");
+      setSelectedClass("");
       fetchProfile();
     } catch (error) {
       setShowForm(false);
       handleNotify("danger", "Lỗi!", error.response.data);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -298,27 +538,25 @@ const ListUser = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-        <SideBar />
         {showProfileDetail && (
           <>
             <div className="bg-black opacity-50 fixed inset-0 z-30"></div>
             <div
               tabIndex="-1"
               aria-hidden="true"
-              className="fixed inset-0 z-40 flex justify-center items-start overflow-y-auto"
+              className="fixed inset-0 z-40 flex justify-center items-start"
             >
-              <div className="bg-white rounded-lg shadow-lg relative p-6 max-w-5xl w-full mt-32 mx-auto">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg relative p-6 max-w-5xl w-full mt-32 mx-auto max-h-[80vh] overflow-y-auto">
                 <button
-                  className="absolute hover:text-custom top-0 z-30 text-4xl right-5 text-gray-500"
+                  className="absolute hover:text-red-500 dark:hover:text-red-400 top-0 z-30 text-4xl right-5 text-gray-500 dark:text-gray-400"
                   onClick={() => setShowProfileDetail(false)}
                 >
                   &times;
                 </button>
-                <div className="relative z-20 bg-white rounded-lg">
-                  <div className="bg-white rounded-lg w-full">
-                    <div className="text-2xl font-bold text-center mb-6">
+                <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg w-full">
+                    <div className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
                       THÔNG TIN HỌC VIÊN
                     </div>
                     <div className="flex flex-wrap justify-start">
@@ -328,95 +566,97 @@ const ListUser = () => {
                           src={profileDetail?.avatar}
                           alt="avatar"
                         />
-                        <div className="font-bold text-lg mt-4">
+                        <div className="font-bold text-lg mt-4 text-gray-900 dark:text-white">
                           Mã HV: {profileDetail?.studentId}
                         </div>
                       </div>
                       <div className="w-full md:w-2/3 flex flex-wrap">
                         <div className="w-full md:w-1/2">
-                          <div className="text-lg font-semibold text-indigo-600 mb-2">
+                          <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
                             THÔNG TIN SINH VIÊN
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Họ và tên:</span>{" "}
-                            {profileDetail?.fullName}
+                            {profileDetail?.fullName || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Giới tính:</span>{" "}
-                            {profileDetail?.gender}
+                            {profileDetail?.gender || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Sinh ngày:</span>{" "}
                             {profileDetail?.birthday
                               ? dayjs(profileDetail?.birthday).format(
                                   "DD/MM/YYYY"
                                 )
-                              : ""}
+                              : "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Năm vào trường:</span>{" "}
-                            {profileDetail?.enrollment}
+                            {profileDetail?.enrollment || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
-                            <span className="font-bold">Bậc đào tạo:</span>{" "}
-                            {profileDetail?.educationLevel}
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Trình độ đào tạo:</span>{" "}
+                            {profileDetail?.educationLevel || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Lớp:</span>{" "}
-                            {profileDetail?.classUniversity}
+                            {profileDetail?.classUniversity ||
+                              "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">
                               Khoa/Viện quản lý:
                             </span>{" "}
-                            {profileDetail?.organization}
+                            {profileDetail?.organization || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Trường:</span>{" "}
-                            {profileDetail?.university}
+                            {profileDetail?.university || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Email:</span>{" "}
-                            {profileDetail?.email}
+                            {profileDetail?.email || "Chưa có dữ liệu"}
                           </div>
                         </div>
                         <div className="w-full md:w-1/2 pl-4">
-                          <div className="text-lg font-semibold text-indigo-600 mb-2">
+                          <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
                             THÔNG TIN HỌC VIÊN
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Số điện thoại:</span>{" "}
-                            {profileDetail?.phoneNumber}
+                            {profileDetail?.phoneNumber || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Đơn vị:</span>{" "}
-                            {profileDetail?.unit}
+                            {profileDetail?.unit || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Cấp bậc:</span>{" "}
-                            {profileDetail?.rank}
+                            {profileDetail?.rank || "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Chức vụ:</span>{" "}
-                            {profileDetail?.positionGovernment}
+                            {profileDetail?.positionGovernment ||
+                              "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Nhập ngũ:</span>{" "}
                             {profileDetail?.dateOfEnlistment
                               ? dayjs(profileDetail?.dateOfEnlistment).format(
                                   "DD/MM/YYYY"
                                 )
-                              : ""}
+                              : "Chưa có dữ liệu"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Đảng viên dự bị:</span>{" "}
                             {profileDetail?.probationaryPartyMember
                               ? dayjs(
                                   profileDetail?.probationaryPartyMember
                                 ).format("DD/MM/YYYY")
-                              : ""}
+                              : "Không"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">
                               Đảng viên chính thức:
                             </span>{" "}
@@ -424,17 +664,19 @@ const ListUser = () => {
                               ? dayjs(profileDetail?.fullPartyMember).format(
                                   "DD/MM/YYYY"
                                 )
-                              : ""}
+                              : "Không"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Chức vụ đảng:</span>{" "}
-                            {profileDetail?.positionParty === "Không"
-                              ? ""
-                              : profileDetail?.positionParty}
+                            {profileDetail?.positionParty || "Không"}
                           </div>
-                          <div className="mb-2">
+                          <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Quê quán:</span>{" "}
-                            {profileDetail?.hometown}
+                            {profileDetail?.hometown || "Chưa có dữ liệu"}
+                          </div>
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Email:</span>{" "}
+                            {profileDetail?.email || "Chưa có dữ liệu"}
                           </div>
                         </div>
                       </div>
@@ -445,7 +687,7 @@ const ListUser = () => {
             </div>
           </>
         )}
-        <div className="flex-1 ml-64">
+        <div className="flex-1">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
@@ -497,10 +739,10 @@ const ListUser = () => {
               <div
                 tabIndex="-1"
                 aria-hidden="true"
-                className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-10 justify-center items-center max-h-full"
+                className="fixed top-0 right-0 left-0 z-10 justify-center items-center"
               >
-                <div className="bg-white rounded-lg relative mt-32 mx-auto max-w-3xl max-h-full">
-                  <div className="relative z-20 bg-white rounded-lg shadow dark:bg-gray-700">
+                <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-20 mx-auto max-w-3xl max-h-[86vh] overflow-y-auto">
+                  <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg shadow">
                     <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
                       <h3 className="text-xl font-semibold dark:text-white mx-auto">
                         THÊM QUÂN NHÂN
@@ -530,7 +772,7 @@ const ListUser = () => {
                       </button>
                     </div>
 
-                    <div className="w-full max-w-3xl p-5 mb-5">
+                    <div className="w-full max-w-3xl p-5">
                       <form onSubmit={handleAddFormData}>
                         <div className="grid gap-6 mb-6 md:grid-cols-2">
                           <div>
@@ -797,33 +1039,6 @@ const ListUser = () => {
 
                           <div>
                             <label
-                              htmlFor="educationLevel"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Bậc đào tạo
-                            </label>
-                            <select
-                              id="educationLevel"
-                              value={addFormData.educationLevel}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  educationLevel: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="Đại học đại trà">
-                                Đại học đại trà
-                              </option>
-                              <option value="Chương trình tiên tiến">
-                                Chương trình tiên tiến
-                              </option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
                               htmlFor="dateOfEnlistment"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
@@ -842,28 +1057,6 @@ const ListUser = () => {
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="classUniversity"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Lớp
-                            </label>
-                            <input
-                              type="text"
-                              id="classUniversity"
-                              value={addFormData.classUniversity}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  classUniversity: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Khoa học máy tính 01 - K65"
                             />
                           </div>
 
@@ -892,37 +1085,38 @@ const ListUser = () => {
 
                           <div>
                             <label
-                              htmlFor="organization"
+                              htmlFor="university"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Khoa/viện quản lý
+                              Trường
                             </label>
                             <select
-                              id="organization"
-                              value={addFormData.organization}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  organization: e.target.value,
-                                })
-                              }
+                              id="university"
+                              value={selectedUniversity?.universityName || ""}
+                              onChange={async (e) => {
+                                const uni = universities.find(
+                                  (u) => u.universityName === e.target.value
+                                );
+                                setSelectedUniversity(uni);
+                                setSelectedOrganization("");
+                                setSelectedLevel("");
+                                setSelectedClass("");
+
+                                if (uni) {
+                                  const organizations =
+                                    await fetchOrganizations(uni._id);
+                                  setOrganizations(organizations);
+                                }
+                              }}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
                             >
-                              <option value="Viện ngoại ngữ">
-                                Viện ngoại ngữ
-                              </option>
-                              <option value="Viện kinh tế và quản lý">
-                                Viện kinh tế và quản lý
-                              </option>
-                              <option value="Viện toán và ứng dụng tin học">
-                                Viện toán và ứng dụng tin học
-                              </option>
-                              <option value="Trường điện - điện tử">
-                                Trường điện - điện tử
-                              </option>
-                              <option value="Trường CNTT&TT">
-                                Trường CNTT&TT
-                              </option>
+                              <option value="">Chọn trường</option>
+                              {universities.map((u) => (
+                                <option key={u._id} value={u.universityName}>
+                                  {u.universityName}
+                                </option>
+                              ))}
                             </select>
                           </div>
 
@@ -951,37 +1145,32 @@ const ListUser = () => {
 
                           <div>
                             <label
-                              htmlFor="university"
+                              htmlFor="organization"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Trường
+                              Khoa/Viện quản lý
                             </label>
                             <select
-                              id="university"
-                              value={addFormData.university}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  university: e.target.value,
-                                })
-                              }
+                              id="organization"
+                              value={selectedOrganization}
+                              onChange={(e) => {
+                                setSelectedOrganization(e.target.value);
+                                setSelectedLevel("");
+                                setSelectedClass("");
+                              }}
+                              disabled={!selectedUniversity}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
                             >
-                              <option value="Đại học Bách Khoa Hà Nội">
-                                Đại học Bách Khoa Hà Nội
-                              </option>
-                              <option value="Đại học Y Hà Nội">
-                                Đại học Y Hà Nội
-                              </option>
-                              <option value=">Đại học Văn Hóa">
-                                Đại học Văn Hóa
-                              </option>
-                              <option value="Đại học Văn Lang">
-                                Đại học Văn Lang
-                              </option>
-                              <option value="Đại học Vinuni">
-                                Đại học Vinuni
-                              </option>
+                              <option value="">Chọn khoa/viện</option>
+                              {selectedUniversity?.organizations?.map((org) => (
+                                <option
+                                  key={org.organization}
+                                  value={org.organization}
+                                >
+                                  {org.organization}
+                                </option>
+                              ))}
                             </select>
                           </div>
 
@@ -1016,24 +1205,52 @@ const ListUser = () => {
 
                           <div>
                             <label
-                              htmlFor="email"
+                              htmlFor="level"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Email
+                              Trình độ đào tạo
                             </label>
-                            <input
-                              type="email"
-                              id="email"
-                              value={addFormData.email}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
-                            />
+                            <select
+                              id="level"
+                              value={selectedLevel || ""}
+                              onChange={async (e) => {
+                                setSelectedLevel(e.target.value);
+                                setSelectedClass("");
+
+                                if (e.target.value && selectedUniversity) {
+                                  const org =
+                                    selectedUniversity.organizations?.find(
+                                      (org) =>
+                                        org.organization ===
+                                        selectedOrganization
+                                    );
+                                  const level = org?.educationLevels?.find(
+                                    (level) => level.level === e.target.value
+                                  );
+                                  if (level) {
+                                    const classList = await fetchClasses(
+                                      level._id
+                                    );
+                                    setClasses(classList);
+                                  }
+                                }
+                              }}
+                              disabled={!selectedOrganization}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn trình độ đào tạo</option>
+                              {selectedUniversity?.organizations
+                                ?.find(
+                                  (org) =>
+                                    org.organization === selectedOrganization
+                                )
+                                ?.educationLevels?.map((level) => (
+                                  <option key={level.level} value={level.level}>
+                                    {level.level}
+                                  </option>
+                                ))}
+                            </select>
                           </div>
 
                           <div>
@@ -1057,14 +1274,107 @@ const ListUser = () => {
                               placeholder="vd: Hà Nội"
                             />
                           </div>
+
+                          {/* Trình độ */}
+
+                          {/* Lớp */}
+                          <div>
+                            <label
+                              htmlFor="class"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Lớp
+                            </label>
+                            <select
+                              id="class"
+                              value={selectedClass?.className || ""}
+                              onChange={(e) => {
+                                const selectedClassObj = classes.find(
+                                  (cls) => cls.className === e.target.value
+                                );
+                                setSelectedClass(selectedClassObj);
+                              }}
+                              disabled={!selectedLevel?._id}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn lớp</option>
+                              {selectedUniversity?.organizations
+                                ?.find(
+                                  (org) =>
+                                    org.organization === selectedOrganization
+                                )
+                                ?.educationLevels?.find(
+                                  (level) => level.level === selectedLevel
+                                )
+                                ?.classes?.map((cls) => (
+                                  <option key={cls} value={cls}>
+                                    {cls}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="email"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              id="email"
+                              value={addFormData.email}
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  email: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
+                            />
+                          </div>
                         </div>
 
                         <div className="grid justify-items-end">
                           <button
                             type="submit"
-                            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                            disabled={isLoading}
+                            className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
+                              isLoading
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                            }`}
                           >
-                            Thêm
+                            {isLoading ? (
+                              <div className="flex items-center">
+                                <svg
+                                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Đang xử lý...
+                              </div>
+                            ) : (
+                              "Thêm"
+                            )}
                           </button>
                         </div>
                       </form>
@@ -1140,27 +1450,57 @@ const ListUser = () => {
                 <div className="text-gray-900 dark:text-white">
                   DANH SÁCH HỌC VIÊN
                 </div>
-                <div
-                  onClick={() => setShowFormAdd(true)}
-                  className="mr-6 flex hover:text-blue-700 cursor-pointer"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-6 h-6"
+                <div className="mr-6 flex space-x-4">
+                  <div
+                    onClick={() => router.push("/admin/universities")}
+                    className="flex hover:text-blue-700 cursor-pointer items-center"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
-                    />
-                  </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-5 h-5 mr-1"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"
+                      />
+                    </svg>
+                    <span className="text-sm">Quản lý Trường</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowFormAdd(true);
+                      // Reset các select động khi mở form add
+                      setSelectedUniversity(null);
+                      setSelectedOrganization("");
+                      setSelectedLevel("");
+                      setSelectedClass("");
+                    }}
+                    className="flex hover:text-blue-700 cursor-pointer items-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-5 h-5 mr-1"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
+                      />
+                    </svg>
+                    <span className="text-sm">Thêm Học viên</span>
+                  </div>
                 </div>
               </div>
-              <div className="w-full ml-5 pr-5 pb-5">
+              <div className="w-full pt-2 ml-5 pr-5 pb-5">
                 <form
                   className="flex items-end pb-4"
                   onSubmit={(e) => handleSearch(e)}
@@ -1208,7 +1548,7 @@ const ListUser = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
@@ -1495,10 +1835,10 @@ const ListUser = () => {
               tabIndex="-1"
               aria-hidden="true"
               onClick={handleAuthenticationModalClick}
-              className="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-10 justify-center items-center max-h-full"
+              className="fixed top-0 right-0 left-0 z-10 justify-center items-center"
             >
-              <div className="bg-white rounded-lg relative mt-32 mx-auto max-w-3xl max-h-full">
-                <div className="relative z-20 bg-white rounded-lg shadow dark:bg-gray-700">
+              <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-32 mx-auto max-w-3xl max-h-[80vh] overflow-y-auto">
+                <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg shadow">
                   <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
                     <h3 className="text-xl font-semibold dark:text-white mx-auto">
                       CHỈNH SỬA THÔNG TIN QUÂN NHÂN
@@ -1535,22 +1875,7 @@ const ListUser = () => {
                       }
                     >
                       <div className="grid gap-6 mb-6 md:grid-cols-2">
-                        <div>
-                          <label
-                            htmlFor="studentId"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Mã học viên
-                          </label>
-                          <input
-                            type="text"
-                            id="studentId"
-                            value={formData.studentId}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: 20200001"
-                          />
-                        </div>
+                        {/* Thông tin cơ bản */}
 
                         <div>
                           <label
@@ -1566,6 +1891,22 @@ const ListUser = () => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: Nguyễn Văn X"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="studentId"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Mã học viên
+                          </label>
+                          <input
+                            type="text"
+                            id="studentId"
+                            value={formData.studentId}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: 20200001"
                           />
                         </div>
 
@@ -1679,7 +2020,6 @@ const ListUser = () => {
                             id="enrollment"
                             value={formData.enrollment}
                             onChange={handleChange}
-                            aria-describedby="helper-text-explanation"
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="2017"
                             min="2017"
@@ -1707,28 +2047,6 @@ const ListUser = () => {
 
                         <div>
                           <label
-                            htmlFor="educationLevel"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Bậc đào tạo
-                          </label>
-                          <select
-                            id="educationLevel"
-                            value={formData.educationLevel}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Đại học đại trà">
-                              Đại học đại trà
-                            </option>
-                            <option value="Chương trình tiên tiến">
-                              Chương trình tiên tiến
-                            </option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
                             htmlFor="dateOfEnlistment"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
@@ -1744,23 +2062,6 @@ const ListUser = () => {
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="classUniversity"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Lớp
-                          </label>
-                          <input
-                            type="text"
-                            id="classUniversity"
-                            value={formData.classUniversity}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: Khoa học máy tính 01 - K65"
                           />
                         </div>
 
@@ -1786,37 +2087,6 @@ const ListUser = () => {
 
                         <div>
                           <label
-                            htmlFor="organization"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Khoa/viện quản lý
-                          </label>
-                          <select
-                            id="organization"
-                            value={formData.organization}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Viện ngoại ngữ">
-                              Viện ngoại ngữ
-                            </option>
-                            <option value="Viện kinh tế và quản lý">
-                              Viện kinh tế và quản lý
-                            </option>
-                            <option value="Viện toán và ứng dụng tin học">
-                              Viện toán và ứng dụng tin học
-                            </option>
-                            <option value="Trường điện - điện tử">
-                              Trường điện - điện tử
-                            </option>
-                            <option value="Trường CNTT&TT">
-                              Trường CNTT&TT
-                            </option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
                             htmlFor="fullPartyMember"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
@@ -1833,37 +2103,6 @@ const ListUser = () => {
                             placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
                           />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="university"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Trường
-                          </label>
-                          <select
-                            id="university"
-                            value={formData.university}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Đại học Bách Khoa Hà Nội">
-                              Đại học Bách Khoa Hà Nội
-                            </option>
-                            <option value="Đại học Y Hà Nội">
-                              Đại học Y Hà Nội
-                            </option>
-                            <option value=">Đại học Văn Hóa">
-                              Đại học Văn Hóa
-                            </option>
-                            <option value="Đại học Văn Lang">
-                              Đại học Văn Lang
-                            </option>
-                            <option value="Đại học Vinuni">
-                              Đại học Vinuni
-                            </option>
-                          </select>
                         </div>
 
                         <div>
@@ -1890,6 +2129,37 @@ const ListUser = () => {
 
                         <div>
                           <label
+                            htmlFor="university"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Trường
+                          </label>
+                          <select
+                            id="university"
+                            value={selectedUniversity?._id || ""}
+                            onChange={(e) => {
+                              const uni = universities.find(
+                                (u) => u._id === e.target.value
+                              );
+                              setSelectedUniversity(uni);
+                              setSelectedOrganization("");
+                              setSelectedLevel("");
+                              setSelectedClass("");
+                            }}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            required
+                          >
+                            <option value="">Chọn trường</option>
+                            {universities.map((u) => (
+                              <option key={u._id} value={u._id}>
+                                {u.universityName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label
                             htmlFor="email"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
@@ -1903,6 +2173,37 @@ const ListUser = () => {
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: x.nv200001@sis.hust.edu.vn"
                           />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="organization"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Khoa/Viện quản lý
+                          </label>
+                          <select
+                            id="organization"
+                            value={selectedOrganization}
+                            onChange={(e) => {
+                              setSelectedOrganization(e.target.value);
+                              setSelectedLevel("");
+                              setSelectedClass("");
+                            }}
+                            disabled={!selectedUniversity}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            required
+                          >
+                            <option value="">Chọn khoa/viện</option>
+                            {selectedUniversity?.organizations?.map((org) => (
+                              <option
+                                key={org.organization}
+                                value={org.organization}
+                              >
+                                {org.organization}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         <div>
@@ -1922,6 +2223,57 @@ const ListUser = () => {
                           />
                         </div>
 
+                        {/* Select động cho university, organization, level, class */}
+
+                        <div>
+                          <label
+                            htmlFor="level"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Trình độ đào tạo
+                          </label>
+                          <select
+                            id="level"
+                            value={selectedLevel}
+                            onChange={async (e) => {
+                              setSelectedLevel(e.target.value);
+                              setSelectedClass("");
+
+                              if (e.target.value && selectedUniversity) {
+                                const org =
+                                  selectedUniversity.organizations?.find(
+                                    (org) =>
+                                      org.organization === selectedOrganization
+                                  );
+                                const level = org?.educationLevels?.find(
+                                  (level) => level.level === e.target.value
+                                );
+                                if (level) {
+                                  const classList = await fetchClasses(
+                                    level._id
+                                  );
+                                  setClasses(classList);
+                                }
+                              }
+                            }}
+                            disabled={!selectedOrganization}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            required
+                          >
+                            <option value="">Chọn trình độ đào tạo</option>
+                            {selectedUniversity?.organizations
+                              ?.find(
+                                (org) =>
+                                  org.organization === selectedOrganization
+                              )
+                              ?.educationLevels?.map((level) => (
+                                <option key={level.level} value={level.level}>
+                                  {level.level}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
                         <div>
                           <label className="block mb-2 text-sm font-medium dark:text-white">
                             Thêm ảnh đại diện
@@ -1934,14 +2286,77 @@ const ListUser = () => {
                             onChange={handleChange}
                           />
                         </div>
+
+                        <div>
+                          <label
+                            htmlFor="class"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Lớp
+                          </label>
+                          <select
+                            id="class"
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                            disabled={!selectedLevel}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            required
+                          >
+                            <option value="">Chọn lớp</option>
+                            {selectedUniversity?.organizations
+                              ?.find(
+                                (org) =>
+                                  org.organization === selectedOrganization
+                              )
+                              ?.educationLevels?.find(
+                                (level) => level.level === selectedLevel
+                              )
+                              ?.classes?.map((cls) => (
+                                <option key={cls} value={cls}>
+                                  {cls}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
                       </div>
 
                       <div className="grid justify-items-end">
                         <button
                           type="submit"
-                          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          disabled={isLoading}
+                          className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
+                            isLoading
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                          }`}
                         >
-                          Cập nhật
+                          {isLoading ? (
+                            <div className="flex items-center">
+                              <svg
+                                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                              Đang cập nhật...
+                            </div>
+                          ) : (
+                            "Cập nhật"
+                          )}
                         </button>
                       </div>
                     </form>

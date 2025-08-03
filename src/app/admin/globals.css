@@ -62,3 +62,21 @@ a {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+.light-notification {
+  @apply bg-white text-gray-900 border border-gray-200;
+}
+
+.dark-notification {
+  @apply bg-gray-800 text-gray-700 border border-gray-700;
+}
+
+.light-notification .ant-notification-notice-message,
+.light-notification .ant-notification-notice-description {
+  @apply text-gray-900 !important;
+}
+
+.dark-notification .ant-notification-notice-message,
+.dark-notification .ant-notification-notice-description {
+  @apply text-gray-100 !important;
+}

@@ -4,8 +4,6 @@ import axios from "axios";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
 import { BASE_URL } from "@/configs";
@@ -176,12 +174,8 @@ const Achievement = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
-        <div>
-          <SideBar />
-        </div>
-        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
+        <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">

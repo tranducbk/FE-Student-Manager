@@ -36,10 +36,7 @@ const TimeTableDetail = ({ params }) => {
 
   return (
     <div className="flex">
-      <div>
-        <SideBar />
-      </div>
-      <div className="w-full ml-64">
+      <div className="flex-1">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">

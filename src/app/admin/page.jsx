@@ -161,11 +161,10 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SideBar />
-      <div className="flex-1 ml-64 pt-20 p-6">
+      <div className="flex-1 pt-20 p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Dashboard
+            Trang chủ
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Tổng quan hệ thống quản lý học viên
@@ -442,7 +441,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Thống kê nhanh

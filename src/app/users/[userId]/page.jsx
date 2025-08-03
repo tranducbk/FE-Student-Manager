@@ -280,7 +280,7 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Bậc đào tạo:
+                              Trình độ đào tạo:
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.educationLevel}
@@ -660,7 +660,7 @@ const UserProfile = ({ params }) => {
                             htmlFor="educationLevel"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
-                            Bậc đào tạo
+                            Trình độ đào tạo
                           </label>
                           <select
                             id="educationLevel"
@@ -739,7 +739,7 @@ const UserProfile = ({ params }) => {
                             htmlFor="organization"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
-                            Khoa/viện quản lý
+                            Khoa/Viện quản lý
                           </label>
                           <select
                             id="organization"

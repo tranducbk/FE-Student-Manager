@@ -1,6 +1,5 @@
 "use client";
 
-import SideBar from "@/components/sidebar";
 import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -9,8 +8,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
+import { useModalScroll } from "@/hooks/useModalScroll";
 
 import { BASE_URL } from "@/configs";
 const CommanderDutySchedule = () => {
@@ -28,9 +27,37 @@ const CommanderDutySchedule = () => {
     workDay: format(new Date(), "yyyy-MM-dd"),
   });
 
-  const handleShowFormEdit = (id) => {
+  useModalScroll(showFormAdd || showFormEdit || showConfirm);
+
+  const handleShowFormEdit = async (id) => {
     setId(id);
-    setShowFormEdit(true);
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/user/commanderDutySchedule/${id}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setEditFormData({
+          fullName: res.data.fullName || "",
+          phoneNumber: res.data.phoneNumber || "",
+          rank: res.data.rank || "",
+          position: res.data.position || "",
+          workDay: res.data.workDay ? new Date(res.data.workDay) : new Date(),
+        });
+
+        setShowFormEdit(true);
+      } catch (error) {
+        console.log(error);
+        handleNotify("danger", "Lỗi!", "Không thể tải thông tin lịch trực");
+      }
+    }
   };
 
   const handleUpdate = async (e, id) => {
@@ -73,6 +100,7 @@ const CommanderDutySchedule = () => {
       });
       handleNotify("success", "Thành công!", "Thêm lịch trực thành công");
       setShowFormAdd(false);
+      setAddFormData({});
       fetchSchedule();
     } catch (error) {
       handleNotify("danger", "Lỗi!", error);
@@ -174,10 +202,8 @@ const CommanderDutySchedule = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-        <SideBar />
-        <div className="flex-1 ml-64">
+        <div className="flex-1">
           <div className="w-full pt-20 pl-5">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
@@ -605,7 +631,7 @@ const CommanderDutySchedule = () => {
               {showFormEdit ? (
                 <div className="fixed inset-0 mt-16 flex items-center justify-center z-30">
                   <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-                  <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12">
+                  <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12 max-h-[80vh] overflow-y-auto">
                     <button
                       onClick={() => setShowFormEdit(false)}
                       className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300"
@@ -775,7 +801,7 @@ const CommanderDutySchedule = () => {
           {showFormAdd ? (
             <div className="fixed inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12">
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12 max-h-[80vh] overflow-y-auto">
                 <button
                   onClick={() => setShowFormAdd(false)}
                   className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-700 dark:hover:text-gray-300"
@@ -934,6 +960,7 @@ const CommanderDutySchedule = () => {
                     </button>
                     <button
                       type="submit"
+                      onClick={handleAddFormData}
                       className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                     >
                       Thêm
