@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import { BASE_URL } from "@/configs";
 import {
   PlusOutlined,
   EditOutlined,
@@ -17,9 +18,6 @@ import {
 
 export default function Universities() {
   const [universities, setUniversities] = useState([]);
-  const [organizations, setOrganizations] = useState([]);
-  const [educationLevels, setEducationLevels] = useState([]);
-  const [classes, setClasses] = useState([]);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -28,48 +26,19 @@ export default function Universities() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Add form data
+  // Add form data (for simple add/edit)
   const [addFormData, setAddFormData] = useState({
     universityCode: "",
     universityName: "",
-    organizationName: "",
-    levelName: "",
-    className: "",
   });
 
   // Edit form data
   const [editFormData, setEditFormData] = useState({
     universityCode: "",
     universityName: "",
-    organizationName: "",
-    levelName: "",
-    className: "",
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [
-          universitiesRes,
-          organizationsRes,
-          educationLevelsRes,
-          classesRes,
-        ] = await Promise.all([
-          axios.get("http://localhost:5000/api/universities"),
-          axios.get("http://localhost:5000/api/organizations"),
-          axios.get("http://localhost:5000/api/education-levels"),
-          axios.get("http://localhost:5000/api/classes"),
-        ]);
-
-        setUniversities(universitiesRes.data);
-        setOrganizations(organizationsRes.data);
-        setEducationLevels(educationLevelsRes.data);
-        setClasses(classesRes.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -81,6 +50,98 @@ export default function Universities() {
     setEditFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
+      }
+
+      // Lấy danh sách universities
+      const universitiesRes = await axios.get(`${BASE_URL}/university`, {
+        headers: { token: `Bearer ${token}` },
+      });
+
+      // Lấy organizations, education levels, và classes cho mỗi university
+      const universitiesWithData = await Promise.all(
+        universitiesRes.data.map(async (university) => {
+          try {
+            // Lấy organizations cho university này
+            const organizationsRes = await axios.get(
+              `${BASE_URL}/university/${university._id}/organizations`,
+              {
+                headers: { token: `Bearer ${token}` },
+              }
+            );
+
+            // Lấy education levels và classes cho mỗi organization
+            const organizationsWithData = await Promise.all(
+              organizationsRes.data.map(async (organization) => {
+                try {
+                  // Lấy education levels cho organization này
+                  const educationLevelsRes = await axios.get(
+                    `${BASE_URL}/university/organizations/${organization._id}/education-levels`,
+                    {
+                      headers: { token: `Bearer ${token}` },
+                    }
+                  );
+
+                  // Lấy classes cho mỗi education level
+                  const educationLevelsWithData = await Promise.all(
+                    educationLevelsRes.data.map(async (educationLevel) => {
+                      try {
+                        const classesRes = await axios.get(
+                          `${BASE_URL}/university/education-levels/${educationLevel._id}/classes`,
+                          {
+                            headers: { token: `Bearer ${token}` },
+                          }
+                        );
+                        return {
+                          ...educationLevel,
+                          classes: classesRes.data,
+                        };
+                      } catch (error) {
+                        return {
+                          ...educationLevel,
+                          classes: [],
+                        };
+                      }
+                    })
+                  );
+
+                  return {
+                    ...organization,
+                    educationLevels: educationLevelsWithData,
+                  };
+                } catch (error) {
+                  return {
+                    ...organization,
+                    educationLevels: [],
+                  };
+                }
+              })
+            );
+
+            return {
+              ...university,
+              organizations: organizationsWithData,
+            };
+          } catch (error) {
+            return {
+              ...university,
+              organizations: [],
+            };
+          }
+        })
+      );
+
+      setUniversities(universitiesWithData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const handleAddSubmit = async (e) => {
     e.preventDefault();
 
@@ -90,42 +151,26 @@ export default function Universities() {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
+      }
+
       // Create university
-      const universityRes = await axios.post(
-        "http://localhost:5000/api/universities",
+      await axios.post(
+        `${BASE_URL}/university/create`,
         {
           universityCode: addFormData.universityCode,
           universityName: addFormData.universityName,
+        },
+        {
+          headers: { token: `Bearer ${token}` },
         }
       );
 
-      // Create organization if provided
-      if (addFormData.organizationName) {
-        await axios.post(
-          `http://localhost:5000/api/universities/${universityRes.data._id}/organizations`,
-          {
-            organizationName: addFormData.organizationName,
-          }
-        );
-      }
-
       // Refresh data
-      const [
-        universitiesRes,
-        organizationsRes,
-        educationLevelsRes,
-        classesRes,
-      ] = await Promise.all([
-        axios.get("http://localhost:5000/api/universities"),
-        axios.get("http://localhost:5000/api/organizations"),
-        axios.get("http://localhost:5000/api/education-levels"),
-        axios.get("http://localhost:5000/api/classes"),
-      ]);
-
-      setUniversities(universitiesRes.data);
-      setOrganizations(organizationsRes.data);
-      setEducationLevels(educationLevelsRes.data);
-      setClasses(classesRes.data);
+      fetchData();
 
       resetAddForm();
       handleNotify("success", "Thành công!", "Thêm trường thành công!");
@@ -144,31 +189,25 @@ export default function Universities() {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
+      }
+
       await axios.put(
-        `http://localhost:5000/api/universities/${selectedUniversity._id}`,
+        `${BASE_URL}/university/${selectedUniversity._id}`,
         {
           universityCode: editFormData.universityCode,
           universityName: editFormData.universityName,
+        },
+        {
+          headers: { token: `Bearer ${token}` },
         }
       );
 
       // Refresh data
-      const [
-        universitiesRes,
-        organizationsRes,
-        educationLevelsRes,
-        classesRes,
-      ] = await Promise.all([
-        axios.get("http://localhost:5000/api/universities"),
-        axios.get("http://localhost:5000/api/organizations"),
-        axios.get("http://localhost:5000/api/education-levels"),
-        axios.get("http://localhost:5000/api/classes"),
-      ]);
-
-      setUniversities(universitiesRes.data);
-      setOrganizations(organizationsRes.data);
-      setEducationLevels(educationLevelsRes.data);
-      setClasses(classesRes.data);
+      fetchData();
 
       resetEditForm();
       handleNotify("success", "Thành công!", "Cập nhật trường thành công!");
@@ -183,9 +222,6 @@ export default function Universities() {
     setEditFormData({
       universityCode: university.universityCode,
       universityName: university.universityName,
-      organizationName: "",
-      levelName: "",
-      className: "",
     });
     setShowEditForm(true);
   };
@@ -193,27 +229,18 @@ export default function Universities() {
   const handleDeleteUniversity = async (universityId) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa trường này?")) {
       try {
-        await axios.delete(
-          `http://localhost:5000/api/universities/${universityId}`
-        );
+        const token = localStorage.getItem("token");
+        if (!token) {
+          handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+          return;
+        }
+
+        await axios.delete(`${BASE_URL}/university/${universityId}`, {
+          headers: { token: `Bearer ${token}` },
+        });
 
         // Refresh data
-        const [
-          universitiesRes,
-          organizationsRes,
-          educationLevelsRes,
-          classesRes,
-        ] = await Promise.all([
-          axios.get("http://localhost:5000/api/universities"),
-          axios.get("http://localhost:5000/api/organizations"),
-          axios.get("http://localhost:5000/api/education-levels"),
-          axios.get("http://localhost:5000/api/classes"),
-        ]);
-
-        setUniversities(universitiesRes.data);
-        setOrganizations(organizationsRes.data);
-        setEducationLevels(educationLevelsRes.data);
-        setClasses(classesRes.data);
+        fetchData();
 
         handleNotify("success", "Thành công!", "Xóa trường thành công!");
       } catch (error) {
@@ -227,9 +254,6 @@ export default function Universities() {
     setAddFormData({
       universityCode: "",
       universityName: "",
-      organizationName: "",
-      levelName: "",
-      className: "",
     });
     setShowAddForm(false);
   };
@@ -238,43 +262,13 @@ export default function Universities() {
     setEditFormData({
       universityCode: "",
       universityName: "",
-      organizationName: "",
-      levelName: "",
-      className: "",
     });
     setSelectedUniversity(null);
     setShowEditForm(false);
   };
 
   const getHierarchyData = () => {
-    return universities.map((university) => {
-      const universityOrganizations = organizations.filter(
-        (org) => org.universityId === university._id
-      );
-
-      return {
-        ...university,
-        organizations: universityOrganizations.map((org) => {
-          const orgEducationLevels = educationLevels.filter(
-            (level) => level.organizationId === org._id
-          );
-
-          return {
-            ...org,
-            educationLevels: orgEducationLevels.map((level) => {
-              const levelClasses = classes.filter(
-                (cls) => cls.educationLevelId === level._id
-              );
-
-              return {
-                ...level,
-                classes: levelClasses,
-              };
-            }),
-          };
-        }),
-      };
-    });
+    return universities;
   };
 
   const filteredUniversities = getHierarchyData().filter(
@@ -367,22 +361,22 @@ export default function Universities() {
 
                 {/* Main Table */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Tên trường
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Khoa/Viện
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Chương trình đào tạo
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Lớp
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Thao tác
                         </th>
                       </tr>
@@ -390,12 +384,31 @@ export default function Universities() {
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {filteredUniversities.length > 0 ? (
                         filteredUniversities.map((university) => {
+                          const totalOrganizations =
+                            university.organizations.length;
+                          const totalEducationLevels =
+                            university.organizations.reduce(
+                              (total, org) =>
+                                total + org.educationLevels.length,
+                              0
+                            );
+                          const totalClasses = university.organizations.reduce(
+                            (total, org) =>
+                              total +
+                              org.educationLevels.reduce(
+                                (levelTotal, level) =>
+                                  levelTotal + level.classes.length,
+                                0
+                              ),
+                            0
+                          );
+
                           return (
                             <tr
                               key={university._id}
                               className="hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
                                 <div className="font-semibold text-blue-600 dark:text-blue-400">
                                   <BankOutlined className="mr-2" />
                                   {university.universityName}
@@ -404,23 +417,30 @@ export default function Universities() {
                                   Mã: {university.universityCode}
                                 </div>
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
                                 <div className="space-y-2">
                                   {university.organizations.length > 0 ? (
-                                    university.organizations.map((org) => (
-                                      <div key={org._id} className="text-sm">
-                                        <div className="font-medium text-green-600">
-                                          <BookOutlined className="mr-1" />
-                                          {org.organizationName}
-                                        </div>
-                                        {org.travelTime && (
-                                          <div className="text-xs text-gray-500 ml-4">
-                                            Thời gian di chuyển:{" "}
-                                            {org.travelTime} phút
+                                    university.organizations.map(
+                                      (org, index) => (
+                                        <div key={org._id} className="text-sm">
+                                          <div className="font-medium text-green-600">
+                                            <BookOutlined className="mr-1" />
+                                            {org.organizationName}
                                           </div>
-                                        )}
-                                      </div>
-                                    ))
+                                          {org.travelTime && (
+                                            <div className="text-xs text-gray-500 ml-4">
+                                              Thời gian di chuyển:{" "}
+                                              {org.travelTime} phút
+                                            </div>
+                                          )}
+                                          {index <
+                                            university.organizations.length -
+                                              1 && (
+                                            <hr className="my-2 border-gray-200 dark:border-gray-600" />
+                                          )}
+                                        </div>
+                                      )
+                                    )
                                   ) : (
                                     <div className="text-gray-400 dark:text-gray-500 text-sm">
                                       Chưa có khoa/viện
@@ -428,24 +448,36 @@ export default function Universities() {
                                   )}
                                 </div>
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
                                 <div className="space-y-2">
                                   {university.organizations.length > 0 ? (
-                                    university.organizations.map((org) =>
-                                      org.educationLevels.map((level) => (
-                                        <div
-                                          key={level._id}
-                                          className="text-sm"
-                                        >
-                                          <div className="font-medium text-orange-600">
-                                            <TrophyOutlined className="mr-1" />
-                                            {level.levelName}
-                                          </div>
-                                          <div className="text-xs text-gray-500 ml-4">
-                                            Thuộc: {org.organizationName}
-                                          </div>
-                                        </div>
-                                      ))
+                                    university.organizations.map(
+                                      (org, orgIndex) =>
+                                        org.educationLevels.map(
+                                          (level, levelIndex) => (
+                                            <div
+                                              key={level._id}
+                                              className="text-sm"
+                                            >
+                                              <div className="font-medium text-orange-600">
+                                                <TrophyOutlined className="mr-1" />
+                                                {level.levelName}
+                                              </div>
+                                              <div className="text-xs text-gray-500 ml-4">
+                                                Thuộc: {org.organizationName}
+                                              </div>
+                                              {(orgIndex <
+                                                university.organizations
+                                                  .length -
+                                                  1 ||
+                                                levelIndex <
+                                                  org.educationLevels.length -
+                                                    1) && (
+                                                <hr className="my-2 border-gray-200 dark:border-gray-600" />
+                                              )}
+                                            </div>
+                                          )
+                                        )
                                     )
                                   ) : (
                                     <div className="text-gray-400 dark:text-gray-500 text-sm">
@@ -454,29 +486,47 @@ export default function Universities() {
                                   )}
                                 </div>
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
                                 <div className="space-y-2">
                                   {university.organizations.length > 0 ? (
-                                    university.organizations.map((org) =>
-                                      org.educationLevels.map((level) =>
-                                        level.classes.map((cls) => (
-                                          <div
-                                            key={cls._id}
-                                            className="text-sm"
-                                          >
-                                            <div className="text-gray-700 dark:text-gray-300">
-                                              <TeamOutlined className="mr-1" />
-                                              {cls.className}
-                                            </div>
-                                            <div className="text-xs text-gray-500 ml-4">
-                                              {cls.studentCount || 0} học viên
-                                            </div>
-                                            <div className="text-xs text-gray-500 ml-4">
-                                              Thuộc: {level.levelName}
-                                            </div>
-                                          </div>
-                                        ))
-                                      )
+                                    university.organizations.map(
+                                      (org, orgIndex) =>
+                                        org.educationLevels.map(
+                                          (level, levelIndex) =>
+                                            level.classes.map(
+                                              (cls, classIndex) => (
+                                                <div
+                                                  key={cls._id}
+                                                  className="text-sm"
+                                                >
+                                                  <div className="text-gray-700 dark:text-gray-300">
+                                                    <TeamOutlined className="mr-1" />
+                                                    {cls.className}
+                                                  </div>
+                                                  <div className="text-xs text-gray-500 ml-4">
+                                                    {cls.studentCount || 0} học
+                                                    viên
+                                                  </div>
+                                                  <div className="text-xs text-gray-500 ml-4">
+                                                    Thuộc: {level.levelName}
+                                                  </div>
+                                                  {(orgIndex <
+                                                    university.organizations
+                                                      .length -
+                                                      1 ||
+                                                    levelIndex <
+                                                      org.educationLevels
+                                                        .length -
+                                                        1 ||
+                                                    classIndex <
+                                                      level.classes.length -
+                                                        1) && (
+                                                    <hr className="my-2 border-gray-200 dark:border-gray-600" />
+                                                  )}
+                                                </div>
+                                              )
+                                            )
+                                        )
                                     )
                                   ) : (
                                     <div className="text-gray-400 dark:text-gray-500 text-sm">
@@ -486,7 +536,14 @@ export default function Universities() {
                                 </div>
                               </td>
 
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
+                                <Link
+                                  href={`/admin/universities/${university._id}/organizations`}
+                                  className="text-green-600 hover:text-green-900 mr-3"
+                                  title="Quản lý Khoa/Viện"
+                                >
+                                  <BookOutlined />
+                                </Link>
                                 <button
                                   onClick={() =>
                                     handleEditUniversity(university)
@@ -513,7 +570,7 @@ export default function Universities() {
                         <tr>
                           <td
                             colSpan="5"
-                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400"
+                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="flex flex-col items-center">
                               <BankOutlined className="text-4xl mb-2" />
@@ -576,20 +633,6 @@ export default function Universities() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Nhập tên trường"
                   required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tên khoa/viện (tùy chọn)
-                </label>
-                <input
-                  type="text"
-                  value={addFormData.organizationName}
-                  onChange={(e) =>
-                    handleAddInputChange("organizationName", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Nhập tên khoa/viện"
                 />
               </div>
               <div className="flex justify-end gap-2">
