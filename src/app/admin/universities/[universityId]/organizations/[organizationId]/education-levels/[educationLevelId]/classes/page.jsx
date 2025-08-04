@@ -26,7 +26,9 @@ export default function EducationLevelClasses() {
   const [classes, setClasses] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [classToDelete, setClassToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [addFormData, setAddFormData] = useState({
@@ -40,10 +42,10 @@ export default function EducationLevelClasses() {
   });
 
   useEffect(() => {
-    if (universityId && organizationId && educationLevelId) {
+    if (educationLevelId) {
       fetchData();
     }
-  }, [universityId, organizationId, educationLevelId]);
+  }, [educationLevelId]);
 
   const fetchData = async () => {
     try {
@@ -150,27 +152,35 @@ export default function EducationLevelClasses() {
     setShowEditForm(true);
   };
 
-  const handleDeleteClass = async (classId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa lớp này?")) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-          return;
-        }
+  const handleDeleteClass = (cls) => {
+    setClassToDelete(cls);
+    setShowDeleteModal(true);
+  };
 
-        await axios.delete(`${BASE_URL}/university/classes/${classId}`, {
-          headers: { token: `Bearer ${token}` },
-        });
-
-        fetchData();
-        handleNotify("success", "Thành công!", "Xóa lớp thành công!");
-      } catch (error) {
-        console.error("Error deleting class:", error);
-        const errorMessage =
-          error.response?.data?.message || "Có lỗi xảy ra khi xóa lớp";
-        handleNotify("danger", "Lỗi!", errorMessage);
+  const confirmDeleteClass = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
       }
+
+      await axios.delete(
+        `${BASE_URL}/university/classes/${classToDelete._id}`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+
+      fetchData();
+      handleNotify("success", "Thành công!", "Xóa lớp thành công!");
+      setShowDeleteModal(false);
+      setClassToDelete(null);
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi xóa lớp";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -331,7 +341,7 @@ export default function EducationLevelClasses() {
                   >
                     <ArrowLeftOutlined className="text-xl" />
                   </Link>
-                  <div className="text-gray-900 pt-2 dark:text-white text-lg">
+                  <div className="text-gray-900 dark:text-white text-lg">
                     QUẢN LÝ LỚP
                   </div>
                 </div>
@@ -364,13 +374,13 @@ export default function EducationLevelClasses() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Tên lớp
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Số học viên
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Thao tác
                         </th>
                       </tr>
@@ -394,20 +404,22 @@ export default function EducationLevelClasses() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
-                              <button
-                                onClick={() => handleEditClass(cls)}
-                                className="text-blue-600 hover:text-blue-900 mr-3"
-                                title="Chỉnh sửa"
-                              >
-                                <EditOutlined />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClass(cls._id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Xóa"
-                              >
-                                <DeleteOutlined />
-                              </button>
+                              <div className="flex justify-center items-center space-x-4">
+                                <button
+                                  onClick={() => handleEditClass(cls)}
+                                  className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                  title="Chỉnh sửa"
+                                >
+                                  <EditOutlined className="text-lg" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteClass(cls)}
+                                  className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  title="Xóa"
+                                >
+                                  <DeleteOutlined className="text-lg" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -575,6 +587,57 @@ export default function EducationLevelClasses() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-6">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <DeleteOutlined className="text-red-600 dark:text-red-400 text-xl" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Xác nhận xóa
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Bạn có chắc chắn muốn xóa lớp này?
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Tên lớp:</strong> {classToDelete?.className}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Số học viên:</strong> {classToDelete?.studentCount || 0}{" "}
+                học viên
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setClassToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteClass}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
           </div>
         </div>
       )}

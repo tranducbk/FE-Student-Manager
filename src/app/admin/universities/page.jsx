@@ -21,7 +21,9 @@ export default function Universities() {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [universityToDelete, setUniversityToDelete] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -230,29 +232,34 @@ export default function Universities() {
     setShowEditForm(true);
   };
 
-  const handleDeleteUniversity = async (universityId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa trường này?")) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-          return;
-        }
+  const handleDeleteUniversity = (university) => {
+    setUniversityToDelete(university);
+    setShowDeleteModal(true);
+  };
 
-        await axios.delete(`${BASE_URL}/university/${universityId}`, {
-          headers: { token: `Bearer ${token}` },
-        });
-
-        // Refresh data
-        fetchData();
-
-        handleNotify("success", "Thành công!", "Xóa trường thành công!");
-      } catch (error) {
-        console.error("Error deleting university:", error);
-        const errorMessage =
-          error.response?.data?.message || "Lỗi khi xóa trường";
-        handleNotify("danger", "Lỗi!", errorMessage);
+  const confirmDeleteUniversity = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
       }
+
+      await axios.delete(`${BASE_URL}/university/${universityToDelete._id}`, {
+        headers: { token: `Bearer ${token}` },
+      });
+
+      // Refresh data
+      fetchData();
+
+      handleNotify("success", "Thành công!", "Xóa trường thành công!");
+      setShowDeleteModal(false);
+      setUniversityToDelete(null);
+    } catch (error) {
+      console.error("Error deleting university:", error);
+      const errorMessage =
+        error.response?.data?.message || "Lỗi khi xóa trường";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -370,19 +377,19 @@ export default function Universities() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Tên trường
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Khoa/Viện
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Chương trình đào tạo
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Lớp
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Thao tác
                         </th>
                       </tr>
@@ -640,9 +647,7 @@ export default function Universities() {
                                     </button>
                                     <button
                                       onClick={() =>
-                                        handleDeleteUniversity(
-                                          row.university._id
-                                        )
+                                        handleDeleteUniversity(row.university)
                                       }
                                       className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                                       title="Xóa"
@@ -813,6 +818,57 @@ export default function Universities() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-6">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <DeleteOutlined className="text-red-600 dark:text-red-400 text-xl" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Xác nhận xóa
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Bạn có chắc chắn muốn xóa trường này?
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Tên trường:</strong>{" "}
+                {universityToDelete?.universityName}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Mã trường:</strong> {universityToDelete?.universityCode}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setUniversityToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteUniversity}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
           </div>
         </div>
       )}

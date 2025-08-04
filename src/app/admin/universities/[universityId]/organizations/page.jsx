@@ -23,7 +23,9 @@ export default function UniversityOrganizations() {
   const [organizations, setOrganizations] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
+  const [organizationToDelete, setOrganizationToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [addFormData, setAddFormData] = useState({
@@ -147,30 +149,35 @@ export default function UniversityOrganizations() {
     setShowEditForm(true);
   };
 
-  const handleDeleteOrganization = async (organizationId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa khoa/viện này?")) {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-          return;
-        }
+  const handleDeleteOrganization = (organization) => {
+    setOrganizationToDelete(organization);
+    setShowDeleteModal(true);
+  };
 
-        await axios.delete(
-          `${BASE_URL}/university/organizations/${organizationId}`,
-          {
-            headers: { token: `Bearer ${token}` },
-          }
-        );
-
-        fetchData();
-        handleNotify("success", "Thành công!", "Xóa khoa/viện thành công!");
-      } catch (error) {
-        console.error("Error deleting organization:", error);
-        const errorMessage =
-          error.response?.data?.message || "Có lỗi xảy ra khi xóa khoa/viện";
-        handleNotify("danger", "Lỗi!", errorMessage);
+  const confirmDeleteOrganization = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
+        return;
       }
+
+      await axios.delete(
+        `${BASE_URL}/university/organizations/${organizationToDelete._id}`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+
+      fetchData();
+      handleNotify("success", "Thành công!", "Xóa khoa/viện thành công!");
+      setShowDeleteModal(false);
+      setOrganizationToDelete(null);
+    } catch (error) {
+      console.error("Error deleting organization:", error);
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi xóa khoa/viện";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -281,7 +288,7 @@ export default function UniversityOrganizations() {
                   >
                     <ArrowLeftOutlined className="text-xl" />
                   </Link>
-                  <div className="text-gray-900 pt-2 dark:text-white text-lg">
+                  <div className="text-gray-900 dark:text-white text-lg">
                     QUẢN LÝ KHOA/VIỆN
                   </div>
                 </div>
@@ -314,13 +321,13 @@ export default function UniversityOrganizations() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Tên khoa/viện
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Thời gian di chuyển
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
                           Thao tác
                         </th>
                       </tr>
@@ -339,36 +346,38 @@ export default function UniversityOrganizations() {
                               </div>
                             </td>
                             <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                              <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
                                 {organization.travelTime || 45} phút
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
-                              <Link
-                                href={`/admin/universities/${universityId}/organizations/${organization._id}/education-levels`}
-                                className="text-orange-600 hover:text-orange-900 mr-3"
-                                title="Quản lý Chương trình đào tạo"
-                              >
-                                <TrophyOutlined />
-                              </Link>
-                              <button
-                                onClick={() =>
-                                  handleEditOrganization(organization)
-                                }
-                                className="text-blue-600 hover:text-blue-900 mr-3"
-                                title="Chỉnh sửa"
-                              >
-                                <EditOutlined />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleDeleteOrganization(organization._id)
-                                }
-                                className="text-red-600 hover:text-red-900"
-                                title="Xóa"
-                              >
-                                <DeleteOutlined />
-                              </button>
+                              <div className="flex justify-center items-center space-x-4">
+                                <Link
+                                  href={`/admin/universities/${universityId}/organizations/${organization._id}/education-levels`}
+                                  className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
+                                  title="Quản lý Chương trình đào tạo"
+                                >
+                                  <TrophyOutlined className="text-lg" />
+                                </Link>
+                                <button
+                                  onClick={() =>
+                                    handleEditOrganization(organization)
+                                  }
+                                  className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                  title="Chỉnh sửa"
+                                >
+                                  <EditOutlined className="text-lg" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDeleteOrganization(organization)
+                                  }
+                                  className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                  title="Xóa"
+                                >
+                                  <DeleteOutlined className="text-lg" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -536,6 +545,58 @@ export default function UniversityOrganizations() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center mb-6">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                  <DeleteOutlined className="text-red-600 dark:text-red-400 text-xl" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Xác nhận xóa
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Bạn có chắc chắn muốn xóa khoa/viện này?
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Tên khoa/viện:</strong>{" "}
+                {organizationToDelete?.organizationName}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <strong>Thời gian di chuyển:</strong>{" "}
+                {organizationToDelete?.travelTime || 45} phút
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setOrganizationToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteOrganization}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Xóa
+              </button>
+            </div>
           </div>
         </div>
       )}
