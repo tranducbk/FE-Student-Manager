@@ -21,7 +21,6 @@ export default function UniversityOrganizations() {
   const universityId = params.universityId;
 
   const [organizations, setOrganizations] = useState([]);
-  const [university, setUniversity] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState(null);
@@ -40,30 +39,8 @@ export default function UniversityOrganizations() {
   useEffect(() => {
     if (universityId) {
       fetchData();
-      fetchUniversity();
     }
   }, [universityId]);
-
-  const fetchUniversity = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/${universityId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setUniversity(response.data);
-    } catch (error) {
-      console.error("Error fetching university:", error);
-      handleNotify("danger", "Lỗi!", "Không thể tải thông tin trường");
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -80,13 +57,7 @@ export default function UniversityOrganizations() {
         }
       );
 
-      // Enrich organizations with university info
-      const organizationsWithData = response.data.map((org) => ({
-        ...org,
-        university: university,
-      }));
-
-      setOrganizations(organizationsWithData);
+      setOrganizations(response.data);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       handleNotify("danger", "Lỗi!", "Không thể tải danh sách khoa/viện");
@@ -124,7 +95,9 @@ export default function UniversityOrganizations() {
       handleNotify("success", "Thành công!", "Thêm khoa/viện thành công!");
     } catch (error) {
       console.error("Error adding organization:", error);
-      handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi thêm khoa/viện");
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi thêm khoa/viện";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -159,7 +132,9 @@ export default function UniversityOrganizations() {
       handleNotify("success", "Thành công!", "Cập nhật khoa/viện thành công!");
     } catch (error) {
       console.error("Error updating organization:", error);
-      handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi cập nhật khoa/viện");
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi cập nhật khoa/viện";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -192,7 +167,9 @@ export default function UniversityOrganizations() {
         handleNotify("success", "Thành công!", "Xóa khoa/viện thành công!");
       } catch (error) {
         console.error("Error deleting organization:", error);
-        handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi xóa khoa/viện");
+        const errorMessage =
+          error.response?.data?.message || "Có lỗi xảy ra khi xóa khoa/viện";
+        handleNotify("danger", "Lỗi!", errorMessage);
       }
     }
   };
@@ -307,11 +284,6 @@ export default function UniversityOrganizations() {
                   <div className="text-gray-900 pt-2 dark:text-white text-lg">
                     QUẢN LÝ KHOA/VIỆN
                   </div>
-                  {university && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      - {university.universityName}
-                    </div>
-                  )}
                 </div>
                 <button
                   onClick={() => setShowAddForm(true)}

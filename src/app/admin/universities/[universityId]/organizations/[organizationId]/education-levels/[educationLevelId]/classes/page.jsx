@@ -24,9 +24,6 @@ export default function EducationLevelClasses() {
   const educationLevelId = params.educationLevelId;
 
   const [classes, setClasses] = useState([]);
-  const [university, setUniversity] = useState(null);
-  const [organization, setOrganization] = useState(null);
-  const [educationLevel, setEducationLevel] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -45,78 +42,8 @@ export default function EducationLevelClasses() {
   useEffect(() => {
     if (universityId && organizationId && educationLevelId) {
       fetchData();
-      fetchUniversity();
-      fetchOrganization();
-      fetchEducationLevel();
     }
   }, [universityId, organizationId, educationLevelId]);
-
-  const fetchUniversity = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/${universityId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setUniversity(response.data);
-    } catch (error) {
-      console.error("Error fetching university:", error);
-      handleNotify("danger", "Lỗi!", "Không thể tải thông tin trường");
-    }
-  };
-
-  const fetchOrganization = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/organizations/${organizationId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setOrganization(response.data);
-    } catch (error) {
-      console.error("Error fetching organization:", error);
-      handleNotify("danger", "Lỗi!", "Không thể tải thông tin khoa/viện");
-    }
-  };
-
-  const fetchEducationLevel = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/education-levels/${educationLevelId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setEducationLevel(response.data);
-    } catch (error) {
-      console.error("Error fetching education level:", error);
-      handleNotify(
-        "danger",
-        "Lỗi!",
-        "Không thể tải thông tin chương trình đào tạo"
-      );
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -133,15 +60,7 @@ export default function EducationLevelClasses() {
         }
       );
 
-      // Enrich classes with education level, organization and university info
-      const classesWithData = response.data.map((cls) => ({
-        ...cls,
-        educationLevel: educationLevel,
-        organization: organization,
-        university: university,
-      }));
-
-      setClasses(classesWithData);
+      setClasses(response.data);
     } catch (error) {
       console.error("Error fetching classes:", error);
       handleNotify("danger", "Lỗi!", "Không thể tải danh sách lớp");
@@ -179,7 +98,9 @@ export default function EducationLevelClasses() {
       handleNotify("success", "Thành công!", "Thêm lớp thành công!");
     } catch (error) {
       console.error("Error adding class:", error);
-      handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi thêm lớp");
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi thêm lớp";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -214,7 +135,9 @@ export default function EducationLevelClasses() {
       handleNotify("success", "Thành công!", "Cập nhật lớp thành công!");
     } catch (error) {
       console.error("Error updating class:", error);
-      handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi cập nhật lớp");
+      const errorMessage =
+        error.response?.data?.message || "Có lỗi xảy ra khi cập nhật lớp";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -244,7 +167,9 @@ export default function EducationLevelClasses() {
         handleNotify("success", "Thành công!", "Xóa lớp thành công!");
       } catch (error) {
         console.error("Error deleting class:", error);
-        handleNotify("danger", "Lỗi!", "Có lỗi xảy ra khi xóa lớp");
+        const errorMessage =
+          error.response?.data?.message || "Có lỗi xảy ra khi xóa lớp";
+        handleNotify("danger", "Lỗi!", errorMessage);
       }
     }
   };
@@ -409,13 +334,6 @@ export default function EducationLevelClasses() {
                   <div className="text-gray-900 pt-2 dark:text-white text-lg">
                     QUẢN LÝ LỚP
                   </div>
-                  {university && organization && educationLevel && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      - {university.universityName} /{" "}
-                      {organization.organizationName} /{" "}
-                      {educationLevel.levelName}
-                    </div>
-                  )}
                 </div>
                 <button
                   onClick={() => setShowAddForm(true)}

@@ -23,8 +23,6 @@ export default function OrganizationEducationLevels() {
   const organizationId = params.organizationId;
 
   const [educationLevels, setEducationLevels] = useState([]);
-  const [university, setUniversity] = useState(null);
-  const [organization, setOrganization] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedEducationLevel, setSelectedEducationLevel] = useState(null);
@@ -41,52 +39,8 @@ export default function OrganizationEducationLevels() {
   useEffect(() => {
     if (universityId && organizationId) {
       fetchData();
-      fetchUniversity();
-      fetchOrganization();
     }
   }, [universityId, organizationId]);
-
-  const fetchUniversity = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/${universityId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setUniversity(response.data);
-    } catch (error) {
-      console.error("Error fetching university:", error);
-      handleNotify("danger", "Lỗi!", "Không thể tải thông tin trường");
-    }
-  };
-
-  const fetchOrganization = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        handleNotify("danger", "Lỗi!", "Vui lòng đăng nhập lại");
-        return;
-      }
-
-      const response = await axios.get(
-        `${BASE_URL}/university/organizations/${organizationId}`,
-        {
-          headers: { token: `Bearer ${token}` },
-        }
-      );
-      setOrganization(response.data);
-    } catch (error) {
-      console.error("Error fetching organization:", error);
-      handleNotify("danger", "Lỗi!", "Không thể tải thông tin khoa/viện");
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -159,11 +113,10 @@ export default function OrganizationEducationLevels() {
       );
     } catch (error) {
       console.error("Error adding education level:", error);
-      handleNotify(
-        "danger",
-        "Lỗi!",
-        "Có lỗi xảy ra khi thêm chương trình đào tạo"
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        "Có lỗi xảy ra khi thêm chương trình đào tạo";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -205,11 +158,10 @@ export default function OrganizationEducationLevels() {
       );
     } catch (error) {
       console.error("Error updating education level:", error);
-      handleNotify(
-        "danger",
-        "Lỗi!",
-        "Có lỗi xảy ra khi cập nhật chương trình đào tạo"
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        "Có lỗi xảy ra khi cập nhật chương trình đào tạo";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -245,11 +197,10 @@ export default function OrganizationEducationLevels() {
         );
       } catch (error) {
         console.error("Error deleting education level:", error);
-        handleNotify(
-          "danger",
-          "Lỗi!",
-          "Có lỗi xảy ra khi xóa chương trình đào tạo"
-        );
+        const errorMessage =
+          error.response?.data?.message ||
+          "Có lỗi xảy ra khi xóa chương trình đào tạo";
+        handleNotify("danger", "Lỗi!", errorMessage);
       }
     }
   };
@@ -387,12 +338,6 @@ export default function OrganizationEducationLevels() {
                   <div className="text-gray-900 pt-2 dark:text-white text-lg">
                     QUẢN LÝ CHƯƠNG TRÌNH ĐÀO TẠO
                   </div>
-                  {university && organization && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      - {university.universityName} /{" "}
-                      {organization.organizationName}
-                    </div>
-                  )}
                 </div>
                 <button
                   onClick={() => setShowAddForm(true)}

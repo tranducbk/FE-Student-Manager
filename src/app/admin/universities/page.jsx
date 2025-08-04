@@ -176,7 +176,9 @@ export default function Universities() {
       handleNotify("success", "Thành công!", "Thêm trường thành công!");
     } catch (error) {
       console.error("Error creating data:", error);
-      handleNotify("danger", "Lỗi!", "Lỗi khi thêm dữ liệu");
+      const errorMessage =
+        error.response?.data?.message || "Lỗi khi thêm dữ liệu";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -213,7 +215,9 @@ export default function Universities() {
       handleNotify("success", "Thành công!", "Cập nhật trường thành công!");
     } catch (error) {
       console.error("Error updating data:", error);
-      handleNotify("danger", "Lỗi!", "Lỗi khi cập nhật dữ liệu");
+      const errorMessage =
+        error.response?.data?.message || "Lỗi khi cập nhật dữ liệu";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -245,7 +249,9 @@ export default function Universities() {
         handleNotify("success", "Thành công!", "Xóa trường thành công!");
       } catch (error) {
         console.error("Error deleting university:", error);
-        handleNotify("danger", "Lỗi!", "Lỗi khi xóa trường");
+        const errorMessage =
+          error.response?.data?.message || "Lỗi khi xóa trường";
+        handleNotify("danger", "Lỗi!", errorMessage);
       }
     }
   };
@@ -384,187 +390,276 @@ export default function Universities() {
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {filteredUniversities.length > 0 ? (
                         filteredUniversities.map((university) => {
-                          const totalOrganizations =
-                            university.organizations.length;
-                          const totalEducationLevels =
-                            university.organizations.reduce(
-                              (total, org) =>
-                                total + org.educationLevels.length,
-                              0
-                            );
-                          const totalClasses = university.organizations.reduce(
-                            (total, org) =>
-                              total +
-                              org.educationLevels.reduce(
-                                (levelTotal, level) =>
-                                  levelTotal + level.classes.length,
-                                0
-                              ),
-                            0
-                          );
+                          // Tạo mảng các hàng cho university này
+                          const rows = [];
 
-                          return (
-                            <tr
-                              key={university._id}
-                              className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                                <div className="font-semibold text-blue-600 dark:text-blue-400">
-                                  <BankOutlined className="mr-2" />
-                                  {university.universityName}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                  Mã: {university.universityCode}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                                <div className="space-y-2">
-                                  {university.organizations.length > 0 ? (
-                                    university.organizations.map(
-                                      (org, index) => (
-                                        <div key={org._id} className="text-sm">
-                                          <div className="font-medium text-green-600">
-                                            <BookOutlined className="mr-1" />
-                                            {org.organizationName}
-                                          </div>
-                                          {org.travelTime && (
-                                            <div className="text-xs text-gray-500 ml-4">
-                                              Thời gian di chuyển:{" "}
-                                              {org.travelTime} phút
-                                            </div>
-                                          )}
-                                          {index <
-                                            university.organizations.length -
-                                              1 && (
-                                            <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                                          )}
-                                        </div>
-                                      )
-                                    )
+                          if (university.organizations.length === 0) {
+                            // University không có organizations
+                            rows.push({
+                              university: university,
+                              organization: null,
+                              educationLevel: null,
+                              class: null,
+                              universityRowSpan: 1,
+                              organizationRowSpan: 1,
+                              educationLevelRowSpan: 1,
+                              isUniversityStart: true,
+                              isOrganizationStart: true,
+                              isEducationLevelStart: true,
+                            });
+                          } else {
+                            // University có organizations
+                            university.organizations.forEach((org) => {
+                              if (org.educationLevels.length === 0) {
+                                // Organization không có education levels
+                                rows.push({
+                                  university: university,
+                                  organization: org,
+                                  educationLevel: null,
+                                  class: null,
+                                  universityRowSpan: 0, // Sẽ tính sau
+                                  organizationRowSpan: 1,
+                                  educationLevelRowSpan: 1,
+                                  isUniversityStart: rows.length === 0,
+                                  isOrganizationStart: true,
+                                  isEducationLevelStart: true,
+                                });
+                              } else {
+                                // Organization có education levels
+                                org.educationLevels.forEach((level) => {
+                                  if (level.classes.length === 0) {
+                                    // Education level không có classes - vẫn hiển thị education level
+                                    rows.push({
+                                      university: university,
+                                      organization: org,
+                                      educationLevel: level,
+                                      class: null,
+                                      universityRowSpan: 0, // Sẽ tính sau
+                                      organizationRowSpan: 0, // Sẽ tính sau
+                                      educationLevelRowSpan: 1,
+                                      isUniversityStart: rows.length === 0,
+                                      isOrganizationStart:
+                                        rows.filter(
+                                          (r) => r.organization?._id === org._id
+                                        ).length === 0,
+                                      isEducationLevelStart: true,
+                                    });
+                                  } else {
+                                    // Education level có classes
+                                    level.classes.forEach((cls) => {
+                                      rows.push({
+                                        university: university,
+                                        organization: org,
+                                        educationLevel: level,
+                                        class: cls,
+                                        universityRowSpan: 0, // Sẽ tính sau
+                                        organizationRowSpan: 0, // Sẽ tính sau
+                                        educationLevelRowSpan: 0, // Sẽ tính sau
+                                        isUniversityStart: rows.length === 0,
+                                        isOrganizationStart:
+                                          rows.filter(
+                                            (r) =>
+                                              r.organization?._id === org._id
+                                          ).length === 0,
+                                        isEducationLevelStart:
+                                          rows.filter(
+                                            (r) =>
+                                              r.educationLevel?._id ===
+                                              level._id
+                                          ).length === 0,
+                                      });
+                                    });
+                                  }
+                                });
+                              }
+                            });
+                          }
+
+                          // Tính rowSpan cho từng cấp độ
+                          let currentUniversityRowSpan = rows.length;
+                          let currentOrganizationRowSpan = 0;
+                          let currentEducationLevelRowSpan = 0;
+                          let currentOrganization = null;
+                          let currentEducationLevel = null;
+
+                          rows.forEach((row, index) => {
+                            // Tính universityRowSpan
+                            if (row.isUniversityStart) {
+                              row.universityRowSpan = currentUniversityRowSpan;
+                            }
+
+                            // Tính organizationRowSpan
+                            if (row.isOrganizationStart) {
+                              if (row.organization) {
+                                // Đếm số hàng cho organization này
+                                currentOrganizationRowSpan = rows
+                                  .slice(index)
+                                  .filter(
+                                    (r) =>
+                                      r.organization?._id ===
+                                      row.organization._id
+                                  ).length;
+                              } else {
+                                // Không có organization
+                                currentOrganizationRowSpan = 1;
+                              }
+                              row.organizationRowSpan =
+                                currentOrganizationRowSpan;
+                            }
+
+                            // Tính educationLevelRowSpan
+                            if (row.isEducationLevelStart) {
+                              if (row.educationLevel) {
+                                // Đếm số hàng cho education level này
+                                currentEducationLevelRowSpan = rows
+                                  .slice(index)
+                                  .filter(
+                                    (r) =>
+                                      r.educationLevel?._id ===
+                                      row.educationLevel._id
+                                  ).length;
+                              } else {
+                                // Không có education level
+                                currentEducationLevelRowSpan = 1;
+                              }
+                              row.educationLevelRowSpan =
+                                currentEducationLevelRowSpan;
+                            }
+                          });
+
+                          return rows.map((row, index) => {
+                            // Đảm bảo mỗi hàng có đủ 5 cột
+                            const cells = [];
+
+                            // University Column
+                            if (row.isUniversityStart) {
+                              cells.push(
+                                <td
+                                  key="university"
+                                  rowSpan={row.universityRowSpan}
+                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                >
+                                  <div className="font-semibold text-blue-600 dark:text-blue-400">
+                                    <BankOutlined className="mr-2" />
+                                    {row.university.universityName}
+                                  </div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Mã: {row.university.universityCode}
+                                  </div>
+                                </td>
+                              );
+                            }
+
+                            // Organization Column
+                            if (row.isOrganizationStart) {
+                              cells.push(
+                                <td
+                                  key="organization"
+                                  rowSpan={row.organizationRowSpan}
+                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                >
+                                  {row.organization ? (
+                                    <div className="font-medium text-green-600">
+                                      <BookOutlined className="mr-1" />
+                                      {row.organization.organizationName}
+                                    </div>
                                   ) : (
                                     <div className="text-gray-400 dark:text-gray-500 text-sm">
                                       Chưa có khoa/viện
                                     </div>
                                   )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                                <div className="space-y-2">
-                                  {university.organizations.length > 0 ? (
-                                    university.organizations.map(
-                                      (org, orgIndex) =>
-                                        org.educationLevels.map(
-                                          (level, levelIndex) => (
-                                            <div
-                                              key={level._id}
-                                              className="text-sm"
-                                            >
-                                              <div className="font-medium text-orange-600">
-                                                <TrophyOutlined className="mr-1" />
-                                                {level.levelName}
-                                              </div>
-                                              <div className="text-xs text-gray-500 ml-4">
-                                                Thuộc: {org.organizationName}
-                                              </div>
-                                              {(orgIndex <
-                                                university.organizations
-                                                  .length -
-                                                  1 ||
-                                                levelIndex <
-                                                  org.educationLevels.length -
-                                                    1) && (
-                                                <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                                              )}
-                                            </div>
-                                          )
-                                        )
-                                    )
+                                </td>
+                              );
+                            }
+
+                            // Education Level Column
+                            if (row.isEducationLevelStart) {
+                              cells.push(
+                                <td
+                                  key="educationLevel"
+                                  rowSpan={row.educationLevelRowSpan}
+                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                >
+                                  {row.educationLevel ? (
+                                    <div className="font-medium text-orange-600">
+                                      <TrophyOutlined className="mr-1" />
+                                      {row.educationLevel.levelName}
+                                    </div>
                                   ) : (
                                     <div className="text-gray-400 dark:text-gray-500 text-sm">
                                       Chưa có chương trình đào tạo
                                     </div>
                                   )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                                <div className="space-y-2">
-                                  {university.organizations.length > 0 ? (
-                                    university.organizations.map(
-                                      (org, orgIndex) =>
-                                        org.educationLevels.map(
-                                          (level, levelIndex) =>
-                                            level.classes.map(
-                                              (cls, classIndex) => (
-                                                <div
-                                                  key={cls._id}
-                                                  className="text-sm"
-                                                >
-                                                  <div className="text-gray-700 dark:text-gray-300">
-                                                    <TeamOutlined className="mr-1" />
-                                                    {cls.className}
-                                                  </div>
-                                                  <div className="text-xs text-gray-500 ml-4">
-                                                    {cls.studentCount || 0} học
-                                                    viên
-                                                  </div>
-                                                  <div className="text-xs text-gray-500 ml-4">
-                                                    Thuộc: {level.levelName}
-                                                  </div>
-                                                  {(orgIndex <
-                                                    university.organizations
-                                                      .length -
-                                                      1 ||
-                                                    levelIndex <
-                                                      org.educationLevels
-                                                        .length -
-                                                        1 ||
-                                                    classIndex <
-                                                      level.classes.length -
-                                                        1) && (
-                                                    <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                                                  )}
-                                                </div>
-                                              )
-                                            )
-                                        )
-                                    )
-                                  ) : (
-                                    <div className="text-gray-400 dark:text-gray-500 text-sm">
-                                      Chưa có lớp
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
+                                </td>
+                              );
+                            }
 
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
-                                <Link
-                                  href={`/admin/universities/${university._id}/organizations`}
-                                  className="text-green-600 hover:text-green-900 mr-3"
-                                  title="Quản lý Khoa/Viện"
-                                >
-                                  <BookOutlined />
-                                </Link>
-                                <button
-                                  onClick={() =>
-                                    handleEditUniversity(university)
-                                  }
-                                  className="text-blue-600 hover:text-blue-900 mr-3"
-                                  title="Chỉnh sửa"
-                                >
-                                  <EditOutlined />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteUniversity(university._id)
-                                  }
-                                  className="text-red-600 hover:text-red-900"
-                                  title="Xóa"
-                                >
-                                  <DeleteOutlined />
-                                </button>
+                            // Class Column - luôn hiển thị
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                              >
+                                {row.class ? (
+                                  <div className="text-gray-700 dark:text-gray-300">
+                                    <TeamOutlined className="mr-1" />
+                                    {row.class.className}
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-400 dark:text-gray-500 text-sm">
+                                    Chưa có lớp
+                                  </div>
+                                )}
                               </td>
-                            </tr>
-                          );
+                            );
+
+                            // Actions Column - chỉ hiển thị ở hàng đầu tiên của university
+                            if (row.isUniversityStart) {
+                              cells.push(
+                                <td
+                                  key="actions"
+                                  rowSpan={row.universityRowSpan}
+                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                >
+                                  <div className="flex justify-center items-center space-x-4">
+                                    <Link
+                                      href={`/admin/universities/${row.university._id}/organizations`}
+                                      className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                      title="Quản lý Khoa/Viện"
+                                    >
+                                      <BookOutlined className="text-lg" />
+                                    </Link>
+                                    <button
+                                      onClick={() =>
+                                        handleEditUniversity(row.university)
+                                      }
+                                      className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                      title="Chỉnh sửa"
+                                    >
+                                      <EditOutlined className="text-lg" />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteUniversity(
+                                          row.university._id
+                                        )
+                                      }
+                                      className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                      title="Xóa"
+                                    >
+                                      <DeleteOutlined className="text-lg" />
+                                    </button>
+                                  </div>
+                                </td>
+                              );
+                            }
+
+                            return (
+                              <tr key={`${row.university._id}-${index}`}>
+                                {cells}
+                              </tr>
+                            );
+                          });
                         })
                       ) : (
                         <tr>
