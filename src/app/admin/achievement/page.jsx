@@ -25,11 +25,15 @@ const Achievement = () => {
         const res = await axios.get(`${BASE_URL}/commander/students`, {
           headers: { token: `Bearer ${token}` },
         });
-        setStudents(res.data);
+
+        // Đảm bảo res.data là mảng
+        const studentsData = Array.isArray(res.data) ? res.data : [];
+        console.log("Students data:", studentsData); // Debug log
+        setStudents(studentsData);
 
         // Fetch achievements for all students
         const achievementsData = {};
-        for (const student of res.data) {
+        for (const student of studentsData) {
           try {
             const achievementRes = await axios.get(
               `${BASE_URL}/achievement/${student._id}`,
@@ -139,6 +143,16 @@ const Achievement = () => {
     return titleMap[title] || title;
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   return (
     <>
       <div className="flex">
@@ -193,21 +207,47 @@ const Achievement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 pt-2 dark:text-white text-lg">
-                  QUẢN LÝ KHEN THƯỞNG HỌC VIÊN
+                  QUẢN LÝ KHEN THƯỞNG THEO HỌC VIÊN
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedStudentForForm(null);
-                    setShowFormAdd(true);
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  + Thêm khen thưởng
-                </button>
+                <div className="flex space-x-2">
+                  <Link
+                    href="/admin/achievement/statistics"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    Thống kê
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setSelectedStudentForForm(null);
+                      setShowFormAdd(true);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                  >
+                    + Thêm khen thưởng
+                  </button>
+                </div>
               </div>
 
               <div className="p-5">
-                {students.length > 0 ? (
+                {/* Debug info */}
+                <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                  Tổng số học viên: {students ? students.length : 0}
+                </div>
+
+                {students && students.length > 0 ? (
                   <div className="space-y-6">
                     {students.map((student) => {
                       const achievement = achievements[student._id] || {
@@ -230,21 +270,49 @@ const Achievement = () => {
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {student.fullName}
+                                {student?.fullName || "Không có tên"}
                               </h3>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {student.unit} - {student.studentId}
+                                {student?.unit || "Không có đơn vị"} -{" "}
+                                {student?.studentId || "Không có mã"}
                               </p>
                             </div>
-                            <button
-                              onClick={() => {
-                                setSelectedStudentForForm(student);
-                                setShowFormAdd(true);
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                            >
-                              + Thêm khen thưởng
-                            </button>
+                            <div className="flex space-x-2">
+                              <Link
+                                href={`/admin/achievement/${student._id}`}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center"
+                              >
+                                <svg
+                                  className="w-4 h-4 mr-1"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                  />
+                                </svg>
+                                Xem chi tiết
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  setSelectedStudentForForm(student);
+                                  setShowFormAdd(true);
+                                }}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                              >
+                                + Thêm khen thưởng
+                              </button>
+                            </div>
                           </div>
 
                           <div className="overflow-x-auto">
@@ -280,24 +348,49 @@ const Achievement = () => {
                                         className="hover:bg-gray-50 dark:hover:bg-gray-700"
                                       >
                                         <td className="border px-3 py-2">
-                                          {ya.year}
+                                          {ya.year || "-"}
                                         </td>
                                         <td className="border px-3 py-2">
-                                          {ya.decisionNumber}
+                                          {ya.decisionNumber || "-"}
                                         </td>
                                         <td className="border px-3 py-2">
-                                          {new Date(
-                                            ya.decisionDate
-                                          ).toLocaleDateString("vi-VN")}
+                                          {formatDate(ya.decisionDate)}
                                         </td>
                                         <td className="border px-3 py-2">
-                                          {getTitleDisplay(ya.title)}
+                                          {ya.title
+                                            ? getTitleDisplay(ya.title)
+                                            : "-"}
                                         </td>
                                         <td className="border px-3 py-2">
                                           {ya.notes || "-"}
                                         </td>
                                         <td className="border px-3 py-2 text-center">
                                           <div className="flex justify-center space-x-2">
+                                            <Link
+                                              href={`/admin/achievement/${student._id}`}
+                                              className="text-green-600 hover:text-green-800 p-1"
+                                              title="Xem chi tiết"
+                                            >
+                                              <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth="2"
+                                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                />
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth="2"
+                                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                                />
+                                              </svg>
+                                            </Link>
                                             <button
                                               onClick={() => {
                                                 setEditFormData(ya);
@@ -308,7 +401,19 @@ const Achievement = () => {
                                               }}
                                               className="text-blue-600 hover:text-blue-800 p-1"
                                             >
-                                              ✏️
+                                              <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth="2"
+                                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                />
+                                              </svg>
                                             </button>
                                             <button
                                               onClick={() =>
@@ -319,7 +424,19 @@ const Achievement = () => {
                                               }
                                               className="text-red-600 hover:text-red-800 p-1"
                                             >
-                                              🗑️
+                                              <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth="2"
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                />
+                                              </svg>
                                             </button>
                                           </div>
                                         </td>
@@ -328,11 +445,23 @@ const Achievement = () => {
                                   )
                                 ) : (
                                   <tr>
-                                    <td
-                                      colSpan="6"
-                                      className="border px-3 py-4 text-center text-gray-500"
-                                    >
-                                      Chưa có khen thưởng nào
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
+                                    </td>
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
+                                    </td>
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
+                                    </td>
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
+                                    </td>
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
+                                    </td>
+                                    <td className="border px-3 py-2 text-center text-gray-400">
+                                      -
                                     </td>
                                   </tr>
                                 )}
@@ -361,11 +490,19 @@ const Achievement = () => {
                         />
                       </svg>
                       <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
-                        Không có dữ liệu
+                        Không có dữ liệu học viên
                       </p>
                       <p className="text-sm text-gray-400 dark:text-gray-500">
-                        Không tìm thấy học viên nào
+                        {students === null || students === undefined
+                          ? "Đang tải dữ liệu..."
+                          : "Không tìm thấy học viên nào trong hệ thống"}
                       </p>
+                      <button
+                        onClick={fetchStudents}
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Thử lại
+                      </button>
                     </div>
                   </div>
                 )}
@@ -378,8 +515,8 @@ const Achievement = () => {
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
               <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-xl font-semibold">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {selectedStudentForForm
                       ? `Thêm khen thưởng cho ${selectedStudentForForm.fullName}`
                       : "Thêm khen thưởng"}
@@ -389,7 +526,7 @@ const Achievement = () => {
                       setShowFormAdd(false);
                       setSelectedStudentForForm(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     ✕
                   </button>
@@ -400,7 +537,7 @@ const Achievement = () => {
                 >
                   {!selectedStudentForForm && (
                     <div>
-                      <label className="block text-sm font-medium mb-1">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                         Chọn học viên
                       </label>
                       <select
@@ -411,7 +548,7 @@ const Achievement = () => {
                           );
                           setSelectedStudentForForm(student);
                         }}
-                        className="w-full p-2 border rounded-lg"
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
                       >
                         <option value="">Chọn học viên</option>
@@ -424,7 +561,7 @@ const Achievement = () => {
                     </div>
                   )}
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Năm
                     </label>
                     <input
@@ -436,12 +573,12 @@ const Achievement = () => {
                           year: parseInt(e.target.value),
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Số quyết định
                     </label>
                     <input
@@ -453,12 +590,12 @@ const Achievement = () => {
                           decisionNumber: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Ngày quyết định
                     </label>
                     <input
@@ -470,12 +607,12 @@ const Achievement = () => {
                           decisionDate: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Danh hiệu
                     </label>
                     <select
@@ -486,7 +623,7 @@ const Achievement = () => {
                           title: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     >
                       <option value="">Chọn danh hiệu</option>
@@ -497,7 +634,7 @@ const Achievement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Ghi chú
                     </label>
                     <textarea
@@ -508,7 +645,7 @@ const Achievement = () => {
                           notes: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows="3"
                     />
                   </div>
@@ -519,13 +656,13 @@ const Achievement = () => {
                         setShowFormAdd(false);
                         setSelectedStudentForForm(null);
                       }}
-                      className="px-4 py-2 bg-gray-200 rounded-lg"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                     >
                       Thêm
                     </button>
@@ -540,8 +677,8 @@ const Achievement = () => {
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
               <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-xl font-semibold">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     Chỉnh sửa khen thưởng cho {selectedStudentForForm.fullName}
                   </h2>
                   <button
@@ -549,7 +686,7 @@ const Achievement = () => {
                       setShowFormEdit(false);
                       setSelectedStudentForForm(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     ✕
                   </button>
@@ -565,7 +702,7 @@ const Achievement = () => {
                   className="p-4 space-y-4"
                 >
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Năm
                     </label>
                     <input
@@ -577,12 +714,12 @@ const Achievement = () => {
                           year: parseInt(e.target.value),
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Số quyết định
                     </label>
                     <input
@@ -594,12 +731,12 @@ const Achievement = () => {
                           decisionNumber: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Ngày quyết định
                     </label>
                     <input
@@ -617,12 +754,12 @@ const Achievement = () => {
                           decisionDate: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Danh hiệu
                     </label>
                     <select
@@ -633,7 +770,7 @@ const Achievement = () => {
                           title: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       required
                     >
                       <option value="">Chọn danh hiệu</option>
@@ -644,7 +781,7 @@ const Achievement = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Ghi chú
                     </label>
                     <textarea
@@ -655,7 +792,7 @@ const Achievement = () => {
                           notes: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows="3"
                     />
                   </div>
@@ -666,13 +803,13 @@ const Achievement = () => {
                         setShowFormEdit(false);
                         setSelectedStudentForForm(null);
                       }}
-                      className="px-4 py-2 bg-gray-200 rounded-lg"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                     >
                       Cập nhật
                     </button>

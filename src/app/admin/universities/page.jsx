@@ -348,13 +348,35 @@ export default function Universities() {
                 <div className="text-gray-900 pt-2 dark:text-white text-lg">
                   QUẢN LÝ TRƯỜNG ĐẠI HỌC
                 </div>
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-                >
-                  <PlusOutlined />
-                  Thêm Trường
-                </button>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/admin/list-user"
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                      />
+                    </svg>
+                    Quay lại trang quản lý học viên
+                  </Link>
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+                  >
+                    <PlusOutlined />
+                    Thêm Trường
+                  </button>
+                </div>
               </div>
 
               <div className="p-5">

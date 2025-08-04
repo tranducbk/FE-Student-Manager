@@ -32,6 +32,12 @@ const ListUser = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // State cho form thông tin học viên
+  const [profileUniversity, setProfileUniversity] = useState(null);
+  const [profileOrganization, setProfileOrganization] = useState(null);
+  const [profileEducationLevel, setProfileEducationLevel] = useState(null);
+  const [profileClass, setProfileClass] = useState(null);
   const [addFormData, setAddFormData] = useState({
     username: "",
     password: "",
@@ -40,6 +46,7 @@ const ListUser = () => {
     gender: "",
     birthday: "",
     hometown: "",
+    currentAddress: "",
     email: "",
     phoneNumber: "",
     enrollment: "",
@@ -114,7 +121,7 @@ const ListUser = () => {
       university: selectedUniversity._id, // Sử dụng ObjectId của university đã chọn
       organization: selectedOrganization, // Tên khoa/viện đã chọn
       educationLevel: selectedLevel, // Trình độ đã chọn
-      classUniversity: selectedClass, // Lớp đã chọn
+      class: selectedClass, // Lớp đã chọn
     };
 
     setIsLoading(true);
@@ -361,9 +368,101 @@ const ListUser = () => {
 
         if (foundUniversity) {
           setSelectedUniversity(foundUniversity);
-          setSelectedOrganization(res.data.organization || "");
-          setSelectedLevel(res.data.educationLevel || "");
-          setSelectedClass(res.data.classUniversity || "");
+
+          // Gọi API để load organizations, education levels, và classes
+          try {
+            // Load organizations
+            const organizations = await fetchOrganizations(foundUniversity._id);
+            setOrganizations(organizations);
+
+            // Tìm organization đã chọn
+            let selectedOrg = null;
+            if (
+              res.data.organization &&
+              typeof res.data.organization === "object"
+            ) {
+              selectedOrg = res.data.organization;
+            } else if (
+              res.data.organization &&
+              typeof res.data.organization === "string"
+            ) {
+              selectedOrg = organizations.find(
+                (org) => org.organizationName === res.data.organization
+              );
+            } else if (
+              res.data.organization &&
+              res.data.organization.length === 24
+            ) {
+              selectedOrg = organizations.find(
+                (org) => org._id === res.data.organization
+              );
+            }
+
+            if (selectedOrg) {
+              setSelectedOrganization(selectedOrg._id);
+
+              // Load education levels
+              const educationLevels = await fetchEducationLevels(
+                selectedOrg._id
+              );
+              setEducationLevels(educationLevels);
+
+              // Tìm education level đã chọn
+              let selectedLevelObj = null;
+              if (
+                res.data.educationLevel &&
+                typeof res.data.educationLevel === "object"
+              ) {
+                selectedLevelObj = res.data.educationLevel;
+              } else if (
+                res.data.educationLevel &&
+                typeof res.data.educationLevel === "string"
+              ) {
+                selectedLevelObj = educationLevels.find(
+                  (level) => level.levelName === res.data.educationLevel
+                );
+              } else if (
+                res.data.educationLevel &&
+                res.data.educationLevel.length === 24
+              ) {
+                selectedLevelObj = educationLevels.find(
+                  (level) => level._id === res.data.educationLevel
+                );
+              }
+
+              if (selectedLevelObj) {
+                setSelectedLevel(selectedLevelObj._id);
+
+                // Load classes
+                const classes = await fetchClasses(selectedLevelObj._id);
+                setClasses(classes);
+
+                // Tìm class đã chọn
+                let selectedClassObj = null;
+                if (res.data.class && typeof res.data.class === "object") {
+                  selectedClassObj = res.data.class;
+                } else if (
+                  res.data.class &&
+                  typeof res.data.class === "string"
+                ) {
+                  selectedClassObj = classes.find(
+                    (cls) => cls.className === res.data.class
+                  );
+                } else if (res.data.class && res.data.class.length === 24) {
+                  selectedClassObj = classes.find(
+                    (cls) => cls._id === res.data.class
+                  );
+                }
+
+                if (selectedClassObj) {
+                  setSelectedClass(selectedClassObj);
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Error loading cascading data:", error);
+          }
+
           console.log("Selected university set:", foundUniversity);
         } else {
           console.log("No university found for:", res.data.university);
@@ -418,7 +517,7 @@ const ListUser = () => {
       university: selectedUniversity._id, // Sử dụng ObjectId của university đã chọn
       organization: selectedOrganization, // Tên khoa/viện đã chọn
       educationLevel: selectedLevel, // Trình độ đã chọn
-      classUniversity: selectedClass, // Lớp đã chọn
+      class: selectedClass?._id || selectedClass, // Lớp đã chọn - gửi ObjectId
     };
 
     setIsLoading(true);
@@ -504,6 +603,97 @@ const ListUser = () => {
           }
         );
         setProfileDetail(res.data);
+
+        // Fetch dữ liệu chi tiết cho university, organization, education level, class
+        console.log("Student data:", res.data);
+
+        // Fetch university
+        if (
+          res.data.university &&
+          typeof res.data.university === "string" &&
+          res.data.university.length === 24
+        ) {
+          try {
+            console.log("Fetching university:", res.data.university);
+            const universityRes = await axios.get(
+              `${BASE_URL}/university/${res.data.university}`,
+              {
+                headers: { token: `Bearer ${token}` },
+              }
+            );
+            console.log("University data:", universityRes.data);
+            setProfileUniversity(universityRes.data);
+          } catch (error) {
+            console.error("Error fetching university:", error);
+          }
+
+          // Fetch organization
+          if (
+            res.data.organization &&
+            typeof res.data.organization === "string" &&
+            res.data.organization.length === 24
+          ) {
+            try {
+              console.log("Fetching organization:", res.data.organization);
+              const organizationRes = await axios.get(
+                `${BASE_URL}/university/organizations/${res.data.organization}`,
+                {
+                  headers: { token: `Bearer ${token}` },
+                }
+              );
+              console.log("Organization data:", organizationRes.data);
+              setProfileOrganization(organizationRes.data);
+            } catch (error) {
+              console.error("Error fetching organization:", error);
+            }
+
+            // Fetch education level
+            if (
+              res.data.educationLevel &&
+              typeof res.data.educationLevel === "string" &&
+              res.data.educationLevel.length === 24
+            ) {
+              try {
+                console.log(
+                  "Fetching education level:",
+                  res.data.educationLevel
+                );
+                const educationLevelRes = await axios.get(
+                  `${BASE_URL}/university/education-levels/${res.data.educationLevel}`,
+                  {
+                    headers: { token: `Bearer ${token}` },
+                  }
+                );
+                console.log("Education level data:", educationLevelRes.data);
+                setProfileEducationLevel(educationLevelRes.data);
+              } catch (error) {
+                console.error("Error fetching education level:", error);
+              }
+
+              // Fetch class
+              if (
+                res.data.class &&
+                typeof res.data.class === "string" &&
+                res.data.class.length === 24
+              ) {
+                try {
+                  console.log("Fetching class:", res.data.class);
+                  const classRes = await axios.get(
+                    `${BASE_URL}/university/classes/${res.data.class}`,
+                    {
+                      headers: { token: `Bearer ${token}` },
+                    }
+                  );
+                  console.log("Class data:", classRes.data);
+                  setProfileClass(classRes.data);
+                } catch (error) {
+                  console.error("Error fetching class:", error);
+                }
+              }
+            }
+          }
+        }
+
         setShowProfileDetail(true);
       } catch (error) {
         console.log(error);
@@ -550,7 +740,14 @@ const ListUser = () => {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg relative p-6 max-w-5xl w-full mt-32 mx-auto max-h-[80vh] overflow-y-auto">
                 <button
                   className="absolute hover:text-red-500 dark:hover:text-red-400 top-0 z-30 text-4xl right-5 text-gray-500 dark:text-gray-400"
-                  onClick={() => setShowProfileDetail(false)}
+                  onClick={() => {
+                    setShowProfileDetail(false);
+                    // Reset các state khi đóng form
+                    setProfileUniversity(null);
+                    setProfileOrganization(null);
+                    setProfileEducationLevel(null);
+                    setProfileClass(null);
+                  }}
                 >
                   &times;
                 </button>
@@ -596,27 +793,34 @@ const ListUser = () => {
                             {profileDetail?.enrollment || "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Trình độ đào tạo:</span>{" "}
-                            {profileDetail?.educationLevel || "Chưa có dữ liệu"}
-                          </div>
-                          <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Lớp:</span>{" "}
-                            {profileDetail?.classUniversity ||
+                            <span className="font-bold">Trường:</span>{" "}
+                            {profileUniversity?.universityName ||
+                              profileDetail?.university?.universityName ||
+                              profileDetail?.university ||
                               "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">
                               Khoa/Viện quản lý:
                             </span>{" "}
-                            {profileDetail?.organization || "Chưa có dữ liệu"}
+                            {profileOrganization?.organizationName ||
+                              profileDetail?.organization?.organizationName ||
+                              profileDetail?.organization ||
+                              "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Trường:</span>{" "}
-                            {profileDetail?.university || "Chưa có dữ liệu"}
+                            <span className="font-bold">Trình độ đào tạo:</span>{" "}
+                            {profileEducationLevel?.levelName ||
+                              profileDetail?.educationLevel?.levelName ||
+                              profileDetail?.educationLevel ||
+                              "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Email:</span>{" "}
-                            {profileDetail?.email || "Chưa có dữ liệu"}
+                            <span className="font-bold">Lớp:</span>{" "}
+                            {profileClass?.className ||
+                              profileDetail?.class?.className ||
+                              profileDetail?.class ||
+                              "Chưa có dữ liệu"}
                           </div>
                         </div>
                         <div className="w-full md:w-1/2 pl-4">
@@ -675,8 +879,8 @@ const ListUser = () => {
                             {profileDetail?.hometown || "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Email:</span>{" "}
-                            {profileDetail?.email || "Chưa có dữ liệu"}
+                            <span className="font-bold">Nơi ở hiện nay:</span>{" "}
+                            {profileDetail?.currentAddress || "Chưa có dữ liệu"}
                           </div>
                         </div>
                       </div>
@@ -907,6 +1111,7 @@ const ListUser = () => {
                               }
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             >
+                              <option value="">Chọn giới tính</option>
                               <option value="Nam">Nam</option>
                               <option value="Nữ">Nữ</option>
                             </select>
@@ -930,6 +1135,7 @@ const ListUser = () => {
                               }
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             >
+                              <option value="">Chọn đơn vị</option>
                               <option value="L1 - H5">L1 - H5</option>
                               <option value="L2 - H5">L2 - H5</option>
                               <option value="L3 - H5">L3 - H5</option>
@@ -980,6 +1186,7 @@ const ListUser = () => {
                               }
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             >
+                              <option value="">Chọn cấp bậc</option>
                               <option value="Binh nhì">Binh nhì</option>
                               <option value="Binh nhất">Binh nhất</option>
                               <option value="Hạ Sỹ">Hạ Sỹ</option>
@@ -1007,7 +1214,7 @@ const ListUser = () => {
                               }
                               aria-describedby="helper-text-explanation"
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="2017"
+                              placeholder="Nhập năm vào trường"
                               min="2017"
                               required
                             />
@@ -1031,6 +1238,7 @@ const ListUser = () => {
                               }
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             >
+                              <option value="">Chọn chức vụ</option>
                               <option value="Học viên">Học viên</option>
                               <option value="Lớp phó">Lớp phó</option>
                               <option value="Lớp trưởng">Lớp trưởng</option>
@@ -1098,9 +1306,12 @@ const ListUser = () => {
                                   (u) => u.universityName === e.target.value
                                 );
                                 setSelectedUniversity(uni);
-                                setSelectedOrganization("");
-                                setSelectedLevel("");
-                                setSelectedClass("");
+                                setSelectedOrganization(null);
+                                setSelectedLevel(null);
+                                setSelectedClass(null);
+                                setOrganizations([]);
+                                setEducationLevels([]);
+                                setClasses([]);
 
                                 if (uni) {
                                   const organizations =
@@ -1152,23 +1363,41 @@ const ListUser = () => {
                             </label>
                             <select
                               id="organization"
-                              value={selectedOrganization}
-                              onChange={(e) => {
-                                setSelectedOrganization(e.target.value);
+                              value={
+                                selectedOrganization
+                                  ? organizations.find(
+                                      (org) => org._id === selectedOrganization
+                                    )?.organizationName || ""
+                                  : ""
+                              }
+                              onChange={async (e) => {
+                                const selectedOrg = organizations.find(
+                                  (org) =>
+                                    org.organizationName === e.target.value
+                                );
+                                setSelectedOrganization(selectedOrg._id);
                                 setSelectedLevel("");
                                 setSelectedClass("");
+                                setEducationLevels([]);
+                                setClasses([]);
+
+                                if (selectedOrg) {
+                                  const educationLevels =
+                                    await fetchEducationLevels(selectedOrg._id);
+                                  setEducationLevels(educationLevels);
+                                }
                               }}
                               disabled={!selectedUniversity}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               required
                             >
                               <option value="">Chọn khoa/viện</option>
-                              {selectedUniversity?.organizations?.map((org) => (
+                              {organizations.map((org) => (
                                 <option
-                                  key={org.organization}
-                                  value={org.organization}
+                                  key={org._id}
+                                  value={org.organizationName}
                                 >
-                                  {org.organization}
+                                  {org.organizationName}
                                 </option>
                               ))}
                             </select>
@@ -1212,27 +1441,26 @@ const ListUser = () => {
                             </label>
                             <select
                               id="level"
-                              value={selectedLevel || ""}
+                              value={
+                                selectedLevel
+                                  ? educationLevels.find(
+                                      (level) => level._id === selectedLevel
+                                    )?.levelName || ""
+                                  : ""
+                              }
                               onChange={async (e) => {
-                                setSelectedLevel(e.target.value);
+                                const selectedLevelObj = educationLevels.find(
+                                  (level) => level.levelName === e.target.value
+                                );
+                                setSelectedLevel(selectedLevelObj._id);
                                 setSelectedClass("");
+                                setClasses([]);
 
-                                if (e.target.value && selectedUniversity) {
-                                  const org =
-                                    selectedUniversity.organizations?.find(
-                                      (org) =>
-                                        org.organization ===
-                                        selectedOrganization
-                                    );
-                                  const level = org?.educationLevels?.find(
-                                    (level) => level.level === e.target.value
+                                if (selectedLevelObj) {
+                                  const classList = await fetchClasses(
+                                    selectedLevelObj._id
                                   );
-                                  if (level) {
-                                    const classList = await fetchClasses(
-                                      level._id
-                                    );
-                                    setClasses(classList);
-                                  }
+                                  setClasses(classList);
                                 }
                               }}
                               disabled={!selectedOrganization}
@@ -1240,16 +1468,11 @@ const ListUser = () => {
                               required
                             >
                               <option value="">Chọn trình độ đào tạo</option>
-                              {selectedUniversity?.organizations
-                                ?.find(
-                                  (org) =>
-                                    org.organization === selectedOrganization
-                                )
-                                ?.educationLevels?.map((level) => (
-                                  <option key={level.level} value={level.level}>
-                                    {level.level}
-                                  </option>
-                                ))}
+                              {educationLevels.map((level) => (
+                                <option key={level._id} value={level.levelName}>
+                                  {level.levelName}
+                                </option>
+                              ))}
                             </select>
                           </div>
 
@@ -1294,25 +1517,39 @@ const ListUser = () => {
                                 );
                                 setSelectedClass(selectedClassObj);
                               }}
-                              disabled={!selectedLevel?._id}
+                              disabled={!selectedLevel}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               required
                             >
                               <option value="">Chọn lớp</option>
-                              {selectedUniversity?.organizations
-                                ?.find(
-                                  (org) =>
-                                    org.organization === selectedOrganization
-                                )
-                                ?.educationLevels?.find(
-                                  (level) => level.level === selectedLevel
-                                )
-                                ?.classes?.map((cls) => (
-                                  <option key={cls} value={cls}>
-                                    {cls}
-                                  </option>
-                                ))}
+                              {classes.map((cls) => (
+                                <option key={cls._id} value={cls.className}>
+                                  {cls.className}
+                                </option>
+                              ))}
                             </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="currentAddress"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Nơi ở hiện nay
+                            </label>
+                            <input
+                              type="text"
+                              id="currentAddress"
+                              value={addFormData.currentAddress}
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  currentAddress: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
+                            />
                           </div>
 
                           <div>
@@ -1472,13 +1709,19 @@ const ListUser = () => {
                     <span className="text-sm">Quản lý Trường</span>
                   </div>
                   <div
-                    onClick={() => {
+                    onClick={async () => {
                       setShowFormAdd(true);
                       // Reset các select động khi mở form add
                       setSelectedUniversity(null);
-                      setSelectedOrganization("");
-                      setSelectedLevel("");
-                      setSelectedClass("");
+                      setSelectedOrganization(null);
+                      setSelectedLevel(null);
+                      setSelectedClass(null);
+                      setOrganizations([]);
+                      setEducationLevels([]);
+                      setClasses([]);
+
+                      // Gọi API lấy danh sách universities khi mở form
+                      await fetchUniversities();
                     }}
                     className="flex hover:text-blue-700 cursor-pointer items-center"
                   >
@@ -2021,7 +2264,7 @@ const ListUser = () => {
                             value={formData.enrollment}
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="2017"
+                            placeholder="Nhập năm vào trường"
                             min="2017"
                           />
                         </div>
@@ -2137,14 +2380,24 @@ const ListUser = () => {
                           <select
                             id="university"
                             value={selectedUniversity?._id || ""}
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const uni = universities.find(
                                 (u) => u._id === e.target.value
                               );
                               setSelectedUniversity(uni);
-                              setSelectedOrganization("");
-                              setSelectedLevel("");
-                              setSelectedClass("");
+                              setSelectedOrganization(null);
+                              setSelectedLevel(null);
+                              setSelectedClass(null);
+                              setOrganizations([]);
+                              setEducationLevels([]);
+                              setClasses([]);
+
+                              if (uni) {
+                                const organizations = await fetchOrganizations(
+                                  uni._id
+                                );
+                                setOrganizations(organizations);
+                              }
                             }}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             required
@@ -2184,23 +2437,40 @@ const ListUser = () => {
                           </label>
                           <select
                             id="organization"
-                            value={selectedOrganization}
-                            onChange={(e) => {
-                              setSelectedOrganization(e.target.value);
-                              setSelectedLevel("");
-                              setSelectedClass("");
+                            value={
+                              selectedOrganization
+                                ? organizations.find(
+                                    (org) => org._id === selectedOrganization
+                                  )?.organizationName || ""
+                                : ""
+                            }
+                            onChange={async (e) => {
+                              const selectedOrg = organizations.find(
+                                (org) => org.organizationName === e.target.value
+                              );
+                              setSelectedOrganization(selectedOrg._id);
+                              setSelectedLevel(null);
+                              setSelectedClass(null);
+                              setEducationLevels([]);
+                              setClasses([]);
+
+                              if (selectedOrg) {
+                                const educationLevels =
+                                  await fetchEducationLevels(selectedOrg._id);
+                                setEducationLevels(educationLevels);
+                              }
                             }}
                             disabled={!selectedUniversity}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             required
                           >
                             <option value="">Chọn khoa/viện</option>
-                            {selectedUniversity?.organizations?.map((org) => (
+                            {organizations.map((org) => (
                               <option
-                                key={org.organization}
-                                value={org.organization}
+                                key={org._id}
+                                value={org.organizationName}
                               >
-                                {org.organization}
+                                {org.organizationName}
                               </option>
                             ))}
                           </select>
@@ -2234,26 +2504,26 @@ const ListUser = () => {
                           </label>
                           <select
                             id="level"
-                            value={selectedLevel}
+                            value={
+                              selectedLevel
+                                ? educationLevels.find(
+                                    (level) => level._id === selectedLevel
+                                  )?.levelName || ""
+                                : ""
+                            }
                             onChange={async (e) => {
-                              setSelectedLevel(e.target.value);
-                              setSelectedClass("");
+                              const selectedLevelObj = educationLevels.find(
+                                (level) => level.levelName === e.target.value
+                              );
+                              setSelectedLevel(selectedLevelObj._id);
+                              setSelectedClass(null);
+                              setClasses([]);
 
-                              if (e.target.value && selectedUniversity) {
-                                const org =
-                                  selectedUniversity.organizations?.find(
-                                    (org) =>
-                                      org.organization === selectedOrganization
-                                  );
-                                const level = org?.educationLevels?.find(
-                                  (level) => level.level === e.target.value
+                              if (selectedLevelObj) {
+                                const classList = await fetchClasses(
+                                  selectedLevelObj._id
                                 );
-                                if (level) {
-                                  const classList = await fetchClasses(
-                                    level._id
-                                  );
-                                  setClasses(classList);
-                                }
+                                setClasses(classList);
                               }
                             }}
                             disabled={!selectedOrganization}
@@ -2261,16 +2531,11 @@ const ListUser = () => {
                             required
                           >
                             <option value="">Chọn trình độ đào tạo</option>
-                            {selectedUniversity?.organizations
-                              ?.find(
-                                (org) =>
-                                  org.organization === selectedOrganization
-                              )
-                              ?.educationLevels?.map((level) => (
-                                <option key={level.level} value={level.level}>
-                                  {level.level}
-                                </option>
-                              ))}
+                            {educationLevels.map((level) => (
+                              <option key={level._id} value={level.levelName}>
+                                {level.levelName}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
@@ -2296,26 +2561,29 @@ const ListUser = () => {
                           </label>
                           <select
                             id="class"
-                            value={selectedClass}
-                            onChange={(e) => setSelectedClass(e.target.value)}
+                            value={
+                              selectedClass
+                                ? classes.find(
+                                    (cls) => cls._id === selectedClass._id
+                                  )?.className || ""
+                                : ""
+                            }
+                            onChange={(e) => {
+                              const selectedClassObj = classes.find(
+                                (cls) => cls.className === e.target.value
+                              );
+                              setSelectedClass(selectedClassObj);
+                            }}
                             disabled={!selectedLevel}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             required
                           >
                             <option value="">Chọn lớp</option>
-                            {selectedUniversity?.organizations
-                              ?.find(
-                                (org) =>
-                                  org.organization === selectedOrganization
-                              )
-                              ?.educationLevels?.find(
-                                (level) => level.level === selectedLevel
-                              )
-                              ?.classes?.map((cls) => (
-                                <option key={cls} value={cls}>
-                                  {cls}
-                                </option>
-                              ))}
+                            {classes.map((cls) => (
+                              <option key={cls._id} value={cls.className}>
+                                {cls.className}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
