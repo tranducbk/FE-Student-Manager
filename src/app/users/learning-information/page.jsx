@@ -38,6 +38,28 @@ const LearningInformation = () => {
   };
 
   const handleEditTimeTable = (id) => {
+    const timeTableItem = timeTable.find((item) => item._id === id);
+    if (timeTableItem) {
+      // Parse time string to startTime and endTime
+      let startTime = "";
+      let endTime = "";
+      if (timeTableItem.time && timeTableItem.time.includes(" - ")) {
+        const timeParts = timeTableItem.time.split(" - ");
+        startTime = timeParts[0];
+        endTime = timeParts[1];
+      }
+
+      setEditedTimeTable({
+        day: timeTableItem.day || "",
+        subject: timeTableItem.subject || "",
+        startTime: startTime,
+        endTime: endTime,
+        classroom: timeTableItem.classroom || "",
+        schoolWeek: timeTableItem.schoolWeek || "",
+        notes: timeTableItem.notes || "",
+        time: timeTableItem.time || "",
+      });
+    }
     setTimeTableId(id);
     setIsOpenTimeTable(true);
   };
@@ -82,10 +104,38 @@ const LearningInformation = () => {
     const token = localStorage.getItem("token");
 
     if (token) {
+      // Validate thời gian
+      if (editedTimeTable.startTime && editedTimeTable.endTime) {
+        const startTime = new Date(
+          `2000-01-01T${editedTimeTable.startTime}:00`
+        );
+        const endTime = new Date(`2000-01-01T${editedTimeTable.endTime}:00`);
+
+        if (startTime >= endTime) {
+          handleNotify(
+            "danger",
+            "Lỗi!",
+            "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+          );
+          return;
+        }
+      }
+
+      // Tạo time string từ startTime và endTime
+      const timeString =
+        editedTimeTable.startTime && editedTimeTable.endTime
+          ? `${editedTimeTable.startTime} - ${editedTimeTable.endTime}`
+          : editedTimeTable.time || "";
+
+      const formData = {
+        ...editedTimeTable,
+        time: timeString,
+      };
+
       try {
         await axios.put(
           `${BASE_URL}/student/time-table/${timeTableId}`,
-          editedTimeTable,
+          formData,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -97,7 +147,7 @@ const LearningInformation = () => {
         fetchTimeTable();
       } catch (error) {
         handleNotify("danger", "Lỗi!", error.response.data);
-        setIsOpenLearningResult(false);
+        setIsOpenTimeTable(false);
       }
     }
   };
@@ -154,10 +204,39 @@ const LearningInformation = () => {
   const handleAddFormTimeTable = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+
+    // Validate thời gian
+    if (addFormDataTimeTable.startTime && addFormDataTimeTable.endTime) {
+      const startTime = new Date(
+        `2000-01-01T${addFormDataTimeTable.startTime}:00`
+      );
+      const endTime = new Date(`2000-01-01T${addFormDataTimeTable.endTime}:00`);
+
+      if (startTime >= endTime) {
+        handleNotify(
+          "danger",
+          "Lỗi!",
+          "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc"
+        );
+        return;
+      }
+    }
+
+    // Tạo time string từ startTime và endTime
+    const timeString =
+      addFormDataTimeTable.startTime && addFormDataTimeTable.endTime
+        ? `${addFormDataTimeTable.startTime} - ${addFormDataTimeTable.endTime}`
+        : addFormDataTimeTable.time || "";
+
+    const formData = {
+      ...addFormDataTimeTable,
+      time: timeString,
+    };
+
     try {
       const response = await axios.post(
         `${BASE_URL}/student/${jwtDecode(token).id}/time-table`,
-        addFormDataTimeTable,
+        formData,
         {
           headers: {
             token: `Bearer ${token}`,
@@ -167,6 +246,8 @@ const LearningInformation = () => {
       handleNotify("success", "Thành công!", "Thêm lịch học thành công");
       setTimeTable([...timeTable, response.data]);
       setShowFormAddTimeTable(false);
+      // Reset form
+      setAddFormDataTimeTable({});
     } catch (error) {
       setShowFormAddTimeTable(false);
       handleNotify("danger", "Lỗi!", error.response.data);
@@ -470,6 +551,12 @@ const LearningInformation = () => {
                           scope="col"
                           className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                         >
+                          Môn học
+                        </th>
+                        <th
+                          scope="col"
+                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                        >
                           Phòng học
                         </th>
                         <th
@@ -497,6 +584,9 @@ const LearningInformation = () => {
                           </td>
                           <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                             {item.time}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.subject || "N/A"}
                           </td>
                           <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                             {item.classroom}
@@ -890,95 +980,177 @@ const LearningInformation = () => {
                 className="p-4"
                 id="infoFormTimeTable"
               >
-                <div className="mb-4">
-                  <label
-                    htmlFor="day"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Thứ
-                  </label>
-                  <input
-                    type="text"
-                    id="day"
-                    name="day"
-                    value={addFormDataTimeTable.day}
-                    onChange={(e) =>
-                      setAddFormDataTimeTable({
-                        ...addFormDataTimeTable,
-                        day: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="vd: 2"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="day"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thứ
+                    </label>
+                    <select
+                      id="day"
+                      name="day"
+                      value={addFormDataTimeTable.day}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          day: e.target.value,
+                        })
+                      }
+                      required
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    >
+                      <option value="">Chọn thứ</option>
+                      <option value="Thứ 2">Thứ 2</option>
+                      <option value="Thứ 3">Thứ 3</option>
+                      <option value="Thứ 4">Thứ 4</option>
+                      <option value="Thứ 5">Thứ 5</option>
+                      <option value="Thứ 6">Thứ 6</option>
+                      <option value="Thứ 7">Thứ 7</option>
+                      <option value="Chủ nhật">Chủ nhật</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="subject"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Môn học
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      value={addFormDataTimeTable.subject}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          subject: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder="VD: Toán học"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="time"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Thời gian
-                  </label>
-                  <input
-                    type="text"
-                    id="time"
-                    name="time"
-                    value={addFormDataTimeTable.time}
-                    onChange={(e) =>
-                      setAddFormDataTimeTable({
-                        ...addFormDataTimeTable,
-                        time: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="vd: 06:45 - 10:05"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="startTime"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thời gian bắt đầu
+                    </label>
+                    <input
+                      type="time"
+                      id="startTime"
+                      name="startTime"
+                      value={addFormDataTimeTable.startTime}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          startTime: e.target.value,
+                        })
+                      }
+                      required
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="endTime"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thời gian kết thúc
+                    </label>
+                    <input
+                      type="time"
+                      id="endTime"
+                      name="endTime"
+                      value={addFormDataTimeTable.endTime}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          endTime: e.target.value,
+                        })
+                      }
+                      required
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="classroom"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Phòng học
-                  </label>
-                  <input
-                    type="text"
-                    id="classroom"
-                    name="classroom"
-                    value={addFormDataTimeTable.classroom}
-                    onChange={(e) =>
-                      setAddFormDataTimeTable({
-                        ...addFormDataTimeTable,
-                        classroom: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="vd: D3-101"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="classroom"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Phòng học
+                    </label>
+                    <input
+                      type="text"
+                      id="classroom"
+                      name="classroom"
+                      value={addFormDataTimeTable.classroom}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          classroom: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder="VD: D3-101"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="schoolWeek"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Tuần học
+                    </label>
+                    <input
+                      type="text"
+                      id="schoolWeek"
+                      name="schoolWeek"
+                      value={addFormDataTimeTable.schoolWeek}
+                      onChange={(e) =>
+                        setAddFormDataTimeTable({
+                          ...addFormDataTimeTable,
+                          schoolWeek: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder="VD: 1-15"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
+
                 <div className="mb-4">
                   <label
-                    htmlFor="schoolWeek"
+                    htmlFor="notes"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Tuần học
+                    Ghi chú
                   </label>
-                  <input
-                    type="text"
-                    id="schoolWeek"
-                    name="schoolWeek"
-                    value={addFormDataTimeTable.schoolWeek}
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    value={addFormDataTimeTable.notes}
                     onChange={(e) =>
                       setAddFormDataTimeTable({
                         ...addFormDataTimeTable,
-                        schoolWeek: e.target.value,
+                        notes: e.target.value,
                       })
                     }
-                    required
-                    placeholder="vd: 34-42"
+                    rows="3"
+                    placeholder="Ghi chú về lịch học..."
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   />
                 </div>
@@ -1037,91 +1209,171 @@ const LearningInformation = () => {
                 className="p-4"
                 id="infoFormEditTimeTable"
               >
-                <div className="mb-4">
-                  <label
-                    htmlFor="day2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Thứ
-                  </label>
-                  <input
-                    type="text"
-                    id="day2"
-                    name="day2"
-                    value={editedTimeTable.day}
-                    onChange={(e) =>
-                      setEditedTimeTable({
-                        ...editedTimeTable,
-                        day: e.target.value,
-                      })
-                    }
-                    placeholder="vd: 2"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="day2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thứ
+                    </label>
+                    <select
+                      id="day2"
+                      name="day2"
+                      value={editedTimeTable.day}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          day: e.target.value,
+                        })
+                      }
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    >
+                      <option value="">Chọn thứ</option>
+                      <option value="Thứ 2">Thứ 2</option>
+                      <option value="Thứ 3">Thứ 3</option>
+                      <option value="Thứ 4">Thứ 4</option>
+                      <option value="Thứ 5">Thứ 5</option>
+                      <option value="Thứ 6">Thứ 6</option>
+                      <option value="Thứ 7">Thứ 7</option>
+                      <option value="Chủ nhật">Chủ nhật</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="subject2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Môn học
+                    </label>
+                    <input
+                      type="text"
+                      id="subject2"
+                      name="subject2"
+                      value={editedTimeTable.subject}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          subject: e.target.value,
+                        })
+                      }
+                      placeholder="VD: Toán học"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="time2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Thời gian
-                  </label>
-                  <input
-                    type="text"
-                    id="time2"
-                    name="time2"
-                    value={editedTimeTable.time}
-                    onChange={(e) =>
-                      setEditedTimeTable({
-                        ...editedTimeTable,
-                        time: e.target.value,
-                      })
-                    }
-                    placeholder="vd: 06:45 - 10:05"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="startTime2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thời gian bắt đầu
+                    </label>
+                    <input
+                      type="time"
+                      id="startTime2"
+                      name="startTime2"
+                      value={editedTimeTable.startTime}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          startTime: e.target.value,
+                        })
+                      }
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="endTime2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Thời gian kết thúc
+                    </label>
+                    <input
+                      type="time"
+                      id="endTime2"
+                      name="endTime2"
+                      value={editedTimeTable.endTime}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          endTime: e.target.value,
+                        })
+                      }
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="classroom2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Phòng học
-                  </label>
-                  <input
-                    type="text"
-                    id="classroom2"
-                    name="classroom2"
-                    value={editedTimeTable.classroom}
-                    onChange={(e) =>
-                      setEditedTimeTable({
-                        ...editedTimeTable,
-                        classroom: e.target.value,
-                      })
-                    }
-                    placeholder="vd: D3-101"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      htmlFor="classroom2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Phòng học
+                    </label>
+                    <input
+                      type="text"
+                      id="classroom2"
+                      name="classroom2"
+                      value={editedTimeTable.classroom}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          classroom: e.target.value,
+                        })
+                      }
+                      placeholder="VD: D3-101"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="schoolWeek2"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Tuần học
+                    </label>
+                    <input
+                      type="text"
+                      id="schoolWeek2"
+                      name="schoolWeek2"
+                      value={editedTimeTable.schoolWeek}
+                      onChange={(e) =>
+                        setEditedTimeTable({
+                          ...editedTimeTable,
+                          schoolWeek: e.target.value,
+                        })
+                      }
+                      placeholder="VD: 1-15"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
                 </div>
+
                 <div className="mb-4">
                   <label
-                    htmlFor="schoolWeek2"
+                    htmlFor="notes2"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Tuần học
+                    Ghi chú
                   </label>
-                  <input
-                    type="text"
-                    id="schoolWeek2"
-                    name="schoolWeek2"
-                    value={editedTimeTable.schoolWeek}
+                  <textarea
+                    id="notes2"
+                    name="notes2"
+                    value={editedTimeTable.notes}
                     onChange={(e) =>
                       setEditedTimeTable({
                         ...editedTimeTable,
-                        schoolWeek: e.target.value,
+                        notes: e.target.value,
                       })
                     }
-                    placeholder="vd: 34-42"
+                    rows="3"
+                    placeholder="Ghi chú về lịch học..."
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   />
                 </div>

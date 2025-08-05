@@ -191,7 +191,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {student || 0}
+                  {student?.length || 0}
                 </span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
@@ -204,7 +204,9 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between">
                   <span>Học viên:</span>
-                  <span className="font-medium">{student} đồng chí</span>
+                  <span className="font-medium">
+                    {student?.length || 0} đồng chí
+                  </span>
                 </div>
               </div>
             </div>
@@ -452,7 +454,7 @@ export default function Home() {
                   Tổng quân số:
                 </span>
                 <span className="font-semibold text-gray-900 dark:text-white">
-                  {student + 3} đồng chí
+                  {(student?.length || 0) + 3} đồng chí
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -460,7 +462,7 @@ export default function Home() {
                   Học viên:
                 </span>
                 <span className="font-semibold text-gray-900 dark:text-white">
-                  {student} đồng chí
+                  {student?.length || 0} đồng chí
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
