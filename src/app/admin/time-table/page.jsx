@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
+import { handleNotify } from "../../../components/notify";
 
 import { BASE_URL } from "@/configs";
 const TimeTable = () => {
@@ -64,6 +65,42 @@ const TimeTable = () => {
     router.push(`/admin/time-table/${studentId}`);
   };
 
+  const handleGenerateAutoCutRice = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Hiển thị loading
+        handleNotify(
+          "info",
+          "Đang xử lý...",
+          "Đang tạo lịch cắt cơm tự động cho tất cả học viên"
+        );
+
+        const response = await axios.post(
+          `${BASE_URL}/commander/cutRice/auto-generate`,
+          {},
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          handleNotify("success", "Thành công!", response.data.message);
+        }
+      } catch (error) {
+        handleNotify(
+          "danger",
+          "Lỗi!",
+          error.response?.data?.message ||
+            "Có lỗi xảy ra khi tạo lịch cắt cơm tự động"
+        );
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex-1">
@@ -115,8 +152,29 @@ const TimeTable = () => {
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
             <div className="font-bold pt-5 pl-5 pb-5 border-b border-gray-200 dark:border-gray-700">
-              <div className="text-gray-900 dark:text-white">
-                LỊCH HỌC HỌC VIÊN
+              <div className="flex justify-between items-center">
+                <div className="text-gray-900 dark:text-white">
+                  LỊCH HỌC HỌC VIÊN
+                </div>
+                <button
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                  onClick={handleGenerateAutoCutRice}
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  Tạo lịch cắt cơm tự động
+                </button>
               </div>
             </div>
             <div className="w-full pl-5 pb-5 pr-5">
@@ -207,6 +265,12 @@ const TimeTable = () => {
                         scope="col"
                         className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
+                        Môn học
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                      >
                         Phòng học
                       </th>
                       <th
@@ -238,6 +302,9 @@ const TimeTable = () => {
                             {item.time}
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
+                            {item.subject || "N/A"}
+                          </td>
+                          <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
                             {item.classroom}
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white text-center py-4 px-6">
@@ -248,7 +315,7 @@ const TimeTable = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="7"
                           className="text-center py-8 text-gray-500 dark:text-gray-400"
                         >
                           <div className="flex flex-col items-center">

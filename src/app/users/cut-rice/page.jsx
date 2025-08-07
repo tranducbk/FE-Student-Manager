@@ -23,6 +23,17 @@ const CutRice = () => {
     sunday: { breakfast: false, lunch: false, dinner: false },
   });
 
+  // Mapping để hiển thị tiếng Việt
+  const dayDisplayMapping = {
+    monday: "Thứ 2",
+    tuesday: "Thứ 3",
+    wednesday: "Thứ 4",
+    thursday: "Thứ 5",
+    friday: "Thứ 6",
+    saturday: "Thứ 7",
+    sunday: "Chủ nhật",
+  };
+
   const handleAuthenticationModalClick = (event) => {
     if (event.target.id === "authentication-modal") {
       setShowModal(false);
@@ -30,6 +41,67 @@ const CutRice = () => {
     if (event.target.id === "authentication-modal1") {
       setShowForm(false);
     }
+  };
+
+  const initializeFormData = () => {
+    if (cutRice) {
+      setFormUpdateData({
+        monday: cutRice.monday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        tuesday: cutRice.tuesday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        wednesday: cutRice.wednesday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        thursday: cutRice.thursday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        friday: cutRice.friday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        saturday: cutRice.saturday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+        sunday: cutRice.sunday || {
+          breakfast: false,
+          lunch: false,
+          dinner: false,
+        },
+      });
+    }
+  };
+
+  const handleEditClick = () => {
+    initializeFormData();
+    setShowModal(true);
+  };
+
+  const handleAddClick = () => {
+    // Reset form về trạng thái ban đầu
+    setFormUpdateData({
+      monday: { breakfast: false, lunch: false, dinner: false },
+      tuesday: { breakfast: false, lunch: false, dinner: false },
+      wednesday: { breakfast: false, lunch: false, dinner: false },
+      thursday: { breakfast: false, lunch: false, dinner: false },
+      friday: { breakfast: false, lunch: false, dinner: false },
+      saturday: { breakfast: false, lunch: false, dinner: false },
+      sunday: { breakfast: false, lunch: false, dinner: false },
+    });
+    setShowForm(true);
   };
 
   const fetchCutRice = async () => {
@@ -47,9 +119,16 @@ const CutRice = () => {
           }
         );
 
-        setCutRice(res.data);
+        // Đảm bảo response có đúng format
+        if (res.data && typeof res.data === "object") {
+          setCutRice(res.data);
+        } else {
+          // Nếu không có dữ liệu, set về null
+          setCutRice(null);
+        }
       } catch (error) {
         console.log(error);
+        setCutRice(null);
       }
     }
   };
@@ -184,7 +263,8 @@ const CutRice = () => {
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-              {showModal && (
+              {/* Ẩn modal chỉnh sửa cho user thường */}
+              {/* {showModal && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-20">
                   <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
                   <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -224,19 +304,7 @@ const CutRice = () => {
                                 className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
                               >
                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3 capitalize">
-                                  {day === "monday"
-                                    ? "Thứ 2"
-                                    : day === "tuesday"
-                                    ? "Thứ 3"
-                                    : day === "wednesday"
-                                    ? "Thứ 4"
-                                    : day === "thursday"
-                                    ? "Thứ 5"
-                                    : day === "friday"
-                                    ? "Thứ 6"
-                                    : day === "saturday"
-                                    ? "Thứ 7"
-                                    : "Chủ nhật"}
+                                  {dayDisplayMapping[day]}
                                 </h3>
                                 <div className="space-y-3">
                                   {Object.entries(meals).map(
@@ -293,8 +361,9 @@ const CutRice = () => {
                     </div>
                   </div>
                 </div>
-              )}
-              {showForm && (
+              )} */}
+              {/* Ẩn modal thêm mới cho user thường */}
+              {/* {showForm && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-20">
                   <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
                   <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -331,19 +400,7 @@ const CutRice = () => {
                                 className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
                               >
                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3 capitalize">
-                                  {day === "monday"
-                                    ? "Thứ 2"
-                                    : day === "tuesday"
-                                    ? "Thứ 3"
-                                    : day === "wednesday"
-                                    ? "Thứ 4"
-                                    : day === "thursday"
-                                    ? "Thứ 5"
-                                    : day === "friday"
-                                    ? "Thứ 6"
-                                    : day === "saturday"
-                                    ? "Thứ 7"
-                                    : "Chủ nhật"}
+                                  {dayDisplayMapping[day]}
                                 </h3>
                                 <div className="space-y-3">
                                   {Object.entries(meals).map(
@@ -400,14 +457,15 @@ const CutRice = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white text-lg">
                   LỊCH CẮT CƠM
                 </div>
-                <div className="flex space-x-3">
+                {/* Ẩn các nút chỉnh sửa và thêm mới cho user thường */}
+                {/* <div className="flex space-x-3">
                   <button
-                    onClick={() => setShowModal(true)}
+                    onClick={handleEditClick}
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
                     <svg
@@ -426,7 +484,7 @@ const CutRice = () => {
                     Chỉnh sửa
                   </button>
                   <button
-                    onClick={() => setShowForm(true)}
+                    onClick={handleAddClick}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
                     <svg
@@ -444,6 +502,27 @@ const CutRice = () => {
                     </svg>
                     Thêm
                   </button>
+                </div> */}
+              </div>
+              {/* Thông báo cho user biết chỉ admin mới có thể chỉnh sửa */}
+              <div className="px-5 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                <div className="flex items-center text-blue-700 dark:text-blue-300 text-sm">
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>
+                    Chỉ quản trị viên mới có thể chỉnh sửa lịch cắt cơm
+                  </span>
                 </div>
               </div>
               <div className="w-full pl-6 pb-6 pr-6 mt-4">
@@ -478,20 +557,20 @@ const CutRice = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800">
-                      {cutRice && (
+                      {cutRice ? (
                         <>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               Thứ 2
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.monday?.breakfast ? "Có" : "Không"}
+                              {cutRice.monday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.monday?.lunch ? "Có" : "Không"}
+                              {cutRice.monday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.monday?.dinner ? "Có" : "Không"}
+                              {cutRice.monday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -499,13 +578,13 @@ const CutRice = () => {
                               Thứ 3
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.tuesday?.breakfast ? "Có" : "Không"}
+                              {cutRice.tuesday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.tuesday?.lunch ? "Có" : "Không"}
+                              {cutRice.tuesday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.tuesday?.dinner ? "Có" : "Không"}
+                              {cutRice.tuesday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -513,13 +592,13 @@ const CutRice = () => {
                               Thứ 4
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.wednesday?.breakfast ? "Có" : "Không"}
+                              {cutRice.wednesday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.wednesday?.lunch ? "Có" : "Không"}
+                              {cutRice.wednesday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.wednesday?.dinner ? "Có" : "Không"}
+                              {cutRice.wednesday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -527,13 +606,13 @@ const CutRice = () => {
                               Thứ 5
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.thursday?.breakfast ? "Có" : "Không"}
+                              {cutRice.thursday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.thursday?.lunch ? "Có" : "Không"}
+                              {cutRice.thursday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.thursday?.dinner ? "Có" : "Không"}
+                              {cutRice.thursday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -541,13 +620,13 @@ const CutRice = () => {
                               Thứ 6
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.friday?.breakfast ? "Có" : "Không"}
+                              {cutRice.friday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.friday?.lunch ? "Có" : "Không"}
+                              {cutRice.friday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.friday?.dinner ? "Có" : "Không"}
+                              {cutRice.friday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -555,13 +634,13 @@ const CutRice = () => {
                               Thứ 7
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.saturday?.breakfast ? "Có" : "Không"}
+                              {cutRice.saturday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.saturday?.lunch ? "Có" : "Không"}
+                              {cutRice.saturday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.saturday?.dinner ? "Có" : "Không"}
+                              {cutRice.saturday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                           <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
@@ -569,16 +648,45 @@ const CutRice = () => {
                               Chủ nhật
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.sunday?.breakfast ? "Có" : "Không"}
+                              {cutRice.sunday?.breakfast ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.sunday?.lunch ? "Có" : "Không"}
+                              {cutRice.sunday?.lunch ? "x" : ""}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {cutRice.sunday?.dinner ? "Có" : "Không"}
+                              {cutRice.sunday?.dinner ? "x" : ""}
                             </td>
                           </tr>
                         </>
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="4"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Chưa có lịch cắt cơm
+                              </p>
+                              <p className="text-sm">
+                                Vui lòng tạo lịch cắt cơm mới
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>

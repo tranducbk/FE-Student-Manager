@@ -130,6 +130,12 @@ const TimeTableDetail = ({ params }) => {
                       scope="col"
                       className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
                     >
+                      Môn học
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
+                    >
                       Phòng học
                     </th>
                     <th
@@ -151,6 +157,9 @@ const TimeTableDetail = ({ params }) => {
                       </td>
                       <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
                         {item.time}
+                      </td>
+                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                        {item.subject || "N/A"}
                       </td>
                       <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
                         {item.classroom}

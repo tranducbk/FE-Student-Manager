@@ -133,7 +133,7 @@ const LearningInformation = () => {
       };
 
       try {
-        await axios.put(
+        const response = await axios.put(
           `${BASE_URL}/student/time-table/${timeTableId}`,
           formData,
           {
@@ -142,7 +142,12 @@ const LearningInformation = () => {
             },
           }
         );
-        handleNotify("success", "Thành công!", "Chỉnh sửa lịch học thành công");
+        handleNotify(
+          "success",
+          "Thành công!",
+          response.data.message ||
+            "Chỉnh sửa lịch học thành công và đã cập nhật lịch cắt cơm tự động"
+        );
         setIsOpenTimeTable(false);
         fetchTimeTable();
       } catch (error) {
@@ -243,7 +248,12 @@ const LearningInformation = () => {
           },
         }
       );
-      handleNotify("success", "Thành công!", "Thêm lịch học thành công");
+      handleNotify(
+        "success",
+        "Thành công!",
+        response.data.message ||
+          "Thêm lịch học thành công và đã cập nhật lịch cắt cơm tự động"
+      );
       setTimeTable([...timeTable, response.data]);
       setShowFormAddTimeTable(false);
       // Reset form
@@ -306,11 +316,16 @@ const LearningInformation = () => {
             },
           }
         )
-        .then(() => {
+        .then((response) => {
           setTimeTable(
             timeTable.filter((timeTable) => timeTable.id !== timeTableId)
           );
-          handleNotify("success", "Thành công!", "Xóa lịch học thành công");
+          handleNotify(
+            "success",
+            "Thành công!",
+            response.data.message ||
+              "Xóa lịch học thành công và đã cập nhật lịch cắt cơm tự động"
+          );
           fetchTimeTable();
         })
         .catch((error) => handleNotify("danger", "Lỗi!", error.response.data));
@@ -354,29 +369,46 @@ const LearningInformation = () => {
   };
 
   const handleConfirmDeleteFee = (feeId) => {
-    const token = localStorage.getItem("token");
+    setFeeId(feeId);
+    setShowConfirmFee(true);
+  };
 
+  // Function để cập nhật lịch cắt cơm tự động
+  const handleUpdateAutoCutRice = async () => {
+    const token = localStorage.getItem("token");
     if (token) {
-      axios
-        .delete(
-          `${BASE_URL}/student/${jwtDecode(token).id}/tuitionFee/${feeId}`,
+      try {
+        const decodedToken = jwtDecode(token);
+        handleNotify(
+          "info",
+          "Đang xử lý...",
+          "Đang cập nhật lịch cắt cơm tự động"
+        );
+
+        await axios.post(
+          `${BASE_URL}/student/${decodedToken.id}/auto-cut-rice`,
+          {},
           {
             headers: {
               token: `Bearer ${token}`,
             },
           }
-        )
-        .then(() => {
-          setTuitionFee(
-            tuitionFee.filter((tuitionFee) => tuitionFee.id !== feeId)
-          );
-          handleNotify("success", "Thành công!", "Xóa học phí thành công");
-          fetchTuitionFee();
-        })
-        .catch((error) => handleNotify("danger", "Lỗi!", error.response.data));
-    }
+        );
 
-    setShowConfirmFee(false);
+        handleNotify(
+          "success",
+          "Thành công!",
+          "Cập nhật lịch cắt cơm tự động thành công"
+        );
+      } catch (error) {
+        handleNotify(
+          "danger",
+          "Lỗi!",
+          error.response?.data?.message ||
+            "Có lỗi xảy ra khi cập nhật lịch cắt cơm"
+        );
+      }
+    }
   };
 
   const fetchTimeTable = async () => {
@@ -510,25 +542,46 @@ const LearningInformation = () => {
                 <div className="text-gray-900 dark:text-white text-lg">
                   THỜI KHÓA BIỂU
                 </div>
-                <button
-                  onClick={() => setShowFormAddTimeTable(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleUpdateAutoCutRice}
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Thêm
-                </button>
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Cập nhật lịch cắt cơm
+                  </button>
+                  <button
+                    onClick={() => setShowFormAddTimeTable(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Thêm
+                  </button>
+                </div>
               </div>
               <div className="w-full pl-6 pb-6 pr-6 mt-4">
                 <div className="overflow-x-auto">
