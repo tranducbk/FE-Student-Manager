@@ -69,6 +69,7 @@ const ListUser = () => {
     rank: "Binh nhì",
     positionGovernment: "Học viên",
     positionParty: "Không",
+    currentAddress: "",
     avatar:
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
   });
@@ -156,6 +157,43 @@ const ListUser = () => {
     setSelectedOrganization("");
     setSelectedLevel("");
     setSelectedClass("");
+    // Reset form data
+    setAddFormData({
+      username: "",
+      password: "",
+      studentId: "",
+      fullName: "",
+      gender: "",
+      birthday: "",
+      hometown: "",
+      currentAddress: "",
+      email: "",
+      phoneNumber: "",
+      enrollment: "",
+      classUniversity: "",
+      educationLevel: "",
+      organization: "",
+      university: "",
+      unit: "",
+      rank: "",
+      positionGovernment: "Học viên",
+      positionParty: "Không",
+      fullPartyMember: "",
+      probationaryPartyMember: "",
+      dateOfEnlistment: "",
+    });
+    // Reset edit form data
+    setFormData({
+      educationLevel: "",
+      organization: "",
+      university: "",
+      rank: "",
+      positionGovernment: "Học viên",
+      positionParty: "Không",
+      currentAddress: "",
+      avatar:
+        "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+    });
   };
 
   const handleAuthenticationModalClick = (event) => {
@@ -333,6 +371,7 @@ const ListUser = () => {
           positionParty: res.data.positionParty || "Không",
           email: res.data.email || "",
           hometown: res.data.hometown || "",
+          currentAddress: res.data.currentAddress || "",
           avatar:
             res.data.avatar ||
             "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
@@ -2540,15 +2579,19 @@ const ListUser = () => {
                         </div>
 
                         <div>
-                          <label className="block mb-2 text-sm font-medium dark:text-white">
-                            Thêm ảnh đại diện
+                          <label
+                            htmlFor="currentAddress"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Nơi ở hiện nay
                           </label>
                           <input
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            type="file"
-                            name="avatar"
-                            accept="image/*"
+                            type="text"
+                            id="currentAddress"
+                            value={formData.currentAddress}
                             onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hà Nội"
                           />
                         </div>
 
