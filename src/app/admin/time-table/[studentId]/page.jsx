@@ -34,6 +34,60 @@ const TimeTableDetail = ({ params }) => {
     fetchTimeTable();
   }, []);
 
+  // Hàm sắp xếp và gộp dữ liệu theo thứ và giờ
+  const processTimeTableData = (data) => {
+    if (!data || data.length === 0) return [];
+
+    // Nhóm theo thứ
+    const groupedByDay = {};
+    data.forEach((item) => {
+      if (!groupedByDay[item.day]) {
+        groupedByDay[item.day] = [];
+      }
+      groupedByDay[item.day].push(item);
+    });
+
+    // Sắp xếp theo thứ tự thứ và giờ
+    const dayOrder = {
+      "Thứ 2": 1,
+      "Thứ 3": 2,
+      "Thứ 4": 3,
+      "Thứ 5": 4,
+      "Thứ 6": 5,
+      "Thứ 7": 6,
+      "Chủ nhật": 7,
+    };
+
+    // Sắp xếp các thứ theo thứ tự
+    const sortedDays = Object.keys(groupedByDay).sort(
+      (a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999)
+    );
+
+    const processedData = [];
+    sortedDays.forEach((day) => {
+      const dayItems = groupedByDay[day];
+
+      // Sắp xếp theo giờ bắt đầu
+      dayItems.sort((a, b) => {
+        const timeA = a.time ? a.time.split("-")[0].trim() : "";
+        const timeB = b.time ? b.time.split("-")[0].trim() : "";
+        return timeA.localeCompare(timeB);
+      });
+
+      // Thêm dữ liệu đã xử lý
+      dayItems.forEach((item, index) => {
+        processedData.push({
+          ...item,
+          rowSpan: index === 0 ? dayItems.length : 0, // Gộp ô cho thứ
+        });
+      });
+    });
+
+    return processedData;
+  };
+
+  const processedTimeTable = processTimeTableData(timeTable);
+
   return (
     <div className="flex">
       <div className="flex-1">
@@ -106,71 +160,118 @@ const TimeTableDetail = ({ params }) => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold pt-5 pl-5 pb-5 uppercase">
-              TKB HỌC VIÊN {timeTable ? timeTable[0]?.fullName : ""}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 w-full">
+            <div className="font-bold pt-5 pl-5 pb-5 pr-5 uppercase text-gray-900 dark:text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  TKB HỌC VIÊN {timeTable ? timeTable[0]?.fullName : ""}
+                </div>
+                <Link
+                  href="/admin/time-table"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  Quay lại danh sách
+                </Link>
+              </div>
             </div>
             <div className="w-full pl-5 pb-5 pr-5">
-              <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-2 py-1 dark:border-white/10"
-                    >
-                      Thứ
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e whitespace-nowrap border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Thời gian
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Môn học
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Phòng học
-                    </th>
-                    <th
-                      scope="col"
-                      className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
-                    >
-                      Tuần học
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {timeTable?.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="border-b border-neutral-200 dark:border-white/10"
-                    >
-                      <td className="whitespace-nowrap border-e border-neutral-200 font-medium dark:border-white/10">
-                        {item.day}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.time}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.subject || "N/A"}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.classroom}
-                      </td>
-                      <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
-                        {item.schoolWeek}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        Thứ
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        Thời gian
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        Môn học
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        Phòng học
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        Tuần học
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {processedTimeTable?.map((item, index) => (
+                      <tr
+                        key={item._id || index}
+                        className="border-b border-gray-200 dark:border-gray-700"
+                      >
+                        {item.rowSpan > 0 ? (
+                          <td
+                            className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                            rowSpan={item.rowSpan}
+                          >
+                            <span className="font-medium text-gray-900 dark:text-white">
+                              {item.day}
+                            </span>
+                          </td>
+                        ) : null}
+                        <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {item.time}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {item.subject || "N/A"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {item.classroom}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {item.schoolWeek}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {processedTimeTable?.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 dark:text-gray-400">
+                    Không có dữ liệu lịch học
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

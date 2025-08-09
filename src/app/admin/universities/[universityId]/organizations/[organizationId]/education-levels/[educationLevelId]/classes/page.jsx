@@ -374,13 +374,13 @@ export default function EducationLevelClasses() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Tên lớp
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Số học viên
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Thao tác
                         </th>
                       </tr>
@@ -390,20 +390,20 @@ export default function EducationLevelClasses() {
                         filteredClasses.map((cls) => (
                           <tr
                             key={cls._id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                            className="border-b border-gray-200 dark:border-gray-600"
                           >
-                            <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="font-semibold text-purple-600 dark:text-purple-400">
+                            <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                              <div className="font-medium text-gray-900 dark:text-white">
                                 <TeamOutlined className="mr-2" />
                                 {cls.className}
                               </div>
                             </td>
-                            <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <td className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600">
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {cls.studentCount || 0} học viên
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
+                            <td className="px-4 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-200 dark:border-gray-600">
                               <div className="flex justify-center items-center space-x-4">
                                 <button
                                   onClick={() => handleEditClass(cls)}
@@ -427,7 +427,7 @@ export default function EducationLevelClasses() {
                         <tr>
                           <td
                             colSpan="3"
-                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
+                            className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="flex flex-col items-center">
                               <TeamOutlined className="text-4xl mb-2" />

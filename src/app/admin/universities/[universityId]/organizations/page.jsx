@@ -14,6 +14,8 @@ import {
   TrophyOutlined,
   SearchOutlined,
   ArrowLeftOutlined,
+  GraduationCapOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 
 export default function UniversityOrganizations() {
@@ -21,6 +23,7 @@ export default function UniversityOrganizations() {
   const universityId = params.universityId;
 
   const [organizations, setOrganizations] = useState([]);
+  const [hierarchyData, setHierarchyData] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -60,6 +63,28 @@ export default function UniversityOrganizations() {
       );
 
       setOrganizations(response.data);
+
+      // Fetch hierarchy data for each organization
+      const hierarchyPromises = response.data.map(async (org) => {
+        try {
+          const hierarchyResponse = await axios.get(
+            `${BASE_URL}/university/organizations/${org._id}/hierarchy`,
+            {
+              headers: { token: `Bearer ${token}` },
+            }
+          );
+          return hierarchyResponse.data;
+        } catch (error) {
+          console.error(
+            `Error fetching hierarchy for organization ${org._id}:`,
+            error
+          );
+          return { organization: org, educationLevels: [] };
+        }
+      });
+
+      const hierarchyResults = await Promise.all(hierarchyPromises);
+      setHierarchyData(hierarchyResults);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       handleNotify("danger", "Lỗi!", "Không thể tải danh sách khoa/viện");
@@ -202,6 +227,69 @@ export default function UniversityOrganizations() {
     org.organizationName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredHierarchyData = hierarchyData.filter((org) =>
+    org.organization.organizationName
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Transform data for table display with rowSpan
+  const transformDataForTable = () => {
+    const tableData = [];
+
+    filteredHierarchyData.forEach((orgData) => {
+      const { organization, educationLevels } = orgData;
+
+      if (educationLevels.length === 0) {
+        // Organization with no education levels
+        tableData.push({
+          organization: organization,
+          educationLevel: null,
+          class: null,
+          rowSpan: {
+            organization: 1,
+            educationLevel: 0,
+            class: 0,
+          },
+        });
+      } else {
+        educationLevels.forEach((level) => {
+          if (level.classes.length === 0) {
+            // Education level with no classes
+            tableData.push({
+              organization: organization,
+              educationLevel: level,
+              class: null,
+              rowSpan: {
+                organization: 1,
+                educationLevel: 1,
+                class: 0,
+              },
+            });
+          } else {
+            // Education level with classes
+            level.classes.forEach((classItem, classIndex) => {
+              tableData.push({
+                organization: organization,
+                educationLevel: level,
+                class: classItem,
+                rowSpan: {
+                  organization: classIndex === 0 ? level.classes.length : 0,
+                  educationLevel: classIndex === 0 ? level.classes.length : 0,
+                  class: 1,
+                },
+              });
+            });
+          }
+        });
+      }
+    });
+
+    return tableData;
+  };
+
+  const tableData = transformDataForTable();
+
   return (
     <>
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -321,71 +409,188 @@ export default function UniversityOrganizations() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Tên khoa/viện
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Thời gian di chuyển
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          Chương trình đào tạo
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          Lớp
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Thao tác
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {filteredOrganizations.length > 0 ? (
-                        filteredOrganizations.map((organization) => (
-                          <tr
-                            key={organization._id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                          >
-                            <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="font-semibold text-green-600 dark:text-green-400">
-                                <BookOutlined className="mr-2" />
-                                {organization.organizationName}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                                {organization.travelTime || 45} phút
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
-                              <div className="flex justify-center items-center space-x-4">
-                                <Link
-                                  href={`/admin/universities/${universityId}/organizations/${organization._id}/education-levels`}
-                                  className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-                                  title="Quản lý Chương trình đào tạo"
-                                >
-                                  <TrophyOutlined className="text-lg" />
-                                </Link>
-                                <button
-                                  onClick={() =>
-                                    handleEditOrganization(organization)
-                                  }
-                                  className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                  title="Chỉnh sửa"
-                                >
-                                  <EditOutlined className="text-lg" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteOrganization(organization)
-                                  }
-                                  className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                  title="Xóa"
-                                >
-                                  <DeleteOutlined className="text-lg" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
+                      {tableData.length > 0 ? (
+                        tableData.map((row, index) => {
+                          const cells = [];
+
+                          // Organization cell
+                          if (row.rowSpan.organization > 0) {
+                            cells.push(
+                              <td
+                                key="organization"
+                                rowSpan={row.rowSpan.organization}
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  <BookOutlined className="mr-2" />
+                                  {row.organization.organizationName}
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Travel Time cell
+                          if (row.rowSpan.organization > 0) {
+                            cells.push(
+                              <td
+                                key="travelTime"
+                                rowSpan={row.rowSpan.organization}
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {row.organization.travelTime || 45} phút
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Education Level cell
+                          if (
+                            row.educationLevel &&
+                            row.rowSpan.educationLevel > 0
+                          ) {
+                            cells.push(
+                              <td
+                                key="educationLevel"
+                                rowSpan={row.rowSpan.educationLevel}
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  <TrophyOutlined className="mr-2" />
+                                  {row.educationLevel.levelName}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {row.educationLevel.classes.length} lớp
+                                </div>
+                              </td>
+                            );
+                          } else if (!row.educationLevel) {
+                            cells.push(
+                              <td
+                                key="educationLevel"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  Chưa có dữ liệu
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Class cell
+                          if (row.class) {
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  <TeamOutlined className="mr-2" />
+                                  {row.class.className}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {row.class.studentCount || 0} học viên
+                                </div>
+                              </td>
+                            );
+                          } else if (
+                            row.educationLevel &&
+                            row.educationLevel.classes.length === 0
+                          ) {
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  Chưa có lớp
+                                </div>
+                              </td>
+                            );
+                          } else if (!row.educationLevel) {
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  -
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Actions cell
+                          if (row.rowSpan.organization > 0) {
+                            cells.push(
+                              <td
+                                key="actions"
+                                rowSpan={row.rowSpan.organization}
+                                className="px-4 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="flex justify-center items-center space-x-4">
+                                  <Link
+                                    href={`/admin/universities/${universityId}/organizations/${row.organization._id}/education-levels`}
+                                    className="text-orange-600 hover:text-orange-900 p-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
+                                    title="Quản lý Chương trình đào tạo"
+                                  >
+                                    <TrophyOutlined className="text-lg" />
+                                  </Link>
+                                  <button
+                                    onClick={() =>
+                                      handleEditOrganization(row.organization)
+                                    }
+                                    className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                    title="Chỉnh sửa"
+                                  >
+                                    <EditOutlined className="text-lg" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteOrganization(row.organization)
+                                    }
+                                    className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                    title="Xóa"
+                                  >
+                                    <DeleteOutlined className="text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <tr
+                              key={`${row.organization._id}-${index}`}
+                              className="border-b border-gray-200 dark:border-gray-600"
+                            >
+                              {cells}
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
                           <td
-                            colSpan="3"
-                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
+                            colSpan="6"
+                            className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="flex flex-col items-center">
                               <BookOutlined className="text-4xl mb-2" />

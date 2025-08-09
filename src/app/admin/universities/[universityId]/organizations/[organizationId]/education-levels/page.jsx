@@ -23,6 +23,7 @@ export default function OrganizationEducationLevels() {
   const organizationId = params.organizationId;
 
   const [educationLevels, setEducationLevels] = useState([]);
+  const [hierarchyData, setHierarchyData] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -60,6 +61,28 @@ export default function OrganizationEducationLevels() {
       );
 
       setEducationLevels(response.data);
+
+      // Fetch hierarchy data for each education level
+      const hierarchyPromises = response.data.map(async (level) => {
+        try {
+          const hierarchyResponse = await axios.get(
+            `${BASE_URL}/university/education-levels/${level._id}/hierarchy`,
+            {
+              headers: { token: `Bearer ${token}` },
+            }
+          );
+          return hierarchyResponse.data;
+        } catch (error) {
+          console.error(
+            `Error fetching hierarchy for education level ${level._id}:`,
+            error
+          );
+          return { educationLevel: level, classes: [] };
+        }
+      });
+
+      const hierarchyResults = await Promise.all(hierarchyPromises);
+      setHierarchyData(hierarchyResults);
     } catch (error) {
       console.error("Error fetching education levels:", error);
       handleNotify(
@@ -223,9 +246,50 @@ export default function OrganizationEducationLevels() {
     setShowEditForm(false);
   };
 
-  const filteredEducationLevels = educationLevels.filter((level) =>
-    level.levelName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredHierarchyData = hierarchyData.filter((level) =>
+    level.educationLevel.levelName
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
+
+  // Transform data for table display with rowSpan
+  const transformDataForTable = () => {
+    const tableData = [];
+
+    filteredHierarchyData.forEach((levelData) => {
+      const { educationLevel, classes } = levelData;
+
+      if (classes.length === 0) {
+        // Education level with no classes
+        tableData.push({
+          educationLevel: educationLevel,
+          class: null,
+          classesCount: classes.length,
+          rowSpan: {
+            educationLevel: 1,
+            class: 0,
+          },
+        });
+      } else {
+        // Education level with classes
+        classes.forEach((classItem, classIndex) => {
+          tableData.push({
+            educationLevel: educationLevel,
+            class: classItem,
+            classesCount: classes.length,
+            rowSpan: {
+              educationLevel: classIndex === 0 ? classes.length : 0,
+              class: 1,
+            },
+          });
+        });
+      }
+    });
+
+    return tableData;
+  };
+
+  const tableData = transformDataForTable();
 
   return (
     <>
@@ -371,63 +435,127 @@ export default function OrganizationEducationLevels() {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Chương trình đào tạo
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          Lớp
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           Thao tác
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {filteredEducationLevels.length > 0 ? (
-                        filteredEducationLevels.map((educationLevel) => (
-                          <tr
-                            key={educationLevel._id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                          >
-                            <td className="px-6 py-4 border border-gray-200 dark:border-gray-600">
-                              <div className="font-semibold text-orange-600 dark:text-orange-400">
-                                <TrophyOutlined className="mr-2" />
-                                {educationLevel.levelName}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium border border-gray-200 dark:border-gray-600">
-                              <div className="flex justify-center items-center space-x-4">
-                                <Link
-                                  href={`/admin/universities/${universityId}/organizations/${organizationId}/education-levels/${educationLevel._id}/classes`}
-                                  className="text-purple-600 hover:text-purple-900 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
-                                  title="Quản lý Lớp"
-                                >
-                                  <TeamOutlined className="text-lg" />
-                                </Link>
-                                <button
-                                  onClick={() =>
-                                    handleEditEducationLevel(educationLevel)
-                                  }
-                                  className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                  title="Chỉnh sửa"
-                                >
-                                  <EditOutlined className="text-lg" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteEducationLevel(educationLevel)
-                                  }
-                                  className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                  title="Xóa"
-                                >
-                                  <DeleteOutlined className="text-lg" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
+                      {tableData.length > 0 ? (
+                        tableData.map((row, index) => {
+                          const cells = [];
+
+                          // Education Level cell
+                          if (row.rowSpan.educationLevel > 0) {
+                            cells.push(
+                              <td
+                                key="educationLevel"
+                                rowSpan={row.rowSpan.educationLevel}
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  <TrophyOutlined className="mr-2" />
+                                  {row.educationLevel.levelName}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {row.classesCount} lớp
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Class cell
+                          if (row.class) {
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  <TeamOutlined className="mr-2" />
+                                  {row.class.className}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {row.class.studentCount || 0} học viên
+                                </div>
+                              </td>
+                            );
+                          } else {
+                            cells.push(
+                              <td
+                                key="class"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  Chưa có lớp
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          // Actions cell
+                          if (row.rowSpan.educationLevel > 0) {
+                            cells.push(
+                              <td
+                                key="actions"
+                                rowSpan={row.rowSpan.educationLevel}
+                                className="px-4 py-4 whitespace-nowrap text-sm font-medium border-r border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="flex justify-center items-center space-x-4">
+                                  <Link
+                                    href={`/admin/universities/${universityId}/organizations/${organizationId}/education-levels/${row.educationLevel._id}/classes`}
+                                    className="text-purple-600 hover:text-purple-900 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                                    title="Quản lý Lớp"
+                                  >
+                                    <TeamOutlined className="text-lg" />
+                                  </Link>
+                                  <button
+                                    onClick={() =>
+                                      handleEditEducationLevel(
+                                        row.educationLevel
+                                      )
+                                    }
+                                    className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                    title="Chỉnh sửa"
+                                  >
+                                    <EditOutlined className="text-lg" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteEducationLevel(
+                                        row.educationLevel
+                                      )
+                                    }
+                                    className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                    title="Xóa"
+                                  >
+                                    <DeleteOutlined className="text-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <tr
+                              key={`${row.educationLevel._id}-${index}`}
+                              className="border-b border-gray-200 dark:border-gray-600"
+                            >
+                              {cells}
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
                           <td
-                            colSpan="2"
-                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
+                            colSpan="3"
+                            className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="flex flex-col items-center">
                               <TrophyOutlined className="text-4xl mb-2" />

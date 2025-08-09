@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
@@ -31,6 +32,8 @@ const LearningInformation = () => {
   const [addFormDataTuitionFee, setAddFormDataTuitionFee] = useState({});
   const [addFormDataTimeTable, setAddFormDataTimeTable] = useState({});
   const [addFormDataLearn, setAddFormDataLearn] = useState({});
+  const searchParams = useSearchParams();
+  const currentTab = searchParams?.get("tab") || "time-table";
 
   const handleEditTuitionFee = (id) => {
     setFeeId(id);
@@ -133,8 +136,14 @@ const LearningInformation = () => {
       };
 
       try {
+        const decodedToken = jwtDecode(token);
+        console.log(
+          `[DEBUG] Updating schedule: scheduleId=${timeTableId}, userId=${decodedToken.id}`
+        );
+        console.log(`[DEBUG] Form data:`, formData);
+
         const response = await axios.put(
-          `${BASE_URL}/student/time-table/${timeTableId}`,
+          `${BASE_URL}/student/${decodedToken.id}/time-table/${timeTableId}`,
           formData,
           {
             headers: {
@@ -151,7 +160,8 @@ const LearningInformation = () => {
         setIsOpenTimeTable(false);
         fetchTimeTable();
       } catch (error) {
-        handleNotify("danger", "Lỗi!", error.response.data);
+        console.error("Error updating time table:", error);
+        handleNotify("danger", "Lỗi!", error.response?.data || "Có lỗi xảy ra");
         setIsOpenTimeTable(false);
       }
     }
@@ -254,7 +264,8 @@ const LearningInformation = () => {
         response.data.message ||
           "Thêm lịch học thành công và đã cập nhật lịch cắt cơm tự động"
       );
-      setTimeTable([...timeTable, response.data]);
+      // Refresh lại toàn bộ danh sách để có scheduleId mới
+      fetchTimeTable();
       setShowFormAddTimeTable(false);
       // Reset form
       setAddFormDataTimeTable({});
@@ -318,7 +329,7 @@ const LearningInformation = () => {
         )
         .then((response) => {
           setTimeTable(
-            timeTable.filter((timeTable) => timeTable.id !== timeTableId)
+            timeTable.filter((timeTable) => timeTable._id !== timeTableId)
           );
           handleNotify(
             "success",
@@ -426,7 +437,28 @@ const LearningInformation = () => {
           }
         );
 
-        setTimeTable(res.data);
+        // Sắp xếp theo thứ và thời gian bắt đầu
+        const sortedTimeTable = res.data.sort((a, b) => {
+          const dayOrder = {
+            "Thứ 2": 1,
+            "Thứ 3": 2,
+            "Thứ 4": 3,
+            "Thứ 5": 4,
+            "Thứ 6": 5,
+            "Thứ 7": 6,
+            "Chủ nhật": 7,
+          };
+
+          // So sánh thứ trước
+          if (dayOrder[a.day] !== dayOrder[b.day]) {
+            return dayOrder[a.day] - dayOrder[b.day];
+          }
+
+          // Nếu cùng thứ thì so sánh thời gian bắt đầu
+          return a.startTime.localeCompare(b.startTime);
+        });
+
+        setTimeTable(sortedTimeTable);
       } catch (error) {
         console.log(error);
       }
@@ -537,33 +569,177 @@ const LearningInformation = () => {
             </nav>
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5 space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  THỜI KHÓA BIỂU
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleUpdateAutoCutRice}
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+            {currentTab === "time-table" && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+                <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="text-gray-900 dark:text-white text-lg">
+                    THỜI KHÓA BIỂU
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleUpdateAutoCutRice}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Cập nhật lịch cắt cơm
-                  </button>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Cập nhật lịch cắt cơm
+                    </button>
+                    <button
+                      onClick={() => setShowFormAddTimeTable(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Thêm
+                    </button>
+                  </div>
+                </div>
+                <div className="w-full pl-6 pb-6 pr-6 mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                      <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Thứ
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Thời gian
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Môn học
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Phòng học
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Tuần học
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Tùy chọn
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800">
+                        {timeTable?.map((item) => (
+                          <tr
+                            key={item._id}
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                          >
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.day}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.startTime} - {item.endTime}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.subject || "N/A"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.classroom || "N/A"}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.schoolWeek || "N/A"}
+                            </td>
+                            <td className="flex justify-center items-center space-x-2 py-4 px-4">
+                              <button
+                                data-modal-target="authentication-modal"
+                                data-modal-toggle="authentication-modal"
+                                type="button"
+                                onClick={() => handleEditTimeTable(item._id)}
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTimeTable(item._id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentTab === "results" && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+                <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="text-gray-900 dark:text-white text-lg">
+                    KẾT QUẢ HỌC TẬP
+                  </div>
                   <button
-                    onClick={() => setShowFormAddTimeTable(true)}
+                    onClick={() => setShowFormAddLearn(true)}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
                     <svg
@@ -582,425 +758,289 @@ const LearningInformation = () => {
                     Thêm
                   </button>
                 </div>
-              </div>
-              <div className="w-full pl-6 pb-6 pr-6 mt-4">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
-                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Thứ
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Thời gian
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Môn học
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Phòng học
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Tuần học
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Tùy chọn
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800">
-                      {timeTable?.map((item) => (
-                        <tr
-                          key={item._id}
-                          className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.day}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.time}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.subject || "N/A"}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.classroom}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.schoolWeek}
-                          </td>
-                          <td className="flex justify-center items-center space-x-2 py-4 px-4">
-                            <button
-                              data-modal-target="authentication-modal"
-                              data-modal-toggle="authentication-modal"
-                              type="button"
-                              onClick={() => handleEditTimeTable(item._id)}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTimeTable(item._id)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                />
-                              </svg>
-                            </button>
-                          </td>
+                <div className="w-full pl-6 pb-6 pr-6 mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                      <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Học kỳ
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            GPA
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            CPA
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            TC tích lũy
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            TC nợ đăng ký
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Trình độ
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Cảnh báo
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Trạng thái
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Tùy chọn
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800">
+                        {learningResult?.map((item, index) => (
+                          <tr
+                            key={index}
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                          >
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.semester}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.GPA}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.CPA}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.cumulativeCredit} tín chỉ
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.totalDebt} tín chỉ
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Năm {item.studentLevel}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              Mức {item.warningLevel}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {item.learningStatus}
+                            </td>
+                            <td className="flex justify-center items-center space-x-2 py-4 px-4">
+                              <button
+                                data-modal-target="authentication-modal"
+                                data-modal-toggle="authentication-modal"
+                                type="button"
+                                onClick={() =>
+                                  handleEditLearningResult(item._id)
+                                }
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteLearn(item._id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  KẾT QUẢ HỌC TẬP
-                </div>
-                <button
-                  onClick={() => setShowFormAddLearn(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            {currentTab === "tuition" && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+                <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="text-gray-900 dark:text-white text-lg">
+                    HỌC PHÍ
+                  </div>
+                  <button
+                    onClick={() => setShowFormAddTuitionFee(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Thêm
-                </button>
-              </div>
-              <div className="w-full pl-6 pb-6 pr-6 mt-4">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
-                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Học kỳ
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          GPA
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          CPA
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          TC tích lũy
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          TC nợ đăng ký
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Trình độ
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Cảnh báo
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Trạng thái
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Tùy chọn
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800">
-                      {learningResult?.map((item, index) => (
-                        <tr
-                          key={index}
-                          className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.semester}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.GPA}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.CPA}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.cumulativeCredit} tín chỉ
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.totalDebt} tín chỉ
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            Năm {item.studentLevel}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            Mức {item.warningLevel}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {item.learningStatus}
-                          </td>
-                          <td className="flex justify-center items-center space-x-2 py-4 px-4">
-                            <button
-                              data-modal-target="authentication-modal"
-                              data-modal-toggle="authentication-modal"
-                              type="button"
-                              onClick={() => handleEditLearningResult(item._id)}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteLearn(item._id)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                />
-                              </svg>
-                            </button>
-                          </td>
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    Thêm
+                  </button>
+                </div>
+                <div className="w-full pl-6 pb-6 pr-6 mt-4">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                      <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Học kỳ
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Loại tiền phải đóng
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Số tiền phải đóng
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Trạng thái
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
+                            Tùy chọn
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  HỌC PHÍ
-                </div>
-                <button
-                  onClick={() => setShowFormAddTuitionFee(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Thêm
-                </button>
-              </div>
-              <div className="w-full pl-6 pb-6 pr-6 mt-4">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
-                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Học kỳ
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Loại tiền phải đóng
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Số tiền phải đóng
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Trạng thái
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Tùy chọn
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800">
-                      {tuitionFee?.map((child) => (
-                        <tr
-                          key={child._id}
-                          className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                        >
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {child.semester}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {child.content}
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {child.totalAmount}đ
-                          </td>
-                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                            {child.status}
-                          </td>
-                          <td className="flex justify-center items-center space-x-2 py-4 px-4">
-                            <button
-                              data-modal-target="authentication-modal"
-                              data-modal-toggle="authentication-modal"
-                              type="button"
-                              onClick={() => handleEditTuitionFee(child._id)}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800">
+                        {tuitionFee?.map((child) => (
+                          <tr
+                            key={child._id}
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                          >
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {child.semester}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {child.content}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {child.totalAmount}đ
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {child.status}
+                            </td>
+                            <td className="flex justify-center items-center space-x-2 py-4 px-4">
+                              <button
+                                data-modal-target="authentication-modal"
+                                data-modal-toggle="authentication-modal"
+                                type="button"
+                                onClick={() => handleEditTuitionFee(child._id)}
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteFee(child._id)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="w-5 h-5"
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFee(child._id)}
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Modal Thêm Thời Khóa Biểu */}
-      {showFormAddTimeTable && (
+      {currentTab === "time-table" && showFormAddTimeTable && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -1229,7 +1269,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Sửa Thời Khóa Biểu */}
-      {isOpenTimeTable && (
+      {currentTab === "time-table" && isOpenTimeTable && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -1452,7 +1492,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Xác nhận xóa */}
-      {showConfirmTimeTable && (
+      {currentTab === "time-table" && showConfirmTimeTable && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
@@ -1518,7 +1558,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Thêm Kết Quả Học Tập */}
-      {showFormAddLearn && (
+      {currentTab === "results" && showFormAddLearn && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
@@ -1572,6 +1612,29 @@ const LearningInformation = () => {
                       }
                       required
                       placeholder="vd: 2023.2"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="studentLevel1"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Trình độ
+                    </label>
+                    <input
+                      type="text"
+                      id="studentLevel1"
+                      name="studentLevel1"
+                      value={addFormDataLearn.studentLevel}
+                      onChange={(e) =>
+                        setAddFormDataLearn({
+                          ...addFormDataLearn,
+                          studentLevel: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder="vd: 4"
                       className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                     />
                   </div>
@@ -1669,29 +1732,6 @@ const LearningInformation = () => {
                   </div>
                   <div className="mb-4">
                     <label
-                      htmlFor="studentLevel1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Trình độ
-                    </label>
-                    <input
-                      type="text"
-                      id="studentLevel1"
-                      name="studentLevel1"
-                      value={addFormDataLearn.studentLevel}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          studentLevel: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 4"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
                       htmlFor="warningLevel1"
                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
@@ -1720,11 +1760,10 @@ const LearningInformation = () => {
                     >
                       Trạng thái
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="learningStatus1"
                       name="learningStatus1"
-                      value={addFormDataLearn.learningStatus}
+                      value={addFormDataLearn.learningStatus || "Học"}
                       onChange={(e) =>
                         setAddFormDataLearn({
                           ...addFormDataLearn,
@@ -1732,9 +1771,20 @@ const LearningInformation = () => {
                         })
                       }
                       required
-                      placeholder="vd: Học"
                       className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
+                    >
+                      <option value="Học">Học</option>
+                      <option value="Cảnh báo học tập (Mức M1)">
+                        Cảnh báo học tập (Mức M1)
+                      </option>
+                      <option value="Cảnh báo học tập (Mức M2)">
+                        Cảnh báo học tập (Mức M2)
+                      </option>
+                      <option value="Cảnh báo học tập (Mức M3)">
+                        Cảnh báo học tập (Mức M3)
+                      </option>
+                      <option value="Buộc thôi học">Buộc thôi học</option>
+                    </select>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -1759,7 +1809,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Sửa Kết Quả Học Tập */}
-      {isOpenLearningResult && (
+      {currentTab === "results" && isOpenLearningResult && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
@@ -1812,6 +1862,28 @@ const LearningInformation = () => {
                         })
                       }
                       placeholder="vd: 2023.2"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="studentLevel3"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Trình độ
+                    </label>
+                    <input
+                      type="text"
+                      id="studentLevel3"
+                      name="studentLevel3"
+                      value={editedLearningResult.studentLevel}
+                      onChange={(e) =>
+                        setEditedLearningResult({
+                          ...editedLearningResult,
+                          studentLevel: e.target.value,
+                        })
+                      }
+                      placeholder="vd: 4"
                       className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                     />
                   </div>
@@ -1905,28 +1977,6 @@ const LearningInformation = () => {
                   </div>
                   <div className="mb-4">
                     <label
-                      htmlFor="studentLevel3"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Trình độ
-                    </label>
-                    <input
-                      type="text"
-                      id="studentLevel3"
-                      name="studentLevel3"
-                      value={editedLearningResult.studentLevel}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          studentLevel: e.target.value,
-                        })
-                      }
-                      placeholder="vd: 4"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
                       htmlFor="warningLevel3"
                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                     >
@@ -1954,20 +2004,30 @@ const LearningInformation = () => {
                     >
                       Trạng thái
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="learningStatus3"
                       name="learningStatus3"
-                      value={editedLearningResult.learningStatus}
+                      value={editedLearningResult.learningStatus || "Học"}
                       onChange={(e) =>
                         setEditedLearningResult({
                           ...editedLearningResult,
                           learningStatus: e.target.value,
                         })
                       }
-                      placeholder="vd: Học"
                       className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
+                    >
+                      <option value="Học">Học</option>
+                      <option value="Cảnh báo học tập (Mức M1)">
+                        Cảnh báo học tập (Mức M1)
+                      </option>
+                      <option value="Cảnh báo học tập (Mức M2)">
+                        Cảnh báo học tập (Mức M2)
+                      </option>
+                      <option value="Cảnh báo học tập (Mức M3)">
+                        Cảnh báo học tập (Mức M3)
+                      </option>
+                      <option value="Buộc thôi học">Buộc thôi học</option>
+                    </select>
                   </div>
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -1992,7 +2052,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Thêm Học Phí */}
-      {showFormAddTuitionFee && (
+      {currentTab === "tuition" && showFormAddTuitionFee && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -2139,7 +2199,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Sửa Học Phí */}
-      {isOpenTuitionFee && (
+      {currentTab === "tuition" && isOpenTuitionFee && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">

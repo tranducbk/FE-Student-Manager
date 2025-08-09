@@ -11,6 +11,15 @@ const LearningResults = () => {
   const router = useRouter();
   const [learningResults, setLearningResults] = useState(null);
   const [semester, setSemester] = useState("2023.1");
+  const [semesters, setSemesters] = useState([]);
+  const [showCreateSemester, setShowCreateSemester] = useState(false);
+  const [newSemester, setNewSemester] = useState({ code: "", schoolYear: "" });
+  const [showEditSemester, setShowEditSemester] = useState(false);
+  const [selectedEditSemesterId, setSelectedEditSemesterId] = useState("");
+  const [editSemester, setEditSemester] = useState({
+    code: "",
+    schoolYear: "",
+  });
 
   const fetchLearningResults = async () => {
     const token = localStorage.getItem("token");
@@ -34,8 +43,96 @@ const LearningResults = () => {
   };
 
   useEffect(() => {
-    fetchLearningResults();
+    const init = async () => {
+      await fetchSemesters();
+      await fetchLearningResults();
+    };
+    init();
   }, []);
+
+  const fetchSemesters = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/semester`, {
+        headers: { token: `Bearer ${token}` },
+      });
+      const list = res.data || [];
+      setSemesters(list);
+      if (list.length > 0) {
+        const exists = list.find((s) => s.code === semester);
+        if (!exists) setSemester(list[0].code);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleCreateSemester = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const payload = {
+        code: newSemester.code.trim(),
+        schoolYear: newSemester.schoolYear.trim(),
+      };
+      if (!payload.code || !payload.schoolYear) return;
+      const res = await axios.post(`${BASE_URL}/semester/create`, payload, {
+        headers: { token: `Bearer ${token}` },
+      });
+      await fetchSemesters();
+      if (res?.data?.code) setSemester(res.data.code);
+      setShowCreateSemester(false);
+      setNewSemester({ code: "", schoolYear: "" });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleOpenEditSemester = () => {
+    if (semesters.length === 0) return;
+    const firstId = semesters[0]._id;
+    setSelectedEditSemesterId(firstId);
+    const sem = semesters.find((s) => s._id === firstId);
+    setEditSemester({
+      code: sem?.code || "",
+      schoolYear: sem?.schoolYear || "",
+    });
+    setShowEditSemester(true);
+  };
+
+  const handleChangeEditSelect = (e) => {
+    const id = e.target.value;
+    setSelectedEditSemesterId(id);
+    const sem = semesters.find((s) => s._id === id);
+    setEditSemester({
+      code: sem?.code || "",
+      schoolYear: sem?.schoolYear || "",
+    });
+  };
+
+  const handleUpdateSemester = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token || !selectedEditSemesterId) return;
+    try {
+      const payload = {
+        code: editSemester.code.trim(),
+        schoolYear: editSemester.schoolYear.trim(),
+      };
+      const res = await axios.put(
+        `${BASE_URL}/semester/${selectedEditSemesterId}`,
+        payload,
+        { headers: { token: `Bearer ${token}` } }
+      );
+      await fetchSemesters();
+      if (semester === res?.data?.code) setSemester(res.data.code);
+      setShowEditSemester(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,111 +191,113 @@ const LearningResults = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex-1">
-        <div className="w-full pt-20 pl-5">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-              <li className="inline-flex items-center">
-                <Link
-                  href="/admin"
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+    <>
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1">
+          <div className="w-full pt-20 pl-5">
+            <nav className="flex" aria-label="Breadcrumb">
+              <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                <li className="inline-flex items-center">
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  >
+                    <svg
+                      className="w-3 h-3 me-2.5"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                    </svg>
+                    Trang chủ
+                  </Link>
+                </li>
+                <li>
+                  <div className="flex items-center">
+                    <svg
+                      className="rtl:rotate-180 w-3 h-3 mx-1"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 6 10"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="m1 9 4-4-4-4"
+                      />
+                    </svg>
+                    <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Kết quả học tập
+                    </div>
+                  </div>
+                </li>
+              </ol>
+            </nav>
+          </div>
+          <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+              <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white text-lg">
+                  KẾT QUẢ HỌC TẬP HỌC VIÊN
+                </div>
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                  onClick={(e) => handleExportFilePdf(e, semester)}
                 >
                   <svg
-                    className="w-3 h-3 me-2.5"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-                  </svg>
-                  Trang chủ
-                </Link>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg
-                    className="rtl:rotate-180 w-3 h-3 mx-1"
-                    aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
-                    viewBox="0 0 6 10"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-4 h-4 mr-2"
                   >
                     <path
-                      stroke="currentColor"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="m1 9 4-4-4-4"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
                     />
                   </svg>
-                  <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Kết quả học tập
-                  </div>
-                </div>
-              </li>
-            </ol>
-          </nav>
-        </div>
-        <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-            <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-              <div className="text-gray-900 dark:text-white text-lg">
-                KẾT QUẢ HỌC TẬP HỌC VIÊN
+                  Xuất PDF
+                </button>
               </div>
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                onClick={(e) => handleExportFilePdf(e, semester)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="w-4 h-4 mr-2"
+              <div className="w-full p-5">
+                <form
+                  className="flex items-end"
+                  onSubmit={(e) => handleSubmit(e)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                  />
-                </svg>
-                Xuất PDF
-              </button>
-            </div>
-            <div className="w-full p-5">
-              <form
-                className="flex items-end"
-                onSubmit={(e) => handleSubmit(e)}
-              >
-                <div className="flex">
-                  <div>
-                    <label
-                      htmlFor="semester"
-                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Chọn học kỳ
-                    </label>
-                    <select
-                      id="semester"
-                      value={semester}
-                      onChange={(e) => setSemester(e.target.value)}
-                      className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
-                    >
-                      <option value="2021.1">2021.1</option>
-                      <option value="2021.2">2021.2</option>
-                      <option value="2021.3">2021.3</option>
-                      <option value="2022.1">2022.1</option>
-                      <option value="2022.2">2022.2</option>
-                      <option value="2022.3">2022.3</option>
-                      <option value="2023.1">2023.1</option>
-                      <option value="2023.2">2023.2</option>
-                      <option value="2023.3">2023.3</option>
-                    </select>
+                  <div className="flex flex-1">
+                    <div>
+                      <label
+                        htmlFor="semester"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Chọn học kỳ
+                      </label>
+                      <select
+                        id="semester"
+                        value={semester}
+                        onChange={(e) => setSemester(e.target.value)}
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
+                      >
+                        {semesters.length === 0 && (
+                          <option value="" disabled>
+                            Chưa có học kỳ
+                          </option>
+                        )}
+                        {semesters.map((s) => (
+                          <option key={s._id} value={s.code}>
+                            {s.code} {s.schoolYear ? `- ${s.schoolYear}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
                 <div className="ml-4">
                   <button
                     type="submit"
@@ -207,154 +306,355 @@ const LearningResults = () => {
                     Tìm kiếm
                   </button>
                 </div>
-              </form>
-            </div>
-            <div className="w-full p-5">
-              <div className="overflow-x-auto">
-                <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        HỌC KỲ
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        HỌ VÀ TÊN
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        TRƯỜNG
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        GPA
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        CPA
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        TC TÍCH LŨY
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        TC NỢ ĐĂNG KÝ
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        TRÌNH ĐỘ
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        CẢNH BÁO
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {learningResults && learningResults.length > 0 ? (
-                      learningResults.map((item, index) => (
-                        <tr
-                          key={item._id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                <div className="ml-auto flex items-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateSemester(true)}
+                    className="h-9 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
+                  >
+                    Thêm học kỳ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenEditSemester}
+                    className="h-9 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
+                  >
+                    Chỉnh sửa học kỳ
+                  </button>
+                </div>
+                </form>
+              </div>
+              <div className="w-full p-5">
+                <div className="overflow-x-auto">
+                  <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                         >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.semester}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.fullName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.university}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.GPA}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.CPA}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.cumulativeCredit} tín chỉ
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.totalDebt} tín chỉ
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            Năm {item.studentLevel}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.warningLevel === 0
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                  : item.warningLevel === 1
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              }`}
-                            >
-                              Mức {item.warningLevel}
-                            </span>
+                          HỌC KỲ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          HỌ VÀ TÊN
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          TRƯỜNG
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          GPA
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          CPA
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          TC TÍCH LŨY
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          TC NỢ ĐĂNG KÝ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          TRÌNH ĐỘ
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          CẢNH BÁO
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {learningResults && learningResults.length > 0 ? (
+                        learningResults.map((item, index) => (
+                          <tr
+                            key={item._id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.semester}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.fullName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.university}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.GPA}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.CPA}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.cumulativeCredit} tín chỉ
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.totalDebt} tín chỉ
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              Năm {item.studentLevel}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  item.warningLevel === 0
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                    : item.warningLevel === 1
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                }`}
+                              >
+                                Mức {item.warningLevel}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="9"
+                            className="text-center py-8 text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium">
+                                Không có dữ liệu
+                              </p>
+                              <p className="text-sm">
+                                Không tìm thấy kết quả học tập nào
+                              </p>
+                            </div>
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan="9"
-                          className="text-center py-8 text-gray-500 dark:text-gray-400"
-                        >
-                          <div className="flex flex-col items-center">
-                            <svg
-                              className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                            <p className="text-lg font-medium">
-                              Không có dữ liệu
-                            </p>
-                            <p className="text-sm">
-                              Không tìm thấy kết quả học tập nào
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {showCreateSemester && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed" />
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Thêm học kỳ
+              </h2>
+              <button
+                onClick={() => setShowCreateSemester(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCreateSemester} className="p-4">
+              <div className="mb-4">
+                <label
+                  htmlFor="code"
+                  className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Mã kỳ (vd: 2024.1)
+                </label>
+                <input
+                  type="text"
+                  id="code"
+                  value={newSemester.code}
+                  onChange={(e) =>
+                    setNewSemester({ ...newSemester, code: e.target.value })
+                  }
+                  required
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="2024.1"
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="schoolYear"
+                  className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Năm học (vd: 2024-2025)
+                </label>
+                <input
+                  type="text"
+                  id="schoolYear"
+                  value={newSemester.schoolYear}
+                  onChange={(e) =>
+                    setNewSemester({
+                      ...newSemester,
+                      schoolYear: e.target.value,
+                    })
+                  }
+                  required
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="2024-2025"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  onClick={() => setShowCreateSemester(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
+                >
+                  Thêm
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditSemester && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed" />
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Chỉnh sửa học kỳ
+              </h2>
+              <button
+                onClick={() => setShowEditSemester(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleUpdateSemester} className="p-4">
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chọn học kỳ cần sửa
+                </label>
+                <select
+                  value={selectedEditSemesterId}
+                  onChange={handleChangeEditSelect}
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                >
+                  {semesters.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.code} {s.schoolYear ? `- ${s.schoolYear}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Mã kỳ
+                </label>
+                <input
+                  type="text"
+                  value={editSemester.code}
+                  onChange={(e) =>
+                    setEditSemester({ ...editSemester, code: e.target.value })
+                  }
+                  required
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Năm học
+                </label>
+                <input
+                  type="text"
+                  value={editSemester.schoolYear}
+                  onChange={(e) =>
+                    setEditSemester({
+                      ...editSemester,
+                      schoolYear: e.target.value,
+                    })
+                  }
+                  required
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  onClick={() => setShowEditSemester(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg"
+                >
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

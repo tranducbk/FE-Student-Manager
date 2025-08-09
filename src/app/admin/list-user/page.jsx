@@ -196,12 +196,6 @@ const ListUser = () => {
     });
   };
 
-  const handleAuthenticationModalClick = (event) => {
-    if (event.target.id === "authentication-modal") {
-      setShowForm(false);
-    }
-  };
-
   useEffect(() => {
     fetchProfile();
     fetchUniversities();
@@ -415,86 +409,81 @@ const ListUser = () => {
             setOrganizations(organizations);
 
             // Tìm organization đã chọn
-            let selectedOrg = null;
+            let selectedOrgId = null;
             if (
               res.data.organization &&
               typeof res.data.organization === "object"
             ) {
-              selectedOrg = res.data.organization;
+              selectedOrgId = res.data.organization._id;
             } else if (
               res.data.organization &&
               typeof res.data.organization === "string"
             ) {
-              selectedOrg = organizations.find(
+              const selectedOrg = organizations.find(
                 (org) => org.organizationName === res.data.organization
               );
+              selectedOrgId = selectedOrg?._id;
             } else if (
               res.data.organization &&
               res.data.organization.length === 24
             ) {
-              selectedOrg = organizations.find(
-                (org) => org._id === res.data.organization
-              );
+              selectedOrgId = res.data.organization;
             }
 
-            if (selectedOrg) {
-              setSelectedOrganization(selectedOrg._id);
+            if (selectedOrgId) {
+              setSelectedOrganization(selectedOrgId);
 
               // Load education levels
-              const educationLevels = await fetchEducationLevels(
-                selectedOrg._id
-              );
+              const educationLevels = await fetchEducationLevels(selectedOrgId);
               setEducationLevels(educationLevels);
 
               // Tìm education level đã chọn
-              let selectedLevelObj = null;
+              let selectedLevelId = null;
               if (
                 res.data.educationLevel &&
                 typeof res.data.educationLevel === "object"
               ) {
-                selectedLevelObj = res.data.educationLevel;
+                selectedLevelId = res.data.educationLevel._id;
               } else if (
                 res.data.educationLevel &&
                 typeof res.data.educationLevel === "string"
               ) {
-                selectedLevelObj = educationLevels.find(
+                const selectedLevelObj = educationLevels.find(
                   (level) => level.levelName === res.data.educationLevel
                 );
+                selectedLevelId = selectedLevelObj?._id;
               } else if (
                 res.data.educationLevel &&
                 res.data.educationLevel.length === 24
               ) {
-                selectedLevelObj = educationLevels.find(
-                  (level) => level._id === res.data.educationLevel
-                );
+                selectedLevelId = res.data.educationLevel;
               }
 
-              if (selectedLevelObj) {
-                setSelectedLevel(selectedLevelObj._id);
+              if (selectedLevelId) {
+                setSelectedLevel(selectedLevelId);
 
                 // Load classes
-                const classes = await fetchClasses(selectedLevelObj._id);
+                const classes = await fetchClasses(selectedLevelId);
                 setClasses(classes);
 
                 // Tìm class đã chọn
-                let selectedClassObj = null;
+                let selectedClassId = null;
                 if (res.data.class && typeof res.data.class === "object") {
-                  selectedClassObj = res.data.class;
+                  selectedClassId = res.data.class._id;
                 } else if (
                   res.data.class &&
                   typeof res.data.class === "string"
                 ) {
-                  selectedClassObj = classes.find(
+                  const selectedClassObj = classes.find(
                     (cls) => cls.className === res.data.class
                   );
+                  selectedClassId = selectedClassObj?._id;
                 } else if (res.data.class && res.data.class.length === 24) {
-                  selectedClassObj = classes.find(
-                    (cls) => cls._id === res.data.class
-                  );
+                  selectedClassId = res.data.class;
                 }
 
-                if (selectedClassObj) {
-                  setSelectedClass(selectedClassObj);
+                if (selectedClassId) {
+                  setSelectedClass(selectedClassId);
                 }
               }
             }
@@ -589,7 +578,7 @@ const ListUser = () => {
       setSelectedClass("");
       fetchProfile();
     } catch (error) {
-      setShowForm(false);
+      // Không đóng modal khi có lỗi, chỉ hiển thị thông báo lỗi
       handleNotify("danger", "Lỗi!", error.response.data);
     } finally {
       setIsLoading(false);
@@ -986,674 +975,662 @@ const ListUser = () => {
               >
                 <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-20 mx-auto max-w-3xl max-h-[86vh] overflow-y-auto">
                   <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
-                      <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                        THÊM QUÂN NHÂN
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={closeForm}
-                        className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                        data-modal-hide="authentication-modal"
-                      >
-                        <svg
-                          className="w-3 h-3"
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 14 14"
+                    <div className="w-full">
+                      <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
+                        <h3 className="text-xl font-semibold dark:text-white mx-auto">
+                          THÊM QUÂN NHÂN
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={closeForm}
+                          className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                          data-modal-hide="authentication-modal"
                         >
-                          <path
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                          />
-                        </svg>
-                        <span className="sr-only">Close modal</span>
-                      </button>
-                    </div>
-
-                    <div className="w-full max-w-3xl p-5">
-                      <form onSubmit={handleAddFormData}>
-                        <div className="grid gap-6 mb-6 md:grid-cols-2">
-                          <div>
-                            <label
-                              htmlFor="username"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Tên đăng nhập
-                            </label>
-                            <input
-                              type="text"
-                              id="username"
-                              value={addFormData.username}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  username: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: NamBT"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="password"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Mật khẩu
-                            </label>
-                            <input
-                              type="text"
-                              id="password"
-                              value={addFormData.password}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  password: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: 02022002"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="studentId"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Mã học viên
-                            </label>
-                            <input
-                              type="text"
-                              id="studentId"
-                              value={addFormData.studentId}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  studentId: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: 20200001"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="fullName"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Họ và tên
-                            </label>
-                            <input
-                              type="text"
-                              id="fullName"
-                              value={addFormData.fullName}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  fullName: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Nguyễn Văn X"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="phoneNumber"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Số điện thoại
-                            </label>
-                            <input
-                              type="tel"
-                              id="phoneNumber"
-                              value={addFormData.phoneNumber}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  phoneNumber: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: 0123456789"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="gender"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Giới tính
-                            </label>
-                            <select
-                              id="gender"
-                              value={addFormData.gender}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  gender: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="">Chọn giới tính</option>
-                              <option value="Nam">Nam</option>
-                              <option value="Nữ">Nữ</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="unit"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Đơn vị
-                            </label>
-                            <select
-                              id="unit"
-                              value={addFormData.unit}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  unit: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="">Chọn đơn vị</option>
-                              <option value="L1 - H5">L1 - H5</option>
-                              <option value="L2 - H5">L2 - H5</option>
-                              <option value="L3 - H5">L3 - H5</option>
-                              <option value="L4 - H5">L4 - H5</option>
-                              <option value="L5 - H5">L5 - H5</option>
-                              <option value="L6 - H5">L6 - H5</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="birthday"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Sinh ngày
-                            </label>
-                            <DatePicker
-                              id="birthday"
-                              selected={addFormData.birthday}
-                              onChange={(date) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  birthday: date,
-                                })
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="rank"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Cấp bậc
-                            </label>
-                            <select
-                              id="rank"
-                              value={addFormData.rank}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  rank: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="">Chọn cấp bậc</option>
-                              <option value="Binh nhì">Binh nhì</option>
-                              <option value="Binh nhất">Binh nhất</option>
-                              <option value="Hạ Sỹ">Hạ Sỹ</option>
-                              <option value="Trung sỹ">Trung sỹ</option>
-                              <option value="Thượng sỹ">Thượng sỹ</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="enrollment"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Năm vào trường
-                            </label>
-                            <input
-                              type="number"
-                              id="enrollment"
-                              value={addFormData.enrollment}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  enrollment: e.target.value,
-                                })
-                              }
-                              aria-describedby="helper-text-explanation"
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="Nhập năm vào trường"
-                              min="2017"
-                              required
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="positionGovernment"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Chức vụ
-                            </label>
-                            <select
-                              id="positionGovernment"
-                              value={addFormData.positionGovernment}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  positionGovernment: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="">Chọn chức vụ</option>
-                              <option value="Học viên">Học viên</option>
-                              <option value="Lớp phó">Lớp phó</option>
-                              <option value="Lớp trưởng">Lớp trưởng</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="dateOfEnlistment"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Nhập ngũ
-                            </label>
-                            <DatePicker
-                              id="dateOfEnlistment"
-                              selected={addFormData.dateOfEnlistment}
-                              onChange={(date) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  dateOfEnlistment: date,
-                                })
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="probationaryPartyMember"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Đảng viên dự bị
-                            </label>
-                            <DatePicker
-                              id="probationaryPartyMember"
-                              selected={addFormData.probationaryPartyMember}
-                              onChange={(date) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  probationaryPartyMember: date,
-                                })
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="university"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Trường
-                            </label>
-                            <select
-                              id="university"
-                              value={selectedUniversity?.universityName || ""}
-                              onChange={async (e) => {
-                                const uni = universities.find(
-                                  (u) => u.universityName === e.target.value
-                                );
-                                setSelectedUniversity(uni);
-                                setSelectedOrganization(null);
-                                setSelectedLevel(null);
-                                setSelectedClass(null);
-                                setOrganizations([]);
-                                setEducationLevels([]);
-                                setClasses([]);
-
-                                if (uni) {
-                                  const organizations =
-                                    await fetchOrganizations(uni._id);
-                                  setOrganizations(organizations);
-                                }
-                              }}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              required
-                            >
-                              <option value="">Chọn trường</option>
-                              {universities.map((u) => (
-                                <option key={u._id} value={u.universityName}>
-                                  {u.universityName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="fullPartyMember"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Đảng viên chính thức
-                            </label>
-                            <DatePicker
-                              id="fullPartyMember"
-                              selected={addFormData.fullPartyMember}
-                              onChange={(date) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  fullPartyMember: date,
-                                })
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="organization"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Khoa/Viện quản lý
-                            </label>
-                            <select
-                              id="organization"
-                              value={
-                                selectedOrganization
-                                  ? organizations.find(
-                                      (org) => org._id === selectedOrganization
-                                    )?.organizationName || ""
-                                  : ""
-                              }
-                              onChange={async (e) => {
-                                const selectedOrg = organizations.find(
-                                  (org) =>
-                                    org.organizationName === e.target.value
-                                );
-                                setSelectedOrganization(selectedOrg._id);
-                                setSelectedLevel("");
-                                setSelectedClass("");
-                                setEducationLevels([]);
-                                setClasses([]);
-
-                                if (selectedOrg) {
-                                  const educationLevels =
-                                    await fetchEducationLevels(selectedOrg._id);
-                                  setEducationLevels(educationLevels);
-                                }
-                              }}
-                              disabled={!selectedUniversity}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              required
-                            >
-                              <option value="">Chọn khoa/viện</option>
-                              {organizations.map((org) => (
-                                <option
-                                  key={org._id}
-                                  value={org.organizationName}
-                                >
-                                  {org.organizationName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="positionParty"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Chức vụ đảng
-                            </label>
-                            <select
-                              id="positionParty"
-                              value={addFormData.positionParty}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  positionParty: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="Không">Không</option>
-                              <option value="Đảng viên">Đảng viên</option>
-                              <option value="Phó bí thư chi bộ">
-                                Phó bí thư chi bộ
-                              </option>
-                              <option value="Bí thư chi bộ">
-                                Bí thư chi bộ
-                              </option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="level"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Trình độ đào tạo
-                            </label>
-                            <select
-                              id="level"
-                              value={
-                                selectedLevel
-                                  ? educationLevels.find(
-                                      (level) => level._id === selectedLevel
-                                    )?.levelName || ""
-                                  : ""
-                              }
-                              onChange={async (e) => {
-                                const selectedLevelObj = educationLevels.find(
-                                  (level) => level.levelName === e.target.value
-                                );
-                                setSelectedLevel(selectedLevelObj._id);
-                                setSelectedClass("");
-                                setClasses([]);
-
-                                if (selectedLevelObj) {
-                                  const classList = await fetchClasses(
-                                    selectedLevelObj._id
-                                  );
-                                  setClasses(classList);
-                                }
-                              }}
-                              disabled={!selectedOrganization}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              required
-                            >
-                              <option value="">Chọn trình độ đào tạo</option>
-                              {educationLevels.map((level) => (
-                                <option key={level._id} value={level.levelName}>
-                                  {level.levelName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="hometown"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Quê quán
-                            </label>
-                            <input
-                              type="text"
-                              id="hometown"
-                              value={addFormData.hometown}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  hometown: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Hà Nội"
-                            />
-                          </div>
-
-                          {/* Trình độ */}
-
-                          {/* Lớp */}
-                          <div>
-                            <label
-                              htmlFor="class"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Lớp
-                            </label>
-                            <select
-                              id="class"
-                              value={selectedClass?.className || ""}
-                              onChange={(e) => {
-                                const selectedClassObj = classes.find(
-                                  (cls) => cls.className === e.target.value
-                                );
-                                setSelectedClass(selectedClassObj);
-                              }}
-                              disabled={!selectedLevel}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              required
-                            >
-                              <option value="">Chọn lớp</option>
-                              {classes.map((cls) => (
-                                <option key={cls._id} value={cls.className}>
-                                  {cls.className}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="currentAddress"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Nơi ở hiện nay
-                            </label>
-                            <input
-                              type="text"
-                              id="currentAddress"
-                              value={addFormData.currentAddress}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  currentAddress: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Hà Nội"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="email"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Email
-                            </label>
-                            <input
-                              type="email"
-                              id="email"
-                              value={addFormData.email}
-                              onChange={(e) =>
-                                setAddFormData({
-                                  ...addFormData,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid justify-items-end">
-                          <button
-                            type="submit"
-                            disabled={isLoading}
-                            className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
-                              isLoading
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                            }`}
+                          <svg
+                            className="w-3 h-3"
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 14 14"
                           >
-                            {isLoading ? (
-                              <div className="flex items-center">
-                                <svg
-                                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                  ></path>
-                                </svg>
-                                Đang xử lý...
-                              </div>
-                            ) : (
-                              "Thêm"
-                            )}
-                          </button>
-                        </div>
-                      </form>
+                            <path
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                            />
+                          </svg>
+                          <span className="sr-only">Close modal</span>
+                        </button>
+                      </div>
+
+                      <div className="w-full max-w-3xl p-5">
+                        <form onSubmit={handleAddFormData}>
+                          <div className="grid gap-6 mb-6 md:grid-cols-2">
+                            <div>
+                              <label
+                                htmlFor="username"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Tên đăng nhập
+                              </label>
+                              <input
+                                type="text"
+                                id="username"
+                                value={addFormData.username}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    username: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: NamBT"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="password"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Mật khẩu
+                              </label>
+                              <input
+                                type="text"
+                                id="password"
+                                value={addFormData.password}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    password: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: 02022002"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="studentId"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Mã học viên
+                              </label>
+                              <input
+                                type="text"
+                                id="studentId"
+                                value={addFormData.studentId}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    studentId: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: 20200001"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="fullName"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Họ và tên
+                              </label>
+                              <input
+                                type="text"
+                                id="fullName"
+                                value={addFormData.fullName}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    fullName: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: Nguyễn Văn X"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="phoneNumber"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Số điện thoại
+                              </label>
+                              <input
+                                type="tel"
+                                id="phoneNumber"
+                                value={addFormData.phoneNumber}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    phoneNumber: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: 0123456789"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="gender"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Giới tính
+                              </label>
+                              <select
+                                id="gender"
+                                value={addFormData.gender}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    gender: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              >
+                                <option value="">Chọn giới tính</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="unit"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Đơn vị
+                              </label>
+                              <select
+                                id="unit"
+                                value={addFormData.unit}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    unit: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              >
+                                <option value="">Chọn đơn vị</option>
+                                <option value="L1 - H5">L1 - H5</option>
+                                <option value="L2 - H5">L2 - H5</option>
+                                <option value="L3 - H5">L3 - H5</option>
+                                <option value="L4 - H5">L4 - H5</option>
+                                <option value="L5 - H5">L5 - H5</option>
+                                <option value="L6 - H5">L6 - H5</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="birthday"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Sinh ngày
+                              </label>
+                              <DatePicker
+                                id="birthday"
+                                selected={addFormData.birthday}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    birthday: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="rank"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Cấp bậc
+                              </label>
+                              <select
+                                id="rank"
+                                value={addFormData.rank}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    rank: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              >
+                                <option value="">Chọn cấp bậc</option>
+                                <option value="Binh nhì">Binh nhì</option>
+                                <option value="Binh nhất">Binh nhất</option>
+                                <option value="Hạ Sỹ">Hạ Sỹ</option>
+                                <option value="Trung sỹ">Trung sỹ</option>
+                                <option value="Thượng sỹ">Thượng sỹ</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="enrollment"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Năm vào trường
+                              </label>
+                              <input
+                                type="number"
+                                id="enrollment"
+                                value={addFormData.enrollment}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    enrollment: e.target.value,
+                                  })
+                                }
+                                aria-describedby="helper-text-explanation"
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="Nhập năm vào trường"
+                                min="2017"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="positionGovernment"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Chức vụ
+                              </label>
+                              <select
+                                id="positionGovernment"
+                                value={addFormData.positionGovernment}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    positionGovernment: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              >
+                                <option value="">Chọn chức vụ</option>
+                                <option value="Học viên">Học viên</option>
+                                <option value="Lớp phó">Lớp phó</option>
+                                <option value="Lớp trưởng">Lớp trưởng</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="dateOfEnlistment"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Nhập ngũ
+                              </label>
+                              <DatePicker
+                                id="dateOfEnlistment"
+                                selected={addFormData.dateOfEnlistment}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    dateOfEnlistment: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="probationaryPartyMember"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Đảng viên dự bị
+                              </label>
+                              <DatePicker
+                                id="probationaryPartyMember"
+                                selected={addFormData.probationaryPartyMember}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    probationaryPartyMember: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="university"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Trường
+                              </label>
+                              <select
+                                id="university"
+                                value={selectedUniversity?._id || ""}
+                                onChange={async (e) => {
+                                  const uni = universities.find(
+                                    (u) => u._id === e.target.value
+                                  );
+                                  setSelectedUniversity(uni);
+                                  setSelectedOrganization(null);
+                                  setSelectedLevel(null);
+                                  setSelectedClass(null);
+                                  setOrganizations([]);
+                                  setEducationLevels([]);
+                                  setClasses([]);
+
+                                  if (uni) {
+                                    const organizations =
+                                      await fetchOrganizations(uni._id);
+                                    setOrganizations(organizations);
+                                  }
+                                }}
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
+                              >
+                                <option value="">Chọn trường</option>
+                                {universities.map((u) => (
+                                  <option key={u._id} value={u._id}>
+                                    {u.universityName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="fullPartyMember"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Đảng viên chính thức
+                              </label>
+                              <DatePicker
+                                id="fullPartyMember"
+                                selected={addFormData.fullPartyMember}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    fullPartyMember: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="organization"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Khoa/Viện quản lý
+                              </label>
+                              <select
+                                id="organization"
+                                value={selectedOrganization || ""}
+                                onChange={async (e) => {
+                                  const selectedOrg = organizations.find(
+                                    (org) => org._id === e.target.value
+                                  );
+                                  setSelectedOrganization(selectedOrg._id);
+                                  setSelectedLevel(null);
+                                  setSelectedClass(null);
+                                  setEducationLevels([]);
+                                  setClasses([]);
+
+                                  if (selectedOrg) {
+                                    const educationLevels =
+                                      await fetchEducationLevels(
+                                        selectedOrg._id
+                                      );
+                                    setEducationLevels(educationLevels);
+                                  }
+                                }}
+                                disabled={!selectedUniversity}
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
+                              >
+                                <option value="">Chọn khoa/viện</option>
+                                {organizations.map((org) => (
+                                  <option key={org._id} value={org._id}>
+                                    {org.organizationName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="positionParty"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Chức vụ đảng
+                              </label>
+                              <select
+                                id="positionParty"
+                                value={addFormData.positionParty}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    positionParty: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              >
+                                <option value="Không">Không</option>
+                                <option value="Đảng viên">Đảng viên</option>
+                                <option value="Phó bí thư chi bộ">
+                                  Phó bí thư chi bộ
+                                </option>
+                                <option value="Bí thư chi bộ">
+                                  Bí thư chi bộ
+                                </option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="level"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Trình độ đào tạo
+                              </label>
+                              <select
+                                id="level"
+                                value={selectedLevel || ""}
+                                onChange={async (e) => {
+                                  const selectedLevelObj = educationLevels.find(
+                                    (level) => level._id === e.target.value
+                                  );
+                                  setSelectedLevel(selectedLevelObj._id);
+                                  setSelectedClass(null);
+                                  setClasses([]);
+
+                                  if (selectedLevelObj) {
+                                    const classList = await fetchClasses(
+                                      selectedLevelObj._id
+                                    );
+                                    setClasses(classList);
+                                  }
+                                }}
+                                disabled={!selectedOrganization}
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
+                              >
+                                <option value="">Chọn trình độ đào tạo</option>
+                                {educationLevels.map((level) => (
+                                  <option key={level._id} value={level._id}>
+                                    {level.levelName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="hometown"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Quê quán
+                              </label>
+                              <input
+                                type="text"
+                                id="hometown"
+                                value={addFormData.hometown}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    hometown: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: Hà Nội"
+                              />
+                            </div>
+
+                            {/* Trình độ */}
+
+                            {/* Lớp */}
+                            <div>
+                              <label
+                                htmlFor="class"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Lớp
+                              </label>
+                              <select
+                                id="class"
+                                value={selectedClass || ""}
+                                onChange={(e) => {
+                                  const selectedClassObj = classes.find(
+                                    (cls) => cls._id === e.target.value
+                                  );
+                                  setSelectedClass(selectedClassObj._id);
+                                }}
+                                disabled={!selectedLevel}
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
+                              >
+                                <option value="">Chọn lớp</option>
+                                {classes.map((cls) => (
+                                  <option key={cls._id} value={cls._id}>
+                                    {cls.className}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="currentAddress"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Nơi ở hiện nay
+                              </label>
+                              <input
+                                type="text"
+                                id="currentAddress"
+                                value={addFormData.currentAddress}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    currentAddress: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: Hà Nội"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="email"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Email
+                              </label>
+                              <input
+                                type="email"
+                                id="email"
+                                value={addFormData.email}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    email: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: x.nv200001@sis.hust.edu.vn"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid justify-items-end">
+                            <button
+                              type="submit"
+                              disabled={isLoading}
+                              className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
+                                isLoading
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                              }`}
+                            >
+                              {isLoading ? (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                  Đang xử lý...
+                                </div>
+                              ) : (
+                                "Thêm"
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2116,561 +2093,545 @@ const ListUser = () => {
               id="authentication-modal"
               tabIndex="-1"
               aria-hidden="true"
-              onClick={handleAuthenticationModalClick}
               className="fixed top-0 right-0 left-0 z-10 justify-center items-center"
             >
               <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-32 mx-auto max-w-3xl max-h-[80vh] overflow-y-auto">
                 <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg shadow">
-                  <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
-                    <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                      CHỈNH SỬA THÔNG TIN QUÂN NHÂN
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={closeForm}
-                      className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                      data-modal-hide="authentication-modal"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 14 14"
+                  <div className="w-full">
+                    <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
+                      <h3 className="text-xl font-semibold dark:text-white mx-auto">
+                        CHỈNH SỬA THÔNG TIN QUÂN NHÂN
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={closeForm}
+                        className="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        data-modal-hide="authentication-modal"
                       >
-                        <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                        />
-                      </svg>
-                      <span className="sr-only">Close modal</span>
-                    </button>
-                  </div>
-
-                  <div className="w-full max-w-3xl p-5 mb-5">
-                    <form
-                      onSubmit={(e) =>
-                        handleSubmit(e, selectedStudentId, profile?.students)
-                      }
-                    >
-                      <div className="grid gap-6 mb-6 md:grid-cols-2">
-                        {/* Thông tin cơ bản */}
-
-                        <div>
-                          <label
-                            htmlFor="fullName"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Họ và tên
-                          </label>
-                          <input
-                            type="text"
-                            id="fullName"
-                            value={formData.fullName}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: Nguyễn Văn X"
-                          />
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="studentId"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Mã học viên
-                          </label>
-                          <input
-                            type="text"
-                            id="studentId"
-                            value={formData.studentId}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: 20200001"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="phoneNumber"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Số điện thoại
-                          </label>
-                          <input
-                            type="tel"
-                            id="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: 0123456789"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="gender"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Giới tính
-                          </label>
-                          <select
-                            id="gender"
-                            value={formData.gender}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="unit"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Đơn vị
-                          </label>
-                          <select
-                            id="unit"
-                            value={formData.unit}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="L1 - H5">L1 - H5</option>
-                            <option value="L2 - H5">L2 - H5</option>
-                            <option value="L3 - H5">L3 - H5</option>
-                            <option value="L4 - H5">L4 - H5</option>
-                            <option value="L5 - H5">L5 - H5</option>
-                            <option value="L6 - H5">L6 - H5</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="birthday"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Sinh ngày
-                          </label>
-                          <DatePicker
-                            id="birthday"
-                            selected={formData.birthday}
-                            onChange={(date) =>
-                              handleChangeDate("birthday", date)
-                            }
-                            dateFormat="dd/MM/yyyy"
-                            className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Ngày/Tháng/Năm"
-                            wrapperClassName="w-full"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="rank"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Cấp bậc
-                          </label>
-                          <select
-                            id="rank"
-                            value={formData.rank}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Binh nhì">Binh nhì</option>
-                            <option value="Binh nhất">Binh nhất</option>
-                            <option value="Hạ Sỹ">Hạ Sỹ</option>
-                            <option value="Trung sỹ">Trung sỹ</option>
-                            <option value="Thượng sỹ">Thượng sỹ</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="enrollment"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Năm vào trường
-                          </label>
-                          <input
-                            type="number"
-                            id="enrollment"
-                            value={formData.enrollment}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Nhập năm vào trường"
-                            min="2017"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="positionGovernment"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Chức vụ
-                          </label>
-                          <select
-                            id="positionGovernment"
-                            value={formData.positionGovernment}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Học viên">Học viên</option>
-                            <option value="Lớp phó">Lớp phó</option>
-                            <option value="Lớp trưởng">Lớp trưởng</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="dateOfEnlistment"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Nhập ngũ
-                          </label>
-                          <DatePicker
-                            id="dateOfEnlistment"
-                            selected={formData.dateOfEnlistment}
-                            onChange={(date) =>
-                              handleChangeDate("dateOfEnlistment", date)
-                            }
-                            dateFormat="dd/MM/yyyy"
-                            className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Ngày/Tháng/Năm"
-                            wrapperClassName="w-full"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="probationaryPartyMember"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Đảng viên dự bị
-                          </label>
-                          <DatePicker
-                            id="probationaryPartyMember"
-                            selected={formData.probationaryPartyMember}
-                            onChange={(date) =>
-                              handleChangeDate("probationaryPartyMember", date)
-                            }
-                            dateFormat="dd/MM/yyyy"
-                            className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Ngày/Tháng/Năm"
-                            wrapperClassName="w-full"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="fullPartyMember"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Đảng viên chính thức
-                          </label>
-                          <DatePicker
-                            id="fullPartyMember"
-                            selected={formData.fullPartyMember}
-                            onChange={(date) =>
-                              handleChangeDate("fullPartyMember", date)
-                            }
-                            dateFormat="dd/MM/yyyy"
-                            className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholderText="Ngày/Tháng/Năm"
-                            wrapperClassName="w-full"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="positionParty"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Chức vụ đảng
-                          </label>
-                          <select
-                            id="positionParty"
-                            value={formData.positionParty}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Không">Không</option>
-                            <option value="Đảng viên">Đảng viên</option>
-                            <option value="Phó bí thư chi bộ">
-                              Phó bí thư chi bộ
-                            </option>
-                            <option value="Bí thư chi bộ">Bí thư chi bộ</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="university"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Trường
-                          </label>
-                          <select
-                            id="university"
-                            value={selectedUniversity?._id || ""}
-                            onChange={async (e) => {
-                              const uni = universities.find(
-                                (u) => u._id === e.target.value
-                              );
-                              setSelectedUniversity(uni);
-                              setSelectedOrganization(null);
-                              setSelectedLevel(null);
-                              setSelectedClass(null);
-                              setOrganizations([]);
-                              setEducationLevels([]);
-                              setClasses([]);
-
-                              if (uni) {
-                                const organizations = await fetchOrganizations(
-                                  uni._id
-                                );
-                                setOrganizations(organizations);
-                              }
-                            }}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            required
-                          >
-                            <option value="">Chọn trường</option>
-                            {universities.map((u) => (
-                              <option key={u._id} value={u._id}>
-                                {u.universityName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="email"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Email
-                          </label>
-                          <input
-                            type="email"
-                            id="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: x.nv200001@sis.hust.edu.vn"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="organization"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Khoa/Viện quản lý
-                          </label>
-                          <select
-                            id="organization"
-                            value={
-                              selectedOrganization
-                                ? organizations.find(
-                                    (org) => org._id === selectedOrganization
-                                  )?.organizationName || ""
-                                : ""
-                            }
-                            onChange={async (e) => {
-                              const selectedOrg = organizations.find(
-                                (org) => org.organizationName === e.target.value
-                              );
-                              setSelectedOrganization(selectedOrg._id);
-                              setSelectedLevel(null);
-                              setSelectedClass(null);
-                              setEducationLevels([]);
-                              setClasses([]);
-
-                              if (selectedOrg) {
-                                const educationLevels =
-                                  await fetchEducationLevels(selectedOrg._id);
-                                setEducationLevels(educationLevels);
-                              }
-                            }}
-                            disabled={!selectedUniversity}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            required
-                          >
-                            <option value="">Chọn khoa/viện</option>
-                            {organizations.map((org) => (
-                              <option
-                                key={org._id}
-                                value={org.organizationName}
-                              >
-                                {org.organizationName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="hometown"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Quê quán
-                          </label>
-                          <input
-                            type="text"
-                            id="hometown"
-                            value={formData.hometown}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: Hà Nội"
-                          />
-                        </div>
-
-                        {/* Select động cho university, organization, level, class */}
-
-                        <div>
-                          <label
-                            htmlFor="level"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Trình độ đào tạo
-                          </label>
-                          <select
-                            id="level"
-                            value={
-                              selectedLevel
-                                ? educationLevels.find(
-                                    (level) => level._id === selectedLevel
-                                  )?.levelName || ""
-                                : ""
-                            }
-                            onChange={async (e) => {
-                              const selectedLevelObj = educationLevels.find(
-                                (level) => level.levelName === e.target.value
-                              );
-                              setSelectedLevel(selectedLevelObj._id);
-                              setSelectedClass(null);
-                              setClasses([]);
-
-                              if (selectedLevelObj) {
-                                const classList = await fetchClasses(
-                                  selectedLevelObj._id
-                                );
-                                setClasses(classList);
-                              }
-                            }}
-                            disabled={!selectedOrganization}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            required
-                          >
-                            <option value="">Chọn trình độ đào tạo</option>
-                            {educationLevels.map((level) => (
-                              <option key={level._id} value={level.levelName}>
-                                {level.levelName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="currentAddress"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Nơi ở hiện nay
-                          </label>
-                          <input
-                            type="text"
-                            id="currentAddress"
-                            value={formData.currentAddress}
-                            onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: Hà Nội"
-                          />
-                        </div>
-
-                        <div>
-                          <label
-                            htmlFor="class"
-                            className="block mb-2 text-sm font-medium dark:text-white"
-                          >
-                            Lớp
-                          </label>
-                          <select
-                            id="class"
-                            value={
-                              selectedClass
-                                ? classes.find(
-                                    (cls) => cls._id === selectedClass._id
-                                  )?.className || ""
-                                : ""
-                            }
-                            onChange={(e) => {
-                              const selectedClassObj = classes.find(
-                                (cls) => cls.className === e.target.value
-                              );
-                              setSelectedClass(selectedClassObj);
-                            }}
-                            disabled={!selectedLevel}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            required
-                          >
-                            <option value="">Chọn lớp</option>
-                            {classes.map((cls) => (
-                              <option key={cls._id} value={cls.className}>
-                                {cls.className}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="grid justify-items-end">
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
-                            isLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                          }`}
+                        <svg
+                          className="w-3 h-3"
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 14 14"
                         >
-                          {isLoading ? (
-                            <div className="flex items-center">
-                              <svg
-                                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                              Đang cập nhật...
-                            </div>
-                          ) : (
-                            "Cập nhật"
-                          )}
-                        </button>
-                      </div>
-                    </form>
+                          <path
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                          />
+                        </svg>
+                        <span className="sr-only">Close modal</span>
+                      </button>
+                    </div>
+
+                    <div className="w-full max-w-3xl p-5 mb-5">
+                      <form
+                        onSubmit={(e) =>
+                          handleSubmit(e, selectedStudentId, profile?.students)
+                        }
+                      >
+                        <div className="grid gap-6 mb-6 md:grid-cols-2">
+                          {/* Thông tin cơ bản */}
+
+                          <div>
+                            <label
+                              htmlFor="fullName"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Họ và tên
+                            </label>
+                            <input
+                              type="text"
+                              id="fullName"
+                              value={formData.fullName}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Nguyễn Văn X"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="studentId"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Mã học viên
+                            </label>
+                            <input
+                              type="text"
+                              id="studentId"
+                              value={formData.studentId}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: 20200001"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="phoneNumber"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Số điện thoại
+                            </label>
+                            <input
+                              type="tel"
+                              id="phoneNumber"
+                              value={formData.phoneNumber}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: 0123456789"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="gender"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Giới tính
+                            </label>
+                            <select
+                              id="gender"
+                              value={formData.gender}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="Nam">Nam</option>
+                              <option value="Nữ">Nữ</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="unit"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Đơn vị
+                            </label>
+                            <select
+                              id="unit"
+                              value={formData.unit}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="L1 - H5">L1 - H5</option>
+                              <option value="L2 - H5">L2 - H5</option>
+                              <option value="L3 - H5">L3 - H5</option>
+                              <option value="L4 - H5">L4 - H5</option>
+                              <option value="L5 - H5">L5 - H5</option>
+                              <option value="L6 - H5">L6 - H5</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="birthday"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Sinh ngày
+                            </label>
+                            <DatePicker
+                              id="birthday"
+                              selected={formData.birthday}
+                              onChange={(date) =>
+                                handleChangeDate("birthday", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="rank"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Cấp bậc
+                            </label>
+                            <select
+                              id="rank"
+                              value={formData.rank}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="Binh nhì">Binh nhì</option>
+                              <option value="Binh nhất">Binh nhất</option>
+                              <option value="Hạ Sỹ">Hạ Sỹ</option>
+                              <option value="Trung sỹ">Trung sỹ</option>
+                              <option value="Thượng sỹ">Thượng sỹ</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="enrollment"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Năm vào trường
+                            </label>
+                            <input
+                              type="number"
+                              id="enrollment"
+                              value={formData.enrollment}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="Nhập năm vào trường"
+                              min="2017"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="positionGovernment"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Chức vụ
+                            </label>
+                            <select
+                              id="positionGovernment"
+                              value={formData.positionGovernment}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="Học viên">Học viên</option>
+                              <option value="Lớp phó">Lớp phó</option>
+                              <option value="Lớp trưởng">Lớp trưởng</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="dateOfEnlistment"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Nhập ngũ
+                            </label>
+                            <DatePicker
+                              id="dateOfEnlistment"
+                              selected={formData.dateOfEnlistment}
+                              onChange={(date) =>
+                                handleChangeDate("dateOfEnlistment", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="probationaryPartyMember"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Đảng viên dự bị
+                            </label>
+                            <DatePicker
+                              id="probationaryPartyMember"
+                              selected={formData.probationaryPartyMember}
+                              onChange={(date) =>
+                                handleChangeDate(
+                                  "probationaryPartyMember",
+                                  date
+                                )
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="fullPartyMember"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Đảng viên chính thức
+                            </label>
+                            <DatePicker
+                              id="fullPartyMember"
+                              selected={formData.fullPartyMember}
+                              onChange={(date) =>
+                                handleChangeDate("fullPartyMember", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="positionParty"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Chức vụ đảng
+                            </label>
+                            <select
+                              id="positionParty"
+                              value={formData.positionParty}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="Không">Không</option>
+                              <option value="Đảng viên">Đảng viên</option>
+                              <option value="Phó bí thư chi bộ">
+                                Phó bí thư chi bộ
+                              </option>
+                              <option value="Bí thư chi bộ">
+                                Bí thư chi bộ
+                              </option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="university"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Trường
+                            </label>
+                            <select
+                              id="university"
+                              value={selectedUniversity?._id || ""}
+                              onChange={async (e) => {
+                                const uni = universities.find(
+                                  (u) => u._id === e.target.value
+                                );
+                                setSelectedUniversity(uni);
+                                setSelectedOrganization(null);
+                                setSelectedLevel(null);
+                                setSelectedClass(null);
+                                setOrganizations([]);
+                                setEducationLevels([]);
+                                setClasses([]);
+
+                                if (uni) {
+                                  const organizations =
+                                    await fetchOrganizations(uni._id);
+                                  setOrganizations(organizations);
+                                }
+                              }}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn trường</option>
+                              {universities.map((u) => (
+                                <option key={u._id} value={u._id}>
+                                  {u.universityName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="email"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              id="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="organization"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Khoa/Viện quản lý
+                            </label>
+                            <select
+                              id="organization"
+                              value={selectedOrganization || ""}
+                              onChange={async (e) => {
+                                const selectedOrg = organizations.find(
+                                  (org) => org._id === e.target.value
+                                );
+                                setSelectedOrganization(selectedOrg._id);
+                                setSelectedLevel(null);
+                                setSelectedClass(null);
+                                setEducationLevels([]);
+                                setClasses([]);
+
+                                if (selectedOrg) {
+                                  const educationLevels =
+                                    await fetchEducationLevels(selectedOrg._id);
+                                  setEducationLevels(educationLevels);
+                                }
+                              }}
+                              disabled={!selectedUniversity}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn khoa/viện</option>
+                              {organizations.map((org) => (
+                                <option key={org._id} value={org._id}>
+                                  {org.organizationName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="hometown"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Quê quán
+                            </label>
+                            <input
+                              type="text"
+                              id="hometown"
+                              value={formData.hometown}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
+                            />
+                          </div>
+
+                          {/* Select động cho university, organization, level, class */}
+
+                          <div>
+                            <label
+                              htmlFor="level"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Trình độ đào tạo
+                            </label>
+                            <select
+                              id="level"
+                              value={selectedLevel || ""}
+                              onChange={async (e) => {
+                                const selectedLevelObj = educationLevels.find(
+                                  (level) => level._id === e.target.value
+                                );
+                                setSelectedLevel(selectedLevelObj._id);
+                                setSelectedClass(null);
+                                setClasses([]);
+
+                                if (selectedLevelObj) {
+                                  const classList = await fetchClasses(
+                                    selectedLevelObj._id
+                                  );
+                                  setClasses(classList);
+                                }
+                              }}
+                              disabled={!selectedOrganization}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn trình độ đào tạo</option>
+                              {educationLevels.map((level) => (
+                                <option key={level._id} value={level._id}>
+                                  {level.levelName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="currentAddress"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Nơi ở hiện nay
+                            </label>
+                            <input
+                              type="text"
+                              id="currentAddress"
+                              value={formData.currentAddress}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="class"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Lớp
+                            </label>
+                            <select
+                              id="class"
+                              value={selectedClass || ""}
+                              onChange={(e) => {
+                                const selectedClassObj = classes.find(
+                                  (cls) => cls._id === e.target.value
+                                );
+                                setSelectedClass(selectedClassObj._id);
+                              }}
+                              disabled={!selectedLevel}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              required
+                            >
+                              <option value="">Chọn lớp</option>
+                              {classes.map((cls) => (
+                                <option key={cls._id} value={cls._id}>
+                                  {cls.className}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid justify-items-end">
+                          <button
+                            type="submit"
+                            disabled={isLoading}
+                            className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
+                              isLoading
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                            }`}
+                          >
+                            {isLoading ? (
+                              <div className="flex items-center">
+                                <svg
+                                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Đang cập nhật...
+                              </div>
+                            ) : (
+                              "Cập nhật"
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 </div>
               </div>

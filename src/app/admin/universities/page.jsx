@@ -394,25 +394,46 @@ export default function Universities() {
                   </div>
                 </div>
 
-                {/* Main Table */}
+                {/* Table */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
+                  <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
-                          Tên trường
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          TÊN TRƯỜNG
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
-                          Khoa/Viện
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          KHOA/VIỆN
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
-                          Chương trình đào tạo
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          THỜI GIAN DI CHUYỂN
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
-                          Lớp
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          CHƯƠNG TRÌNH ĐÀO TẠO
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-gray-600">
-                          Thao tác
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          LỚP
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          THAO TÁC
                         </th>
                       </tr>
                     </thead>
@@ -508,8 +529,6 @@ export default function Universities() {
                           let currentUniversityRowSpan = rows.length;
                           let currentOrganizationRowSpan = 0;
                           let currentEducationLevelRowSpan = 0;
-                          let currentOrganization = null;
-                          let currentEducationLevel = null;
 
                           rows.forEach((row, index) => {
                             // Tính universityRowSpan
@@ -557,7 +576,6 @@ export default function Universities() {
                           });
 
                           return rows.map((row, index) => {
-                            // Đảm bảo mỗi hàng có đủ 5 cột
                             const cells = [];
 
                             // University Column
@@ -566,13 +584,12 @@ export default function Universities() {
                                 <td
                                   key="university"
                                   rowSpan={row.universityRowSpan}
-                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                  className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
                                 >
-                                  <div className="font-semibold text-blue-600 dark:text-blue-400">
-                                    <BankOutlined className="mr-2" />
+                                  <div className="font-medium text-gray-900 dark:text-white">
                                     {row.university.universityName}
                                   </div>
-                                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">
                                     Mã: {row.university.universityCode}
                                   </div>
                                 </td>
@@ -585,16 +602,45 @@ export default function Universities() {
                                 <td
                                   key="organization"
                                   rowSpan={row.organizationRowSpan}
-                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                  className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
                                 >
                                   {row.organization ? (
-                                    <div className="font-medium text-green-600">
-                                      <BookOutlined className="mr-1" />
-                                      {row.organization.organizationName}
+                                    <div>
+                                      <div className="font-medium text-gray-900 dark:text-white">
+                                        {row.organization.organizationName}
+                                      </div>
+                                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        {
+                                          row.organization.educationLevels
+                                            .length
+                                        }{" "}
+                                        chương trình
+                                      </div>
                                     </div>
                                   ) : (
-                                    <div className="text-gray-400 dark:text-gray-500 text-sm">
+                                    <div className="text-gray-400 dark:text-gray-500 text-sm italic">
                                       Chưa có khoa/viện
+                                    </div>
+                                  )}
+                                </td>
+                              );
+                            }
+
+                            // Travel Time Column
+                            if (row.isOrganizationStart) {
+                              cells.push(
+                                <td
+                                  key="travelTime"
+                                  rowSpan={row.organizationRowSpan}
+                                  className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
+                                >
+                                  {row.organization ? (
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                      {row.organization.travelTime || 45} phút
+                                    </div>
+                                  ) : (
+                                    <div className="text-gray-400 dark:text-gray-500 text-sm italic">
+                                      -
                                     </div>
                                   )}
                                 </td>
@@ -607,15 +653,19 @@ export default function Universities() {
                                 <td
                                   key="educationLevel"
                                   rowSpan={row.educationLevelRowSpan}
-                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                  className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
                                 >
                                   {row.educationLevel ? (
-                                    <div className="font-medium text-orange-600">
-                                      <TrophyOutlined className="mr-1" />
-                                      {row.educationLevel.levelName}
+                                    <div>
+                                      <div className="font-medium text-gray-900 dark:text-white">
+                                        {row.educationLevel.levelName}
+                                      </div>
+                                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        {row.educationLevel.classes.length} lớp
+                                      </div>
                                     </div>
                                   ) : (
-                                    <div className="text-gray-400 dark:text-gray-500 text-sm">
+                                    <div className="text-gray-400 dark:text-gray-500 text-sm italic">
                                       Chưa có chương trình đào tạo
                                     </div>
                                   )}
@@ -627,15 +677,14 @@ export default function Universities() {
                             cells.push(
                               <td
                                 key="class"
-                                className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                className="px-4 py-4 text-center border-r border-gray-200 dark:border-gray-600"
                               >
                                 {row.class ? (
-                                  <div className="text-gray-700 dark:text-gray-300">
-                                    <TeamOutlined className="mr-1" />
+                                  <div className="font-medium text-gray-900 dark:text-white">
                                     {row.class.className}
                                   </div>
                                 ) : (
-                                  <div className="text-gray-400 dark:text-gray-500 text-sm">
+                                  <div className="text-gray-400 dark:text-gray-500 text-sm italic">
                                     Chưa có lớp
                                   </div>
                                 )}
@@ -648,9 +697,9 @@ export default function Universities() {
                                 <td
                                   key="actions"
                                   rowSpan={row.universityRowSpan}
-                                  className="px-6 py-4 border border-gray-200 dark:border-gray-600"
+                                  className="px-4 py-4 text-center"
                                 >
-                                  <div className="flex justify-center items-center space-x-4">
+                                  <div className="flex justify-center items-center space-x-2">
                                     <Link
                                       href={`/admin/universities/${row.university._id}/organizations`}
                                       className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
@@ -682,7 +731,10 @@ export default function Universities() {
                             }
 
                             return (
-                              <tr key={`${row.university._id}-${index}`}>
+                              <tr
+                                key={`${row.university._id}-${index}`}
+                                className="border-b border-gray-200 dark:border-gray-600"
+                              >
                                 {cells}
                               </tr>
                             );
@@ -691,7 +743,7 @@ export default function Universities() {
                       ) : (
                         <tr>
                           <td
-                            colSpan="5"
+                            colSpan="6"
                             className="px-6 py-4 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="flex flex-col items-center">
