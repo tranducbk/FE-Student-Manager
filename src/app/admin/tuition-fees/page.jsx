@@ -12,6 +12,19 @@ const TuitionFees = () => {
   const router = useRouter();
   const [tuitionFees, setTuitionFees] = useState(null);
   const [semester, setSemester] = useState("2023.2");
+  const [semesters, setSemesters] = useState([]);
+
+  const getSemesterLabel = (s) => {
+    if (!s) return "";
+    const code = s.code || "";
+    // code có thể là HK1/HK2/HK3 hoặc dạng năm.kỳ cũ
+    if (code.startsWith("HK")) {
+      return s.schoolYear ? `${code} - ${s.schoolYear}` : code;
+    }
+    const parts = code.split(".");
+    const term = parts.length > 1 ? parts[1] : "";
+    return s.schoolYear && term ? `HK${term} - ${s.schoolYear}` : code;
+  };
 
   const fetchTuitionFees = async () => {
     const token = localStorage.getItem("token");
@@ -35,8 +48,30 @@ const TuitionFees = () => {
   };
 
   useEffect(() => {
-    fetchTuitionFees();
+    const init = async () => {
+      await fetchSemesters();
+      await fetchTuitionFees();
+    };
+    init();
   }, []);
+
+  const fetchSemesters = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/semester`, {
+        headers: { token: `Bearer ${token}` },
+      });
+      const list = res.data || [];
+      setSemesters(list);
+      if (list.length > 0) {
+        const exists = list.find((s) => s.code === semester);
+        if (!exists) setSemester(list[0].code);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -206,16 +241,16 @@ const TuitionFees = () => {
                       onChange={(e) => setSemester(e.target.value)}
                       className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                     >
-                      <option value="2020.1">2020.1</option>
-                      <option value="2020.2">2020.2</option>
-                      <option value="2021.1">2021.1</option>
-                      <option value="2021.2">2021.2</option>
-                      <option value="2022.1">2022.1</option>
-                      <option value="2022.2">2022.2</option>
-                      <option value="2023.1">2023.1</option>
-                      <option value="2023.2">2023.2</option>
-                      <option value="2024.1">2024.1</option>
-                      <option value="2024.2">2024.2</option>
+                      {semesters.length === 0 && (
+                        <option value="" disabled>
+                          Chưa có học kỳ
+                        </option>
+                      )}
+                      {semesters.map((s) => (
+                        <option key={s._id} value={s.code}>
+                          {getSemesterLabel(s)}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

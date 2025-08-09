@@ -2,6 +2,8 @@
 
 import axios from "axios";
 import Link from "next/link";
+import { ReactNotifications } from "react-notifications-component";
+import { handleNotify } from "@/components/notify";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
@@ -14,12 +16,119 @@ const LearningResults = () => {
   const [semesters, setSemesters] = useState([]);
   const [showCreateSemester, setShowCreateSemester] = useState(false);
   const [newSemester, setNewSemester] = useState({ code: "", schoolYear: "" });
+  const [newTerm, setNewTerm] = useState("1");
+  const [yearStart, setYearStart] = useState("");
+  const [yearEnd, setYearEnd] = useState("");
   const [showEditSemester, setShowEditSemester] = useState(false);
   const [selectedEditSemesterId, setSelectedEditSemesterId] = useState("");
   const [editSemester, setEditSemester] = useState({
     code: "",
     schoolYear: "",
   });
+  const [showConfirmDeleteSemester, setShowConfirmDeleteSemester] =
+    useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [gradeUserId, setGradeUserId] = useState("");
+  const [gradeSubjects, setGradeSubjects] = useState([
+    { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+  ]);
+
+  const getSemesterLabel = (s) => {
+    if (!s) return "";
+    const parts = (s.code || "").split(".");
+    const term = parts.length > 1 ? parts[1] : "";
+    if (term && s.schoolYear) return `HK ${term} - ${s.schoolYear}`;
+    if (s.schoolYear) return `${s.code} (${s.schoolYear})`;
+    return s.code;
+  };
+
+  const openGradeModal = () => {
+    setShowGradeModal(true);
+  };
+
+  const addSubjectRow = () => {
+    setGradeSubjects([
+      ...gradeSubjects,
+      { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+    ]);
+  };
+
+  const removeSubjectRow = (idx) => {
+    const next = gradeSubjects.filter((_, i) => i !== idx);
+    setGradeSubjects(
+      next.length
+        ? next
+        : [{ subjectCode: "", subjectName: "", credits: "", letterGrade: "A" }]
+    );
+  };
+
+  const updateSubjectField = (idx, field, value) => {
+    const next = gradeSubjects.slice();
+    next[idx] = { ...next[idx], [field]: value };
+    setGradeSubjects(next);
+  };
+
+  const parseTermAndYear = () => {
+    const sem = semesters.find((s) => s.code === semester);
+    if (!sem) return { term: null, schoolYear: "" };
+    let term = null;
+    if (sem.code?.startsWith("HK"))
+      term = parseInt(sem.code.replace("HK", ""), 10);
+    else if (sem.code?.includes("."))
+      term = parseInt(sem.code.split(".")[1], 10);
+    return { term, schoolYear: sem.schoolYear };
+  };
+
+  const submitSemesterGrades = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const { term, schoolYear } = parseTermAndYear();
+    if (!term || !schoolYear) {
+      handleNotify("warning", "Thiếu học kỳ", "Vui lòng chọn học kỳ hợp lệ");
+      return;
+    }
+    if (!gradeUserId) {
+      handleNotify(
+        "warning",
+        "Thiếu người dùng",
+        "Vui lòng nhập userId của học viên"
+      );
+      return;
+    }
+    try {
+      const payload = {
+        semester: term,
+        schoolYear,
+        subjects: gradeSubjects.map((s) => ({
+          subjectCode: s.subjectCode.trim(),
+          subjectName: s.subjectName.trim(),
+          credits: Number(s.credits || 0),
+          letterGrade: s.letterGrade,
+        })),
+      };
+      await axios.post(`${BASE_URL}/grade/${gradeUserId}`, payload, {
+        headers: { token: `Bearer ${token}` },
+      });
+      handleNotify(
+        "success",
+        "Thành công",
+        `Đã thêm kết quả HK${term} - ${schoolYear}`
+      );
+      setShowGradeModal(false);
+      setGradeUserId("");
+      setGradeSubjects([
+        { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+      ]);
+      await fetchLearningResults();
+    } catch (err) {
+      handleNotify(
+        "danger",
+        "Lỗi",
+        err?.response?.data?.message || "Thêm kết quả thất bại"
+      );
+    }
+  };
 
   const fetchLearningResults = async () => {
     const token = localStorage.getItem("token");
@@ -73,25 +182,70 @@ const LearningResults = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
+      const start = yearStart.trim();
+      const end = yearEnd.trim();
+      const term = String(newTerm).trim();
+
+      if (!start || !end || !term) {
+        handleNotify(
+          "warning",
+          "Thiếu dữ liệu",
+          "Vui lòng nhập đủ kỳ và năm học"
+        );
+        return;
+      }
+      if (!/^\d{4}$/.test(start) || !/^\d{4}$/.test(end)) {
+        handleNotify(
+          "danger",
+          "Sai định dạng",
+          "Năm học phải gồm 4 chữ số, ví dụ 2024 và 2025"
+        );
+        return;
+      }
+      if (Number(end) !== Number(start) + 1) {
+        handleNotify(
+          "warning",
+          "Năm học không hợp lệ",
+          "Năm kết thúc phải lớn hơn năm bắt đầu 1 năm"
+        );
+        return;
+      }
+
       const payload = {
-        code: newSemester.code.trim(),
-        schoolYear: newSemester.schoolYear.trim(),
+        code: `HK${term}`,
+        schoolYear: `${start}-${end}`,
       };
-      if (!payload.code || !payload.schoolYear) return;
-      const res = await axios.post(`${BASE_URL}/semester/create`, payload, {
-        headers: { token: `Bearer ${token}` },
-      });
+      let res;
+      try {
+        res = await axios.post(`${BASE_URL}/semester/create`, payload, {
+          headers: { token: `Bearer ${token}` },
+        });
+      } catch (err) {
+        const msg = err?.response?.data?.message || "Tạo học kỳ thất bại";
+        handleNotify("danger", "Lỗi", msg);
+        return;
+      }
       await fetchSemesters();
       if (res?.data?.code) setSemester(res.data.code);
       setShowCreateSemester(false);
-      setNewSemester({ code: "", schoolYear: "" });
+      setNewTerm("1");
+      setYearStart("");
+      setYearEnd("");
     } catch (error) {
-      console.log(error);
+      const msg = error?.response?.data?.message || "Tạo học kỳ thất bại";
+      handleNotify("danger", "Lỗi", msg);
     }
   };
 
   const handleOpenEditSemester = () => {
-    if (semesters.length === 0) return;
+    if (semesters.length === 0) {
+      handleNotify(
+        "warning",
+        "Chưa có học kỳ",
+        "Vui lòng thêm học kỳ trước khi chỉnh sửa"
+      );
+      return;
+    }
     const firstId = semesters[0]._id;
     setSelectedEditSemesterId(firstId);
     const sem = semesters.find((s) => s._id === firstId);
@@ -132,6 +286,45 @@ const LearningResults = () => {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleDeleteSemester = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !selectedEditSemesterId) return;
+    try {
+      await axios.delete(`${BASE_URL}/semester/${selectedEditSemesterId}`, {
+        headers: { token: `Bearer ${token}` },
+      });
+      handleNotify("success", "Thành công", "Đã xóa học kỳ");
+      setShowConfirmDeleteSemester(false);
+      setShowEditSemester(false);
+      await fetchSemesters();
+    } catch (error) {
+      handleNotify(
+        "danger",
+        "Lỗi",
+        error?.response?.data?.message || "Xóa học kỳ thất bại"
+      );
+    }
+  };
+
+  const handleOpenDeleteSemester = () => {
+    if (semesters.length === 0) {
+      handleNotify(
+        "warning",
+        "Chưa có học kỳ",
+        "Vui lòng thêm học kỳ trước khi xóa"
+      );
+      return;
+    }
+    let targetId = null;
+    if (semester) {
+      const found = semesters.find((s) => s.code === semester);
+      if (found) targetId = found._id;
+    }
+    if (!targetId) targetId = semesters[0]._id;
+    setSelectedEditSemesterId(targetId);
+    setShowConfirmDeleteSemester(true);
   };
 
   const handleSubmit = async (e) => {
@@ -271,7 +464,7 @@ const LearningResults = () => {
                   className="flex items-end"
                   onSubmit={(e) => handleSubmit(e)}
                 >
-                  <div className="flex flex-1">
+                  <div className="flex items-end gap-2">
                     <div>
                       <label
                         htmlFor="semester"
@@ -292,36 +485,43 @@ const LearningResults = () => {
                         )}
                         {semesters.map((s) => (
                           <option key={s._id} value={s.code}>
-                            {s.code} {s.schoolYear ? `- ${s.schoolYear}` : ""}
+                            {getSemesterLabel(s)}
                           </option>
                         ))}
                       </select>
                     </div>
+                    <div>
+                      <button
+                        type="submit"
+                        className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
+                      >
+                        Tìm kiếm
+                      </button>
+                    </div>
                   </div>
-                <div className="ml-4">
-                  <button
-                    type="submit"
-                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
-                  >
-                    Tìm kiếm
-                  </button>
-                </div>
-                <div className="ml-auto flex items-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateSemester(true)}
-                    className="h-9 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
-                  >
-                    Thêm học kỳ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleOpenEditSemester}
-                    className="h-9 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
-                  >
-                    Chỉnh sửa học kỳ
-                  </button>
-                </div>
+                  <div className="ml-auto flex items-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateSemester(true)}
+                      className="h-9 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
+                    >
+                      Thêm học kỳ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleOpenEditSemester}
+                      className="h-9 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
+                    >
+                      Chỉnh sửa học kỳ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleOpenDeleteSemester}
+                      className="h-9 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200"
+                    >
+                      Xóa học kỳ
+                    </button>
+                  </div>
                 </form>
               </div>
               <div className="w-full p-5">
@@ -499,46 +699,45 @@ const LearningResults = () => {
               </button>
             </div>
             <form onSubmit={handleCreateSemester} className="p-4">
-              <div className="mb-4">
-                <label
-                  htmlFor="code"
-                  className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Mã kỳ (vd: 2024.1)
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  value={newSemester.code}
-                  onChange={(e) =>
-                    setNewSemester({ ...newSemester, code: e.target.value })
-                  }
-                  required
-                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="2024.1"
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="schoolYear"
-                  className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Năm học (vd: 2024-2025)
-                </label>
-                <input
-                  type="text"
-                  id="schoolYear"
-                  value={newSemester.schoolYear}
-                  onChange={(e) =>
-                    setNewSemester({
-                      ...newSemester,
-                      schoolYear: e.target.value,
-                    })
-                  }
-                  required
-                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="2024-2025"
-                />
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Chọn kỳ
+                  </label>
+                  <select
+                    value={newTerm}
+                    onChange={(e) => setNewTerm(e.target.value)}
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  >
+                    <option value="1">HK1</option>
+                    <option value="2">HK2</option>
+                    <option value="3">HK3</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Năm bắt đầu
+                  </label>
+                  <input
+                    type="number"
+                    value={yearStart}
+                    onChange={(e) => setYearStart(e.target.value)}
+                    placeholder="vd: 2024"
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Năm kết thúc
+                  </label>
+                  <input
+                    type="number"
+                    value={yearEnd}
+                    onChange={(e) => setYearEnd(e.target.value)}
+                    placeholder="vd: 2025"
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-3">
                 <button
@@ -556,6 +755,56 @@ const LearningResults = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showConfirmDeleteSemester && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed" />
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Xác nhận xóa
+              </h2>
+              <button
+                onClick={() => setShowConfirmDeleteSemester(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="mb-4">Bạn có chắc chắn muốn xóa học kỳ này?</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  onClick={() => setShowConfirmDeleteSemester(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteSemester}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -599,7 +848,7 @@ const LearningResults = () => {
                 >
                   {semesters.map((s) => (
                     <option key={s._id} value={s._id}>
-                      {s.code} {s.schoolYear ? `- ${s.schoolYear}` : ""}
+                      {getSemesterLabel(s)}
                     </option>
                   ))}
                 </select>
@@ -648,6 +897,13 @@ const LearningResults = () => {
                   className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg"
                 >
                   Lưu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDeleteSemester(true)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"
+                >
+                  Xóa
                 </button>
               </div>
             </form>

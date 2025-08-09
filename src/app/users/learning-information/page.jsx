@@ -12,6 +12,8 @@ import { BASE_URL } from "@/configs";
 
 const LearningInformation = () => {
   const [tuitionFee, setTuitionFee] = useState([]);
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [learningResult, setLearningResult] = useState([]);
   const [timeTable, setTimeTable] = useState([]);
   const [showConfirmTimeTable, setShowConfirmTimeTable] = useState(false);
@@ -32,11 +34,127 @@ const LearningInformation = () => {
   const [addFormDataTuitionFee, setAddFormDataTuitionFee] = useState({});
   const [addFormDataTimeTable, setAddFormDataTimeTable] = useState({});
   const [addFormDataLearn, setAddFormDataLearn] = useState({});
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [gradeSubjects, setGradeSubjects] = useState([
+    { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+  ]);
+  const [gradeSemesterCode, setGradeSemesterCode] = useState("");
   const searchParams = useSearchParams();
   const currentTab = searchParams?.get("tab") || "time-table";
 
-  const handleEditTuitionFee = (id) => {
+  // Format hiển thị số tiền: 1.000.000 (chỉ hiển thị, state lưu chuỗi số thô)
+  const formatNumberWithDots = (value) => {
+    if (value == null || value === "") return "";
+    const raw = String(value).replace(/\D/g, "");
+    return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  // Helpers cho nhập KQHT
+  const parseTermFromCode = (code) => {
+    if (!code) return null;
+    if (code.startsWith("HK")) return parseInt(code.replace("HK", ""), 10);
+    if (code.includes(".")) return parseInt(code.split(".")[1], 10);
+    return null;
+  };
+  const findSchoolYearByCode = (code) => {
+    const s = semesters.find((x) => x.code === code);
+    return s?.schoolYear || "";
+  };
+  const addSubjectRow = () => {
+    setGradeSubjects((prev) => [
+      ...prev,
+      { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+    ]);
+  };
+  const removeSubjectRow = (idx) => {
+    setGradeSubjects((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      return next.length
+        ? next
+        : [{ subjectCode: "", subjectName: "", credits: "", letterGrade: "A" }];
+    });
+  };
+  const updateSubjectField = (idx, field, value) => {
+    setGradeSubjects((prev) => {
+      const next = prev.slice();
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+  };
+  const openGradeModal = () => {
+    // chọn mặc định kỳ đầu danh sách nếu chưa có
+    if (!gradeSemesterCode) {
+      if (semesters && semesters.length > 0)
+        setGradeSemesterCode(semesters[0].code);
+    }
+    setShowGradeModal(true);
+  };
+  const submitSemesterGrades = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const userId = jwtDecode(token).id;
+    const term = parseTermFromCode(gradeSemesterCode);
+    const schoolYear = findSchoolYearByCode(gradeSemesterCode);
+    if (!term || !schoolYear) {
+      handleNotify("warning", "Thiếu thông tin", "Vui lòng chọn học kỳ hợp lệ");
+      return;
+    }
+    try {
+      const payload = {
+        semester: term,
+        schoolYear,
+        subjects: gradeSubjects.map((s) => ({
+          subjectCode: s.subjectCode.trim(),
+          subjectName: s.subjectName.trim(),
+          credits: Number(s.credits || 0),
+          letterGrade: s.letterGrade,
+        })),
+      };
+      await axios.post(`${BASE_URL}/grade/${userId}`, payload, {
+        headers: { token: `Bearer ${token}` },
+      });
+      handleNotify(
+        "success",
+        "Thành công",
+        `Đã nhập KQ học tập HK${term} - ${schoolYear}`
+      );
+      setShowGradeModal(false);
+      setGradeSubjects([
+        { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+      ]);
+    } catch (err) {
+      handleNotify(
+        "danger",
+        "Lỗi",
+        err?.response?.data?.message || "Không thể lưu KQ học tập"
+      );
+    }
+  };
+
+  const handleEditTuitionFee = async (id) => {
     setFeeId(id);
+    const token = localStorage.getItem("token");
+    try {
+      const decoded = jwtDecode(token);
+      const res = await axios.get(
+        `${BASE_URL}/student/${decoded.id}/tuition-fee`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+      const item = (res.data || []).find((t) => t._id === id);
+      if (item) {
+        setEditedTuitionFee({
+          semester: item.semester || selectedSemester,
+          content: item.content || "",
+          totalAmount: item.totalAmount || "",
+          status: item.status || "Chưa đóng",
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
     setIsOpenTuitionFee(true);
   };
 
@@ -279,9 +397,13 @@ const LearningInformation = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
+      const payload = {
+        ...addFormDataTuitionFee,
+        status: "Chưa đóng",
+      };
       const response = await axios.post(
         `${BASE_URL}/student/${jwtDecode(token).id}/tuition-fee`,
-        addFormDataTuitionFee,
+        payload,
         {
           headers: {
             token: `Bearer ${token}`,
@@ -499,6 +621,7 @@ const LearningInformation = () => {
             headers: {
               token: `Bearer ${token}`,
             },
+            params: selectedSemester ? { semester: selectedSemester } : {},
           }
         );
 
@@ -514,6 +637,33 @@ const LearningInformation = () => {
     fetchTuitionFee();
     fetchTimeTable();
   }, []);
+
+  // fetch danh sách học kỳ cho user
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await axios.get(`${BASE_URL}/semester`, {
+          headers: { token: `Bearer ${token}` },
+        });
+        const list = (res.data || []).sort((a, b) =>
+          (b.createdAt || "").localeCompare(a.createdAt || "")
+        );
+        setSemesters(list);
+        // Mặc định hiển thị "Tất cả học kỳ" khi mới vào
+        // Không set selectedSemester để giữ giá trị rỗng
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    fetchSemesters();
+  }, []);
+
+  // refetch tuition when semester changes (kể cả chọn "Tất cả")
+  useEffect(() => {
+    fetchTuitionFee();
+  }, [selectedSemester]);
 
   return (
     <>
@@ -738,25 +888,33 @@ const LearningInformation = () => {
                   <div className="text-gray-900 dark:text-white text-lg">
                     KẾT QUẢ HỌC TẬP
                   </div>
-                  <button
-                    onClick={() => setShowFormAddLearn(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="flex gap-2">
+                    <button
+                      onClick={openGradeModal}
+                      className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 border border-purple-600 hover:border-purple-700 rounded-lg transition-colors duration-200 flex items-center"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    Thêm
-                  </button>
+                      Nhập KQ học tập (môn)
+                    </button>
+                    <button
+                      onClick={() => setShowFormAddLearn(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Thêm tóm tắt
+                    </button>
+                  </div>
                 </div>
                 <div className="w-full pl-6 pb-6 pr-6 mt-4">
                   <div className="overflow-x-auto">
@@ -903,11 +1061,220 @@ const LearningInformation = () => {
               </div>
             )}
 
+            {/* Modal nhập KQ học tập theo môn */}
+            {showGradeModal && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+                <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+                <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Nhập kết quả học tập theo môn
+                    </h2>
+                    <button
+                      onClick={() => setShowGradeModal(false)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
+                    <form onSubmit={submitSemesterGrades} className="p-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Học kỳ
+                          </label>
+                          <select
+                            value={gradeSemesterCode}
+                            onChange={(e) =>
+                              setGradeSemesterCode(e.target.value)
+                            }
+                            className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                          >
+                            {semesters.map((s) => (
+                              <option key={s._id} value={s.code}>
+                                {s.code.startsWith("HK") && s.schoolYear
+                                  ? `${s.code} - ${s.schoolYear}`
+                                  : s.schoolYear && s.code.includes(".")
+                                  ? `HK${s.code.split(".")[1]} - ${
+                                      s.schoolYear
+                                    }`
+                                  : s.code}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm rounded-lg">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              <th className="px-3 py-2 border-r">Mã môn</th>
+                              <th className="px-3 py-2 border-r">Tên môn</th>
+                              <th className="px-3 py-2 border-r">Tín chỉ</th>
+                              <th className="px-3 py-2">Điểm chữ</th>
+                              <th className="px-3 py-2"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {gradeSubjects.map((row, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="px-2 py-2 border-r">
+                                  <input
+                                    type="text"
+                                    value={row.subjectCode}
+                                    onChange={(e) =>
+                                      updateSubjectField(
+                                        idx,
+                                        "subjectCode",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 border-r">
+                                  <input
+                                    type="text"
+                                    value={row.subjectName}
+                                    onChange={(e) =>
+                                      updateSubjectField(
+                                        idx,
+                                        "subjectName",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                  />
+                                </td>
+                                <td className="px-2 py-2 border-r">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={row.credits}
+                                    onChange={(e) =>
+                                      updateSubjectField(
+                                        idx,
+                                        "credits",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="w-24 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                  />
+                                </td>
+                                <td className="px-2 py-2">
+                                  <select
+                                    value={row.letterGrade}
+                                    onChange={(e) =>
+                                      updateSubjectField(
+                                        idx,
+                                        "letterGrade",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                  >
+                                    {[
+                                      "A+",
+                                      "A",
+                                      "B+",
+                                      "B",
+                                      "C+",
+                                      "C",
+                                      "D+",
+                                      "D",
+                                      "F",
+                                    ].map((g) => (
+                                      <option key={g} value={g}>
+                                        {g}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="px-2 py-2 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeSubjectRow(idx)}
+                                    className="text-red-600 hover:text-red-800"
+                                  >
+                                    Xóa
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex justify-between mt-3">
+                        <button
+                          type="button"
+                          onClick={addSubjectRow}
+                          className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md"
+                        >
+                          Thêm dòng
+                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowGradeModal(false)}
+                            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md"
+                          >
+                            Lưu kết quả
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {currentTab === "tuition" && (
               <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-                <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                  <div className="text-gray-900 dark:text-white text-lg">
-                    HỌC PHÍ
+                <div className="flex justify-between items-end font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div>
+                    <div className="text-gray-900 dark:text-white text-lg mb-2">
+                      HỌC PHÍ
+                    </div>
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="mr-2">Chọn học kỳ</label>
+                      <select
+                        value={selectedSemester}
+                        onChange={(e) => setSelectedSemester(e.target.value)}
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-3 py-1"
+                      >
+                        <option value="">Tất cả học kỳ</option>
+                        {semesters.map((s) => (
+                          <option key={s._id} value={s.code}>
+                            {s.code.startsWith("HK") && s.schoolYear
+                              ? `${s.code} - ${s.schoolYear}`
+                              : s.schoolYear && s.code.includes(".")
+                              ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
+                              : s.code}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <button
                     onClick={() => setShowFormAddTuitionFee(true)}
@@ -979,10 +1346,18 @@ const LearningInformation = () => {
                               {child.content}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {child.totalAmount}đ
+                              {formatNumberWithDots(child.totalAmount)}đ
                             </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {child.status}
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4 text-center">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  child.status === "Đã đóng"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                }`}
+                              >
+                                {child.status}
+                              </span>
                             </td>
                             <td className="flex justify-center items-center space-x-2 py-4 px-4">
                               <button
@@ -2086,17 +2461,11 @@ const LearningInformation = () => {
                 id="infoFormTuitionFee"
               >
                 <div className="mb-4">
-                  <label
-                    htmlFor="semester"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Học kỳ
                   </label>
-                  <input
-                    type="text"
-                    id="semester"
-                    name="semester"
-                    value={addFormDataTuitionFee.semester}
+                  <select
+                    value={addFormDataTuitionFee.semester || selectedSemester}
                     onChange={(e) =>
                       setAddFormDataTuitionFee({
                         ...addFormDataTuitionFee,
@@ -2104,9 +2473,18 @@ const LearningInformation = () => {
                       })
                     }
                     required
-                    placeholder="vd: 2023.2"
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+                  >
+                    {semesters.map((s) => (
+                      <option key={s._id} value={s.code}>
+                        {s.code.startsWith("HK") && s.schoolYear
+                          ? `${s.code} - ${s.schoolYear}`
+                          : s.schoolYear && s.code.includes(".")
+                          ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
+                          : s.code}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mb-4">
                   <label
@@ -2142,41 +2520,22 @@ const LearningInformation = () => {
                     type="text"
                     id="totalAmount"
                     name="totalAmount"
-                    value={addFormDataTuitionFee.totalAmount}
-                    onChange={(e) =>
+                    value={formatNumberWithDots(
+                      addFormDataTuitionFee.totalAmount || ""
+                    )}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
                       setAddFormDataTuitionFee({
                         ...addFormDataTuitionFee,
-                        totalAmount: e.target.value,
-                      })
-                    }
+                        totalAmount: raw,
+                      });
+                    }}
                     required
                     placeholder="vd: 15.000.000"
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="status"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Trạng thái
-                  </label>
-                  <input
-                    type="text"
-                    id="status"
-                    name="status"
-                    value={addFormDataTuitionFee.status}
-                    onChange={(e) =>
-                      setAddFormDataTuitionFee({
-                        ...addFormDataTuitionFee,
-                        status: e.target.value,
-                      })
-                    }
-                    required
-                    placeholder="vd: Chưa đóng"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
-                </div>
+                {/* Trạng thái mặc định 'Chưa đóng' khi thêm. Không cần chọn ở form user. */}
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -2239,20 +2598,28 @@ const LearningInformation = () => {
                   >
                     Học kỳ
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="semester2"
                     name="semester2"
-                    value={editedTuitionFee.semester}
+                    value={editedTuitionFee.semester || selectedSemester}
                     onChange={(e) =>
                       setEditedTuitionFee({
                         ...editedTuitionFee,
                         semester: e.target.value,
                       })
                     }
-                    placeholder="vd: 2023.2"
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
+                  >
+                    {semesters.map((s) => (
+                      <option key={s._id} value={s.code}>
+                        {s.code.startsWith("HK") && s.schoolYear
+                          ? `${s.code} - ${s.schoolYear}`
+                          : s.schoolYear && s.code.includes(".")
+                          ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
+                          : s.code}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mb-4">
                   <label
@@ -2287,39 +2654,21 @@ const LearningInformation = () => {
                     type="text"
                     id="totalAmount2"
                     name="totalAmount2"
-                    value={editedTuitionFee.totalAmount}
-                    onChange={(e) =>
+                    value={formatNumberWithDots(
+                      editedTuitionFee.totalAmount || ""
+                    )}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
                       setEditedTuitionFee({
                         ...editedTuitionFee,
-                        totalAmount: e.target.value,
-                      })
-                    }
+                        totalAmount: raw,
+                      });
+                    }}
                     placeholder="vd: 15.000.000"
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   />
                 </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="status2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                  >
-                    Trạng thái
-                  </label>
-                  <input
-                    type="text"
-                    id="status2"
-                    name="status2"
-                    value={editedTuitionFee.status}
-                    onChange={(e) =>
-                      setEditedTuitionFee({
-                        ...editedTuitionFee,
-                        status: e.target.value,
-                      })
-                    }
-                    placeholder="vd: Chưa đóng"
-                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                  />
-                </div>
+                {/* Ẩn trường Trạng thái trong modal user */}
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
