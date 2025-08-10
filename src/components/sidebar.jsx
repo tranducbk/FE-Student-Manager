@@ -340,6 +340,10 @@ const SideBar = () => {
                 Tổng quan
               </Menu.Item>
 
+              <Menu.Item key={`/users/${token?.id}`} icon={<UserOutlined />}>
+                Thông tin cá nhân
+              </Menu.Item>
+
               <SubMenu
                 key="learning-user"
                 icon={<BookOutlined />}

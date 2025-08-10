@@ -77,14 +77,14 @@ const Guard = () => {
       <div>
         <SideBar />
       </div>
-      <div className="w-full ml-64">
+      <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
               <li className="inline-flex items-center">
                 <Link
                   href="/users"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 me-2.5"
@@ -115,7 +115,7 @@ const Guard = () => {
                       d="m1 9 4-4-4-4"
                     />
                   </svg>
-                  <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
                     Lịch gác đêm
                   </div>
                 </div>
@@ -124,8 +124,12 @@ const Guard = () => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold pt-5 pl-5 pb-5">LỊCH GÁC ĐÊM</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+            <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+              <div className="text-gray-900 dark:text-white text-lg">
+                LỊCH GÁC ĐÊM
+              </div>
+            </div>
             <div className="w-full pl-5 pb-5 pr-5">
               <div className="w-full">
                 <form
@@ -136,7 +140,7 @@ const Guard = () => {
                     <div>
                       <label
                         htmlFor="month"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn tháng
                       </label>
@@ -163,7 +167,7 @@ const Guard = () => {
                     <div className="ml-4">
                       <label
                         htmlFor="enrollment"
-                        className="block mb-1 text-sm font-medium dark:text-white"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
                         Chọn năm
                       </label>
@@ -183,7 +187,7 @@ const Guard = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                     >
                       Tìm kiếm
                     </button>
@@ -191,27 +195,33 @@ const Guard = () => {
                 </form>
               </div>
             </div>
-            <div className="text-sm pl-5 flex font-medium">
-              Ngày:{" "}
-              <div className="pl-1 font-bold">
-                {dayjs(guard ? guard[index]?.dayGuard : "").format(
-                  "DD/MM/YYYY"
-                )}
-              </div>
-            </div>
-            <div className="text-sm pl-5 font-medium">Mật khẩu: </div>
-            <div className="flex text-sm pl-5">
-              <div className="flex font-medium">
-                Hỏi:{" "}
-                <div className="pl-1 font-bold">
-                  {guard ? guard[index]?.guardPassword?.question : ""}
+            <div className="w-full pl-5 pb-5 pr-5">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                <div className="text-sm flex font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Ngày:{" "}
+                  <span className="pl-1 font-bold text-gray-900 dark:text-white">
+                    {dayjs(guard ? guard[index]?.dayGuard : "").format(
+                      "DD/MM/YYYY"
+                    )}
+                  </span>
                 </div>
-              </div>
-              <div className="pl-8">
-                <div className="flex font-medium">
-                  Đáp:{" "}
-                  <div className="pl-1 font-bold">
-                    {guard ? guard[index]?.guardPassword?.answer : ""}
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mật khẩu:{" "}
+                </div>
+                <div className="flex text-sm">
+                  <div className="flex font-medium text-gray-700 dark:text-gray-300">
+                    Hỏi:{" "}
+                    <span className="pl-1 font-bold text-gray-900 dark:text-white">
+                      {guard ? guard[index]?.guardPassword?.question : ""}
+                    </span>
+                  </div>
+                  <div className="pl-8">
+                    <div className="flex font-medium text-gray-700 dark:text-gray-300">
+                      Đáp:{" "}
+                      <span className="pl-1 font-bold text-gray-900 dark:text-white">
+                        {guard ? guard[index]?.guardPassword?.answer : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -221,142 +231,145 @@ const Guard = () => {
                 <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
                   <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
                     <div className="overflow-hidden">
-                      <table className="min-w-full border border-neutral-200 text-center text-sm font-light text-surface dark:border-white/10 dark:text-white">
-                        <thead className="border-b bg-sky-100 border-neutral-200 font-medium dark:border-white/10">
+                      <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                        <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
                           <tr>
                             <th
                               scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
+                              className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                             >
                               Thời gian
                             </th>
                             <th
                               scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
+                              className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                             >
                               Vọng 1 (Cầu thang tòa S1)
                             </th>
                             <th
                               scope="col"
-                              className="border-e border-neutral-200 px-6 py-4 dark:border-white/10"
+                              className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                             >
                               Vọng 2 (Đối diện tòa S2)
                             </th>
-                            <th scope="col" className="px-6 py-4">
+                            <th
+                              scope="col"
+                              className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                            >
                               Vọng 3 (Đằng sau tòa S3)
                             </th>
                           </tr>
                         </thead>
-                        <tbody>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                        <tbody className="bg-white dark:bg-gray-800">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               19h00 - 21h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[0] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[0] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[0] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               21h00 - 22h30
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[1] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[1] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[1] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               22h30 - 24h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[2] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[2] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[2] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               24h00 - 1h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[3] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[3] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[3] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               1h00 - 2h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[4] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[4] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[4] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               2h00 - 3h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[5] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[5] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[5] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               3h00 - 4h00
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[6] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium border-e border-neutral-200 px-6 py-4 dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[6] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[6] : ""}
                             </td>
                           </tr>
-                          <tr className="border-b border-neutral-200 dark:border-white/10">
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                          <tr className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               4h00 - 5h30
                             </td>
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location1[7] : ""}
                             </td>
-                            <td className="whitespace-nowrap border-e border-neutral-200 px-6 py-4 font-medium dark:border-white/10">
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {guard ? guard[index]?.location2[7] : ""}
                             </td>
-                            <td className="whitespace-nowrap font-medium px-6 py-4">
+                            <td className="whitespace-nowrap font-medium py-4 px-4">
                               {guard ? guard[index]?.location3[7] : ""}
                             </td>
                           </tr>
@@ -373,7 +386,11 @@ const Guard = () => {
                   <button
                     key={item._id}
                     onClick={() => setIndex(i)}
-                    className="bg-gray-50 border hover:text-white hover:bg-blue-700 text-sm py-1 px-2 w-24 rounded"
+                    className={`text-sm py-1 px-2 w-24 rounded transition-colors duration-200 ${
+                      i === index
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-blue-600 hover:text-white"
+                    }`}
                   >
                     {dayjs(item.dayGuard).format("DD/MM/YYYY")}
                   </button>

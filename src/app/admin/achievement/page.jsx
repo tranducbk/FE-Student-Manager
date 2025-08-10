@@ -216,11 +216,7 @@ const Achievement = () => {
   };
 
   const getTitleDisplay = (title) => {
-    const titleMap = {
-      "chiến sĩ tiên tiến": "Chiến sĩ tiên tiến",
-      "chiến sĩ thi đua": "Chiến sĩ thi đua",
-    };
-    return titleMap[title] || title;
+    return title || "-";
   };
 
   const formatDate = (dateString) => {
@@ -300,7 +296,7 @@ const Achievement = () => {
     // Kiểm tra có ít nhất 2 năm chiến sĩ thi đua liên tiếp
     const competitiveYears =
       achievement.yearlyAchievements
-        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.filter((ya) => ya.title === "Chiến sĩ thi đua")
         ?.map((ya) => ya.year)
         ?.sort((a, b) => a - b) || [];
 
@@ -373,7 +369,7 @@ const Achievement = () => {
     // Kiểm tra có ít nhất 3 năm chiến sĩ thi đua liên tiếp
     const competitiveYears =
       achievement.yearlyAchievements
-        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.filter((ya) => ya.title === "Chiến sĩ thi đua")
         ?.map((ya) => ya.year)
         ?.sort((a, b) => a - b) || [];
 
@@ -1082,10 +1078,10 @@ const Achievement = () => {
                           required
                         >
                           <option value="">Chọn danh hiệu</option>
-                          <option value="chiến sĩ tiên tiến">
+                          <option value="Chiến sĩ tiên tiến">
                             Chiến sĩ tiên tiến
                           </option>
-                          <option value="chiến sĩ thi đua">
+                          <option value="Chiến sĩ thi đua">
                             Chiến sĩ thi đua
                           </option>
                         </select>
@@ -1570,10 +1566,10 @@ const Achievement = () => {
                           required
                         >
                           <option value="">Chọn danh hiệu</option>
-                          <option value="chiến sĩ tiên tiến">
+                          <option value="Chiến sĩ tiên tiến">
                             Chiến sĩ tiên tiến
                           </option>
-                          <option value="chiến sĩ thi đua">
+                          <option value="Chiến sĩ thi đua">
                             Chiến sĩ thi đua
                           </option>
                         </select>

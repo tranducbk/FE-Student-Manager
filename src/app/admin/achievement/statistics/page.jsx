@@ -145,8 +145,8 @@ const AchievementStatistics = () => {
       if (!ach || !Array.isArray(ach.yearlyAchievements)) return;
       ach.yearlyAchievements.forEach((ya) => {
         if (parseInt(ya.year) !== y) return;
-        if (ya.title === "chiến sĩ tiên tiến") advancedCount += 1;
-        if (ya.title === "chiến sĩ thi đua") competitiveCount += 1;
+        if (ya.title === "Chiến sĩ tiên tiến") advancedCount += 1;
+        if (ya.title === "Chiến sĩ thi đua") competitiveCount += 1;
         if (ya.hasMinistryReward) bkBqpCount += 1;
         if (ya.hasNationalReward) cstdTqCount += 1;
       });
@@ -284,11 +284,7 @@ const AchievementStatistics = () => {
   };
 
   const getTitleDisplay = (title) => {
-    const titleMap = {
-      "chiến sĩ tiên tiến": "Chiến sĩ tiên tiến",
-      "chiến sĩ thi đua": "Chiến sĩ thi đua",
-    };
-    return titleMap[title] || title;
+    return title || "-";
   };
 
   const formatDate = (dateString) => {
@@ -312,7 +308,7 @@ const AchievementStatistics = () => {
 
     const competitiveYears =
       ach.yearlyAchievements
-        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.filter((ya) => ya.title === "Chiến sĩ thi đua")
         ?.map((ya) => ya.year)
         ?.sort((a, b) => a - b) || [];
     if (competitiveYears.length < 2) return false;
@@ -362,7 +358,7 @@ const AchievementStatistics = () => {
 
     const competitiveYears =
       ach.yearlyAchievements
-        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.filter((ya) => ya.title === "Chiến sĩ thi đua")
         ?.map((ya) => ya.year)
         ?.sort((a, b) => a - b) || [];
     if (competitiveYears.length < 3) return false;
@@ -1136,10 +1132,10 @@ const AchievementStatistics = () => {
                           required
                         >
                           <option value="">Chọn danh hiệu</option>
-                          <option value="chiến sĩ tiên tiến">
+                          <option value="Chiến sĩ tiên tiến">
                             Chiến sĩ tiên tiến
                           </option>
-                          <option value="chiến sĩ thi đua">
+                          <option value="Chiến sĩ thi đua">
                             Chiến sĩ thi đua
                           </option>
                         </select>
@@ -1605,10 +1601,10 @@ const AchievementStatistics = () => {
                       required
                     >
                       <option value="">Chọn danh hiệu</option>
-                      <option value="chiến sĩ tiên tiến">
+                      <option value="Chiến sĩ tiên tiến">
                         Chiến sĩ tiên tiến
                       </option>
-                      <option value="chiến sĩ thi đua">Chiến sĩ thi đua</option>
+                      <option value="Chiến sĩ thi đua">Chiến sĩ thi đua</option>
                     </select>
                   </div>
                   <div>

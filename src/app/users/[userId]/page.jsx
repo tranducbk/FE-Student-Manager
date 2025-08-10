@@ -14,12 +14,17 @@ import { BASE_URL } from "@/configs";
 const UserProfile = ({ params }) => {
   const [profile, setProfile] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [profileUniversity, setProfileUniversity] = useState(null);
+  const [profileOrganization, setProfileOrganization] = useState(null);
+  const [profileEducationLevel, setProfileEducationLevel] = useState(null);
+  const [profileClass, setProfileClass] = useState(null);
   const [formData, setFormData] = useState({
     educationLevel: "Đại học đại trà",
     organization: "Viện ngoại ngữ",
     university: "Đại học Bách Khoa Hà Nội",
     positionGovernment: "Học viên",
     positionParty: "Không",
+    currentAddress: "",
     avatar:
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
   });
@@ -51,6 +56,7 @@ const UserProfile = ({ params }) => {
         positionParty: profile.positionParty || "Không",
         email: profile.email || "",
         hometown: profile.hometown || "",
+        currentAddress: profile.currentAddress || "",
         educationLevel: profile.educationLevel || "Đại học đại trà",
         avatar:
           profile.avatar ||
@@ -88,6 +94,96 @@ const UserProfile = ({ params }) => {
         });
 
         setProfile(res.data);
+
+        // Fetch dữ liệu chi tiết cho university, organization, education level, class
+        console.log("Student data:", res.data);
+
+        // Fetch university
+        if (
+          res.data.university &&
+          typeof res.data.university === "string" &&
+          res.data.university.length === 24
+        ) {
+          try {
+            console.log("Fetching university:", res.data.university);
+            const universityRes = await axios.get(
+              `${BASE_URL}/university/${res.data.university}`,
+              {
+                headers: { token: `Bearer ${token}` },
+              }
+            );
+            console.log("University data:", universityRes.data);
+            setProfileUniversity(universityRes.data);
+          } catch (error) {
+            console.error("Error fetching university:", error);
+          }
+
+          // Fetch organization
+          if (
+            res.data.organization &&
+            typeof res.data.organization === "string" &&
+            res.data.organization.length === 24
+          ) {
+            try {
+              console.log("Fetching organization:", res.data.organization);
+              const organizationRes = await axios.get(
+                `${BASE_URL}/university/organizations/${res.data.organization}`,
+                {
+                  headers: { token: `Bearer ${token}` },
+                }
+              );
+              console.log("Organization data:", organizationRes.data);
+              setProfileOrganization(organizationRes.data);
+            } catch (error) {
+              console.error("Error fetching organization:", error);
+            }
+
+            // Fetch education level
+            if (
+              res.data.educationLevel &&
+              typeof res.data.educationLevel === "string" &&
+              res.data.educationLevel.length === 24
+            ) {
+              try {
+                console.log(
+                  "Fetching education level:",
+                  res.data.educationLevel
+                );
+                const educationLevelRes = await axios.get(
+                  `${BASE_URL}/university/education-levels/${res.data.educationLevel}`,
+                  {
+                    headers: { token: `Bearer ${token}` },
+                  }
+                );
+                console.log("Education level data:", educationLevelRes.data);
+                setProfileEducationLevel(educationLevelRes.data);
+              } catch (error) {
+                console.error("Error fetching education level:", error);
+              }
+
+              // Fetch class
+              if (
+                res.data.class &&
+                typeof res.data.class === "string" &&
+                res.data.class.length === 24
+              ) {
+                try {
+                  console.log("Fetching class:", res.data.class);
+                  const classRes = await axios.get(
+                    `${BASE_URL}/university/classes/${res.data.class}`,
+                    {
+                      headers: { token: `Bearer ${token}` },
+                    }
+                  );
+                  console.log("Class data:", classRes.data);
+                  setProfileClass(classRes.data);
+                } catch (error) {
+                  console.error("Error fetching class:", error);
+                }
+              }
+            }
+          }
+        }
       } catch (error) {
         console.log(error);
       }
@@ -187,7 +283,7 @@ const UserProfile = ({ params }) => {
                       />
                     </svg>
                     <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
-                      Thông tin cá nhân
+                      Thông tin học viên
                     </div>
                   </div>
                 </li>
@@ -198,7 +294,7 @@ const UserProfile = ({ params }) => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white text-lg">
-                  THÔNG TIN CÁ NHÂN
+                  THÔNG TIN HỌC VIÊN
                 </div>
                 <button
                   onClick={openForm}
@@ -241,7 +337,7 @@ const UserProfile = ({ params }) => {
                     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 border-b border-gray-200 dark:border-gray-600 pb-2">
-                          THÔNG TIN SINH VIÊN
+                          THÔNG TIN CÁ NHÂN
                         </h3>
                         <div className="space-y-3">
                           <div className="flex justify-between">
@@ -249,7 +345,7 @@ const UserProfile = ({ params }) => {
                               Họ và tên:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.fullName}
+                              {profile?.fullName || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -257,7 +353,7 @@ const UserProfile = ({ params }) => {
                               Giới tính:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.gender}
+                              {profile?.gender || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -267,7 +363,7 @@ const UserProfile = ({ params }) => {
                             <span className="text-gray-900 dark:text-white">
                               {profile?.birthday
                                 ? dayjs(profile?.birthday).format("DD/MM/YYYY")
-                                : ""}
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -275,31 +371,7 @@ const UserProfile = ({ params }) => {
                               Năm vào trường:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.enrollment}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Trình độ đào tạo:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.educationLevel}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Lớp:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.classUniversity}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Khoa/Viện quản lý:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.organization}
+                              {profile?.enrollment || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -307,7 +379,43 @@ const UserProfile = ({ params }) => {
                               Trường:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.university}
+                              {profileUniversity?.universityName ||
+                                profile?.university?.universityName ||
+                                profile?.university ||
+                                "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Khoa/Viện quản lý:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profileOrganization?.organizationName ||
+                                profile?.organization?.organizationName ||
+                                profile?.organization ||
+                                "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Trình độ đào tạo:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profileEducationLevel?.levelName ||
+                                profile?.educationLevel?.levelName ||
+                                profile?.educationLevel ||
+                                "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Lớp:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profileClass?.className ||
+                                profile?.class?.className ||
+                                profile?.classUniversity ||
+                                "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -315,14 +423,14 @@ const UserProfile = ({ params }) => {
                               Email:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.email}
+                              {profile?.email || "Chưa có dữ liệu"}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 border-b border-gray-200 dark:border-gray-600 pb-2">
-                          THÔNG TIN HỌC VIÊN
+                          THÔNG TIN QUÂN NHÂN
                         </h3>
                         <div className="space-y-3">
                           <div className="flex justify-between">
@@ -330,7 +438,7 @@ const UserProfile = ({ params }) => {
                               Số điện thoại:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.phoneNumber}
+                              {profile?.phoneNumber || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -338,7 +446,7 @@ const UserProfile = ({ params }) => {
                               Đơn vị:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.unit}
+                              {profile?.unit || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -346,7 +454,7 @@ const UserProfile = ({ params }) => {
                               Cấp bậc:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.rank}
+                              {profile?.rank || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -354,7 +462,7 @@ const UserProfile = ({ params }) => {
                               Chức vụ:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.positionGovernment}
+                              {profile?.positionGovernment || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -366,7 +474,7 @@ const UserProfile = ({ params }) => {
                                 ? dayjs(profile?.dateOfEnlistment).format(
                                     "DD/MM/YYYY"
                                   )
-                                : ""}
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -378,7 +486,7 @@ const UserProfile = ({ params }) => {
                                 ? dayjs(
                                     profile?.probationaryPartyMember
                                   ).format("DD/MM/YYYY")
-                                : ""}
+                                : "Không"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -390,7 +498,7 @@ const UserProfile = ({ params }) => {
                                 ? dayjs(profile?.fullPartyMember).format(
                                     "DD/MM/YYYY"
                                   )
-                                : ""}
+                                : "Không"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -398,9 +506,7 @@ const UserProfile = ({ params }) => {
                               Chức vụ đảng:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.positionParty === "Không"
-                                ? ""
-                                : profile?.positionParty}
+                              {profile?.positionParty || "Không"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -408,7 +514,15 @@ const UserProfile = ({ params }) => {
                               Quê quán:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.hometown}
+                              {profile?.hometown || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Nơi ở hiện nay:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.currentAddress || "Chưa có dữ liệu"}
                             </span>
                           </div>
                         </div>
@@ -445,41 +559,29 @@ const UserProfile = ({ params }) => {
           </div>
         </div>
         {showForm && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4 mt-14">
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="relative mt-12 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  CHỈNH SỬA THÔNG TIN CÁ NHÂN
+                  CHỈNH SỬA THÔNG TIN HỌC VIÊN
                 </h3>
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  ×
                 </button>
               </div>
               <div className="overflow-y-auto max-h-[calc(85vh-80px)]">
-                <div className="w-full max-w-4xl p-6">
+                <div className="w-full max-w-5xl p-6">
                   <div className="w-full flex">
                     <div className="font-bold text-blue-600 dark:text-blue-400 w-1/2">
-                      THÔNG TIN HỌC VIÊN
+                      THÔNG TIN QUÂN NHÂN
                     </div>
                     <div className="font-bold text-blue-600 dark:text-blue-400 w-1/2 pl-3">
-                      THÔNG TIN SINH VIÊN
+                      THÔNG TIN CÁ NHÂN
                     </div>
                   </div>
                   <div className="w-full mt-5">
@@ -873,15 +975,19 @@ const UserProfile = ({ params }) => {
                         </div>
 
                         <div>
-                          <label className="block mb-2 text-sm font-medium dark:text-white">
-                            Thêm ảnh đại diện
+                          <label
+                            htmlFor="currentAddress"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Nơi ở hiện nay
                           </label>
                           <input
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            type="file"
-                            name="avatar"
-                            accept="image/*"
+                            type="text"
+                            id="currentAddress"
+                            value={formData.currentAddress}
                             onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hà Nội"
                           />
                         </div>
                       </div>
