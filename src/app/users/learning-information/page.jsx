@@ -49,6 +49,22 @@ const LearningInformation = () => {
     return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
+  // Màu trạng thái học phí (đồng bộ với trang admin)
+  const getStatusClasses = (status) => {
+    const s = String(status || "").toLowerCase();
+    const isPaid = s.includes("đã thanh toán") || s.includes("đã đóng");
+    const isUnpaid = s.includes("chưa thanh toán") || s.includes("chưa đóng");
+    const isPending =
+      s.includes("chờ") || s.includes("pending") || s.includes("đang xử lý");
+    if (isPaid)
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (isUnpaid)
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    if (isPending)
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+  };
+
   // Helpers cho nhập KQHT
   const parseTermFromCode = (code) => {
     if (!code) return null;
@@ -149,7 +165,7 @@ const LearningInformation = () => {
           semester: item.semester || selectedSemester,
           content: item.content || "",
           totalAmount: item.totalAmount || "",
-          status: item.status || "Chưa đóng",
+          status: item.status || "Chưa thanh toán",
         });
       }
     } catch (e) {
@@ -214,7 +230,11 @@ const LearningInformation = () => {
         setIsOpenLearningResult(false);
         fetchLearningResult();
       } catch (error) {
-        handleNotify("danger", "Lỗi!", error.response.data);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Có lỗi xảy ra khi cập nhật kết quả học tập";
+        handleNotify("danger", "Lỗi!", errorMessage);
         setIsOpenLearningResult(false);
       }
     }
@@ -279,7 +299,11 @@ const LearningInformation = () => {
         fetchTimeTable();
       } catch (error) {
         console.error("Error updating time table:", error);
-        handleNotify("danger", "Lỗi!", error.response?.data || "Có lỗi xảy ra");
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Có lỗi xảy ra khi cập nhật lịch học";
+        handleNotify("danger", "Lỗi!", errorMessage);
         setIsOpenTimeTable(false);
       }
     }
@@ -305,7 +329,11 @@ const LearningInformation = () => {
         setIsOpenTuitionFee(false);
         fetchTuitionFee();
       } catch (error) {
-        handleNotify("danger", "Lỗi!", error.response.data);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Có lỗi xảy ra khi cập nhật học phí";
+        handleNotify("danger", "Lỗi!", errorMessage);
         setIsOpenLearningResult(false);
       }
     }
@@ -330,7 +358,11 @@ const LearningInformation = () => {
       fetchLearningResult();
     } catch (error) {
       setShowFormAddLearn(false);
-      handleNotify("danger", "Lỗi!", error.response.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "Có lỗi xảy ra khi thêm kết quả học tập";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -389,7 +421,11 @@ const LearningInformation = () => {
       setAddFormDataTimeTable({});
     } catch (error) {
       setShowFormAddTimeTable(false);
-      handleNotify("danger", "Lỗi!", error.response.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "Có lỗi xảy ra khi thêm lịch học";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -399,7 +435,7 @@ const LearningInformation = () => {
     try {
       const payload = {
         ...addFormDataTuitionFee,
-        status: "Chưa đóng",
+        status: "Chưa thanh toán",
       };
       const response = await axios.post(
         `${BASE_URL}/student/${jwtDecode(token).id}/tuition-fee`,
@@ -415,7 +451,11 @@ const LearningInformation = () => {
       setShowFormAddTuitionFee(false);
     } catch (error) {
       setShowFormAddTuitionFee(false);
-      handleNotify("danger", "Lỗi!", error.response.data);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        "Có lỗi xảy ra khi thêm học phí";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -461,7 +501,13 @@ const LearningInformation = () => {
           );
           fetchTimeTable();
         })
-        .catch((error) => handleNotify("danger", "Lỗi!", error.response.data));
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.response?.data ||
+            "Có lỗi xảy ra khi xóa lịch học";
+          handleNotify("danger", "Lỗi!", errorMessage);
+        });
     }
 
     setShowConfirmTimeTable(false);
@@ -495,7 +541,13 @@ const LearningInformation = () => {
           );
           fetchLearningResult();
         })
-        .catch((error) => handleNotify("danger", "Lỗi!", error.response.data));
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.response?.data ||
+            "Có lỗi xảy ra khi xóa kết quả học tập";
+          handleNotify("danger", "Lỗi!", errorMessage);
+        });
     }
 
     setShowConfirmLearn(false);
@@ -1350,11 +1402,9 @@ const LearningInformation = () => {
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4 text-center">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  child.status === "Đã đóng"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                }`}
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClasses(
+                                  child.status
+                                )}`}
                               >
                                 {child.status}
                               </span>
@@ -2535,7 +2585,7 @@ const LearningInformation = () => {
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   />
                 </div>
-                {/* Trạng thái mặc định 'Chưa đóng' khi thêm. Không cần chọn ở form user. */}
+                {/* Trạng thái mặc định 'Chưa thanh toán' khi thêm. Không cần chọn ở form user. */}
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"

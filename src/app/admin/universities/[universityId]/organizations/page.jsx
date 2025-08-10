@@ -240,49 +240,50 @@ export default function UniversityOrganizations() {
     filteredHierarchyData.forEach((orgData) => {
       const { organization, educationLevels } = orgData;
 
-      if (educationLevels.length === 0) {
-        // Organization with no education levels
-        tableData.push({
-          organization: organization,
-          educationLevel: null,
-          class: null,
-          rowSpan: {
-            organization: 1,
-            educationLevel: 0,
-            class: 0,
-          },
-        });
+      // Chuẩn hóa thành các block theo chương trình, mỗi block có số hàng = max(1, số lớp)
+      const levelBlocks = [];
+      if (!educationLevels || educationLevels.length === 0) {
+        levelBlocks.push({ educationLevel: null, rows: [{ class: null }] });
       } else {
         educationLevels.forEach((level) => {
-          if (level.classes.length === 0) {
-            // Education level with no classes
-            tableData.push({
-              organization: organization,
+          if (level.classes && level.classes.length > 0) {
+            levelBlocks.push({
               educationLevel: level,
-              class: null,
-              rowSpan: {
-                organization: 1,
-                educationLevel: 1,
-                class: 0,
-              },
+              rows: level.classes.map((c) => ({ class: c })),
             });
           } else {
-            // Education level with classes
-            level.classes.forEach((classItem, classIndex) => {
-              tableData.push({
-                organization: organization,
-                educationLevel: level,
-                class: classItem,
-                rowSpan: {
-                  organization: classIndex === 0 ? level.classes.length : 0,
-                  educationLevel: classIndex === 0 ? level.classes.length : 0,
-                  class: 1,
-                },
-              });
+            levelBlocks.push({
+              educationLevel: level,
+              rows: [{ class: null }],
             });
           }
         });
       }
+
+      // Tổng số hàng của toàn bộ khoa/viện
+      const totalOrgRows = levelBlocks.reduce(
+        (sum, blk) => sum + blk.rows.length,
+        0
+      );
+
+      let orgCellPlaced = false;
+      levelBlocks.forEach((blk) => {
+        let levelCellPlaced = false;
+        blk.rows.forEach((row) => {
+          tableData.push({
+            organization,
+            educationLevel: blk.educationLevel,
+            class: row.class,
+            rowSpan: {
+              organization: orgCellPlaced ? 0 : totalOrgRows,
+              educationLevel: levelCellPlaced ? 0 : blk.rows.length,
+              class: 1,
+            },
+          });
+          orgCellPlaced = true;
+          levelCellPlaced = true;
+        });
+      });
     });
 
     return tableData;

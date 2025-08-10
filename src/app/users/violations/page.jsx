@@ -1,27 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import axios from "axios";
+import Link from "next/link";
+import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
 import { BASE_URL } from "@/configs";
 
-const Achievement = () => {
-  const [achievement, setAchievement] = useState(null);
-  const searchParams = useSearchParams();
+const ViolationsPage = () => {
+  const [violations, setViolations] = useState(null);
 
-  const fetchAchievement = async () => {
+  const fetchViolations = async () => {
     const token = localStorage.getItem("token");
 
     if (token) {
+      const decodedToken = jwtDecode(token);
       try {
-        const decodedToken = jwtDecode(token);
-        const studentIdParam = searchParams?.get("studentId");
-        const targetStudentId = studentIdParam || decodedToken.id;
         const res = await axios.get(
-          `${BASE_URL}/achievement/${targetStudentId}`,
+          `${BASE_URL}/commander/violation/${decodedToken.id}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -29,7 +26,7 @@ const Achievement = () => {
           }
         );
 
-        setAchievement(res.data);
+        setViolations(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -37,10 +34,8 @@ const Achievement = () => {
   };
 
   useEffect(() => {
-    fetchAchievement();
-    // Re-fetch when the query changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    fetchViolations();
+  }, []);
 
   return (
     <div className="flex">
@@ -86,7 +81,7 @@ const Achievement = () => {
                     />
                   </svg>
                   <div className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
-                    Khen thưởng
+                    Rèn luyện
                   </div>
                 </div>
               </li>
@@ -94,10 +89,10 @@ const Achievement = () => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg mt-6">
             <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
               <div className="text-gray-900 dark:text-white text-lg">
-                THÀNH TÍCH
+                LỖI VI PHẠM
               </div>
             </div>
             <div className="w-full pl-6 pb-6 pr-6 mt-4">
@@ -115,24 +110,24 @@ const Achievement = () => {
                         scope="col"
                         className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                       >
-                        Học kỳ
+                        Nội dung vi phạm
                       </th>
                       <th
                         scope="col"
                         className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                       >
-                        Năm học
+                        Hình thức xử lý
                       </th>
                       <th
                         scope="col"
                         className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                       >
-                        Thành tích
+                        Ngày vi phạm
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800">
-                    {achievement?.map((item, index) => (
+                    {violations?.map((item, index) => (
                       <tr
                         key={item._id}
                         className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
@@ -141,13 +136,13 @@ const Achievement = () => {
                           {index + 1}
                         </td>
                         <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.semester}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.schoolYear}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                           {item.content}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.penalty}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {dayjs(item.dateOfViolation).format("DD/MM/YYYY")}
                         </td>
                       </tr>
                     ))}
@@ -162,4 +157,4 @@ const Achievement = () => {
   );
 };
 
-export default Achievement;
+export default ViolationsPage;

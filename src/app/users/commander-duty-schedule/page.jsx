@@ -85,14 +85,14 @@ const CommanderDutySchedule = () => {
       <div>
         <SideBar />
       </div>
-      <div className="w-full ml-64">
+      <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900 ml-64">
         <div className="w-full pt-20 pl-5">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
               <li className="inline-flex items-center">
                 <Link
                   href="/users"
-                  className="inline-flex items-center text-sm font-medium hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                  className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
                 >
                   <svg
                     className="w-3 h-3 me-2.5"
@@ -123,7 +123,7 @@ const CommanderDutySchedule = () => {
                       d="m1 9 4-4-4-4"
                     />
                   </svg>
-                  <div className="ms-1 text-sm pointer-events-none text-custom text-opacity-70 font-medium md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  <div className="ms-1 text-sm pointer-events-none font-medium md:ms-2 text-gray-500 dark:text-gray-400">
                     Lịch trực chỉ huy
                   </div>
                 </div>
@@ -132,8 +132,10 @@ const CommanderDutySchedule = () => {
           </nav>
         </div>
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
-          <div className="bg-white rounded-lg w-full">
-            <div className="font-bold pt-5 pl-5 pb-5">LỊCH TRỰC CHỈ HUY</div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
+            <div className="font-bold pt-5 pl-5 pb-5 text-gray-900 dark:text-white">
+              LỊCH TRỰC CHỈ HUY
+            </div>
             <div className="w-full pl-5 pb-5 pr-5">
               <div className="w-full">
                 <form
@@ -191,66 +193,79 @@ const CommanderDutySchedule = () => {
                   <div className="ml-4">
                     <button
                       type="submit"
-                      className="h-9 bg-gray-50 border hover:text-white hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                      className="h-9 bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                     >
                       Tìm kiếm
                     </button>
                   </div>
                 </form>
-                <table className="table-auto w-full mt-4 divide-y border border-gray-200 divide-gray-200 overflow-x-auto">
-                  <thead className="bg-sky-100">
-                    <tr className="border border-gray-200">
+                <div className="mt-4 text-sm text-gray-700 dark:text-gray-300">
+                  {(() => {
+                    const paddedMonth = String(month).padStart(2, "0");
+                    const start = dayjs(`${year}-${paddedMonth}-01`).startOf(
+                      "month"
+                    );
+                    const end = start.endOf("month");
+                    return (
+                      <span>
+                        Khoảng thời gian: {start.format("DD/MM/YYYY")} -{" "}
+                        {end.format("DD/MM/YYYY")}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <table className="table-auto w-full mt-4 divide-y border border-gray-200 divide-gray-200 overflow-x-auto text-center dark:border-gray-700 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr className="border border-gray-200 dark:border-gray-600">
                       <th
                         scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase "
+                        className="px-6 border border-gray-200 dark:border-gray-600 py-3 text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
                       >
                         Ngày trực
                       </th>
                       <th
                         scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase"
+                        className="px-6 border border-gray-200 dark:border-gray-600 py-3 text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
                       >
                         Họ và tên
                       </th>
                       <th
                         scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase"
+                        className="px-6 border border-gray-200 dark:border-gray-600 py-3 text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
                       >
                         Cấp bậc
                       </th>
                       <th
                         scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase"
+                        className="px-6 border border-gray-200 dark:border-gray-600 py-3 text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
                       >
                         Chức vụ
                       </th>
                       <th
                         scope="col"
-                        className="px-6 border py-3 text-sm text-left uppercase"
+                        className="px-6 border border-gray-200 dark:border-gray-600 py-3 text-xs font-medium uppercase text-gray-700 dark:text-gray-300"
                       >
                         Số điện thoại
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {commanderDutySchedule?.schedules?.map((item) => (
                       <tr key={item._id}>
-                        <td className="px-6 border py-4 whitespace-nowrap">
-                          <div className="text-sm ">
-                            {dayjs(item.workDay).format("DD/MM/YYYY")}
-                          </div>
+                        <td className="px-6 border border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap">
+                          {dayjs(item.workDay).format("DD/MM/YYYY")}
                         </td>
-                        <td className="px-6 border py-4 whitespace-nowrap">
-                          <div className="text-sm ">{item.fullName}</div>
+                        <td className="px-6 border border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap">
+                          {item.fullName}
                         </td>
-                        <td className="px-6 border py-4 whitespace-nowrap">
-                          <div className="text-sm ">{item.rank}</div>
+                        <td className="px-6 border border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap">
+                          {item.rank}
                         </td>
-                        <td className="px-6 border py-4 whitespace-nowrap">
-                          <div className="text-sm ">{item.position}</div>
+                        <td className="px-6 border border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap">
+                          {item.position}
                         </td>
-                        <td className="px-6 border py-4 whitespace-nowrap">
-                          <div className="text-sm ">{item.phoneNumber}</div>
+                        <td className="px-6 border border-gray-200 dark:border-gray-700 py-4 whitespace-nowrap">
+                          {item.phoneNumber}
                         </td>
                       </tr>
                     ))}
@@ -262,10 +277,10 @@ const CommanderDutySchedule = () => {
                   <ul className="list-style-none flex">
                     <li>
                       <Link
-                        className={`relative mr-1 block rounded bg-transparent px-3 py-1.5 text-sm font-bold transition-all duration-300 ${
+                        className={`relative mr-1 block rounded bg-transparent px-3 py-1.5 text-sm font-bold transition-all duration-300 text-gray-700 dark:text-gray-300 ${
                           currentPage <= 1
                             ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-blue-100"
+                            : "hover:bg-blue-100 dark:hover:bg-gray-700"
                         }`}
                         href={
                           currentPage <= 1
@@ -300,10 +315,10 @@ const CommanderDutySchedule = () => {
                     ).map((pageNumber) => (
                       <li key={pageNumber}>
                         <Link
-                          className={`relative mr-1 block rounded bg-transparent font-bold px-3 py-1.5 text-sm transition-all duration-300 ${
+                          className={`relative mr-1 block rounded bg-transparent font-bold px-3 py-1.5 text-sm transition-all duration-300 text-gray-700 dark:text-gray-300 ${
                             currentPage === pageNumber
-                              ? "bg-blue-100"
-                              : "hover:bg-blue-100"
+                              ? "bg-blue-100 dark:bg-gray-700"
+                              : "hover:bg-blue-100 dark:hover:bg-gray-700"
                           }`}
                           href={`/users/commander-duty-schedule?page=${pageNumber}`}
                           onClick={() => {
@@ -316,10 +331,10 @@ const CommanderDutySchedule = () => {
                     ))}
                     <li>
                       <Link
-                        className={`relative block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
+                        className={`relative block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 text-gray-700 dark:text-gray-300 ${
                           currentPage >= commanderDutySchedule?.totalPages
                             ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-blue-100"
+                            : "hover:bg-blue-100 dark:hover:bg-gray-700"
                         }`}
                         href={
                           currentPage >= commanderDutySchedule?.totalPages

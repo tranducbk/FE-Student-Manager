@@ -12,12 +12,14 @@ const AchievementStatistics = () => {
   const [students, setStudents] = useState([]);
   const [achievements, setAchievements] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showStatistics, setShowStatistics] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(true);
   const [showFormAdd, setShowFormAdd] = useState(false);
   const [showFormEdit, setShowFormEdit] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [addFormData, setAddFormData] = useState({});
   const [selectedStudentForForm, setSelectedStudentForForm] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedUnit, setSelectedUnit] = useState("");
   const [statistics, setStatistics] = useState({
     totalStudents: 0,
     studentsWithAchievements: 0,
@@ -28,6 +30,13 @@ const AchievementStatistics = () => {
     totalScientificInitiatives: 0,
     eligibleForMinistryReward: 0,
     eligibleForNationalReward: 0,
+  });
+
+  const [yearStats, setYearStats] = useState({
+    advancedCount: 0,
+    competitiveCount: 0,
+    bkBqpCount: 0,
+    cstdTqCount: 0,
   });
 
   const fetchStudentsAndAchievements = async () => {
@@ -53,7 +62,7 @@ const AchievementStatistics = () => {
         for (const student of res.data) {
           try {
             const achievementRes = await axios.get(
-              `${BASE_URL}/achievement/${student._id}`,
+              `${BASE_URL}/achievement/admin/${student._id}`,
               {
                 headers: { token: `Bearer ${token}` },
               }
@@ -106,6 +115,9 @@ const AchievementStatistics = () => {
           eligibleForMinistryReward,
           eligibleForNationalReward,
         });
+
+        // Tính thống kê theo năm được chọn
+        computeYearStats(achievementsData, selectedYear);
       } catch (error) {
         console.log("Error fetching statistics:", error.message || error);
         handleNotify("danger", "Lỗi!", "Không thể tải dữ liệu");
@@ -115,11 +127,95 @@ const AchievementStatistics = () => {
     }
   };
 
+  const computeYearStats = (
+    achievementsData,
+    year,
+    filteredStudents = null
+  ) => {
+    const y = parseInt(year);
+    let advancedCount = 0;
+    let competitiveCount = 0;
+    let bkBqpCount = 0;
+    let cstdTqCount = 0;
+    const allowedIds = filteredStudents
+      ? new Set(filteredStudents.map((s) => s._id))
+      : null;
+    Object.entries(achievementsData).forEach(([studentId, ach]) => {
+      if (allowedIds && !allowedIds.has(studentId)) return;
+      if (!ach || !Array.isArray(ach.yearlyAchievements)) return;
+      ach.yearlyAchievements.forEach((ya) => {
+        if (parseInt(ya.year) !== y) return;
+        if (ya.title === "chiến sĩ tiên tiến") advancedCount += 1;
+        if (ya.title === "chiến sĩ thi đua") competitiveCount += 1;
+        if (ya.hasMinistryReward) bkBqpCount += 1;
+        if (ya.hasNationalReward) cstdTqCount += 1;
+      });
+    });
+    setYearStats({ advancedCount, competitiveCount, bkBqpCount, cstdTqCount });
+  };
+
+  const computeOverallStats = (studentsList, achievementsData) => {
+    const filteredIds = new Set(studentsList.map((s) => s._id));
+    let totalAchievements = 0;
+    let totalAdvancedSoldier = 0;
+    let totalCompetitiveSoldier = 0;
+    let totalScientificTopics = 0;
+    let totalScientificInitiatives = 0;
+    let eligibleForMinistryReward = 0;
+    let eligibleForNationalReward = 0;
+    let studentsWithAchievements = 0;
+
+    studentsList.forEach((student) => {
+      const ach = achievementsData[student._id];
+      if (!ach || !Array.isArray(ach.yearlyAchievements)) return;
+      if (ach.yearlyAchievements.length > 0) {
+        studentsWithAchievements++;
+        totalAchievements += ach.totalYears || 0;
+        totalAdvancedSoldier += ach.totalAdvancedSoldier || 0;
+        totalCompetitiveSoldier += ach.totalCompetitiveSoldier || 0;
+        totalScientificTopics += ach.totalScientificTopics || 0;
+        totalScientificInitiatives += ach.totalScientificInitiatives || 0;
+        if (ach.eligibleForMinistryReward) eligibleForMinistryReward++;
+        if (ach.eligibleForNationalReward) eligibleForNationalReward++;
+      }
+    });
+
+    setStatistics({
+      totalStudents: studentsList.length,
+      studentsWithAchievements,
+      totalAchievements,
+      totalAdvancedSoldier,
+      totalCompetitiveSoldier,
+      totalScientificTopics,
+      totalScientificInitiatives,
+      eligibleForMinistryReward,
+      eligibleForNationalReward,
+    });
+  };
+
   const handleShowStatistics = async () => {
     setLoading(true);
     setShowStatistics(true);
     await fetchStudentsAndAchievements();
   };
+
+  useEffect(() => {
+    // Tự động tải thống kê khi mở trang
+    setLoading(true);
+    fetchStudentsAndAchievements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!showStatistics) return;
+    if (Object.keys(achievements).length === 0) return;
+    const filteredStudents = selectedUnit
+      ? students.filter((s) => s.unit === selectedUnit)
+      : students;
+    computeOverallStats(filteredStudents, achievements);
+    computeYearStats(achievements, selectedYear, filteredStudents);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, selectedUnit, achievements, students, showStatistics]);
 
   const handleAddYearlyAchievement = async (e) => {
     e.preventDefault();
@@ -203,6 +299,107 @@ const AchievementStatistics = () => {
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  // Điều kiện chọn bằng khen theo từng học viên trong trang thống kê
+  const canSelectMinistryRewardFor = (studentId) => {
+    const ach = achievements[studentId];
+    if (!ach) return false;
+    const hasMinistryReward = ach.yearlyAchievements?.some(
+      (ya) => ya.hasMinistryReward
+    );
+    if (hasMinistryReward) return false;
+
+    const competitiveYears =
+      ach.yearlyAchievements
+        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.map((ya) => ya.year)
+        ?.sort((a, b) => a - b) || [];
+    if (competitiveYears.length < 2) return false;
+
+    let maxConsecutive = 0;
+    let currentConsecutive = 0;
+    let consecutiveStartYear = 0;
+    for (let i = 0; i < competitiveYears.length; i++) {
+      if (i === 0 || competitiveYears[i] === competitiveYears[i - 1] + 1) {
+        if (currentConsecutive === 0)
+          consecutiveStartYear = competitiveYears[i];
+        currentConsecutive++;
+      } else {
+        currentConsecutive = 1;
+        consecutiveStartYear = competitiveYears[i];
+      }
+      if (currentConsecutive > maxConsecutive)
+        maxConsecutive = currentConsecutive;
+    }
+    if (maxConsecutive < 2) return false;
+
+    const currentYear = new Date().getFullYear();
+    const secondYearOfStreak = consecutiveStartYear + 1;
+    if (currentYear < secondYearOfStreak) return false;
+
+    let hasApprovedScientific = false;
+    ach.yearlyAchievements?.forEach((ya) => {
+      if (ya.scientific) {
+        if (ya.scientific.topics?.some((t) => t.status === "approved")) {
+          hasApprovedScientific = true;
+        }
+        if (ya.scientific.initiatives?.some((i) => i.status === "approved")) {
+          hasApprovedScientific = true;
+        }
+      }
+    });
+    return hasApprovedScientific;
+  };
+
+  const canSelectNationalRewardFor = (studentId) => {
+    const ach = achievements[studentId];
+    if (!ach) return false;
+    const hasNationalReward = ach.yearlyAchievements?.some(
+      (ya) => ya.hasNationalReward
+    );
+    if (hasNationalReward) return false;
+
+    const competitiveYears =
+      ach.yearlyAchievements
+        ?.filter((ya) => ya.title === "chiến sĩ thi đua")
+        ?.map((ya) => ya.year)
+        ?.sort((a, b) => a - b) || [];
+    if (competitiveYears.length < 3) return false;
+
+    let maxConsecutive = 0;
+    let currentConsecutive = 0;
+    let consecutiveStartYear = 0;
+    for (let i = 0; i < competitiveYears.length; i++) {
+      if (i === 0 || competitiveYears[i] === competitiveYears[i - 1] + 1) {
+        if (currentConsecutive === 0)
+          consecutiveStartYear = competitiveYears[i];
+        currentConsecutive++;
+      } else {
+        currentConsecutive = 1;
+        consecutiveStartYear = competitiveYears[i];
+      }
+      if (currentConsecutive > maxConsecutive)
+        maxConsecutive = currentConsecutive;
+    }
+    if (maxConsecutive < 3) return false;
+
+    const currentYear = new Date().getFullYear();
+    const thirdYearOfStreak = consecutiveStartYear + 2;
+    if (currentYear < thirdYearOfStreak) return false;
+
+    let hasApprovedScientific = false;
+    ach.yearlyAchievements?.forEach((ya) => {
+      if (ya.scientific) {
+        if (ya.scientific.topics?.some((t) => t.status === "approved")) {
+          hasApprovedScientific = true;
+        }
+        if (ya.scientific.initiatives?.some((i) => i.status === "approved")) {
+          hasApprovedScientific = true;
+        }
+      }
+    });
+    return hasApprovedScientific;
   };
 
   if (loading) {
@@ -300,25 +497,6 @@ const AchievementStatistics = () => {
                   THỐNG KÊ KHEN THƯỞNG TỔNG QUAN
                 </div>
                 <div className="flex space-x-2">
-                  {!showStatistics && (
-                    <button
-                      onClick={handleShowStatistics}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      Xem thống kê
-                    </button>
-                  )}
-                  {showStatistics && (
-                    <button
-                      onClick={() => {
-                        setSelectedStudentForForm(null);
-                        setShowFormAdd(true);
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      + Thêm khen thưởng
-                    </button>
-                  )}
                   <Link
                     href="/admin/achievement"
                     className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
@@ -337,10 +515,43 @@ const AchievementStatistics = () => {
                 </div>
               ) : (
                 <div className="p-5">
+                  {/* Bộ lọc theo năm */}
+                  <div className="mb-6 flex items-end gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Chọn năm
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="w-40 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Chọn đơn vị
+                      </label>
+                      <select
+                        value={selectedUnit}
+                        onChange={(e) => setSelectedUnit(e.target.value)}
+                        className="w-48 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="">Tất cả đơn vị</option>
+                        <option value="L1 - H5">L1 - H5</option>
+                        <option value="L2 - H5">L2 - H5</option>
+                        <option value="L3 - H5">L3 - H5</option>
+                        <option value="L4 - H5">L4 - H5</option>
+                        <option value="L5 - H5">L5 - H5</option>
+                        <option value="L6 - H5">L6 - H5</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <h3 className="text-lg font-semibold mb-6 text-gray-900 dark:text-white">
                     Thống kê tổng quan
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                     <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
                       <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                         {statistics.totalStudents}
@@ -359,26 +570,34 @@ const AchievementStatistics = () => {
                     </div>
                     <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
                       <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {statistics.totalAchievements}
+                        {yearStats.advancedCount}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Tổng khen thưởng
+                        Tổng tiên tiến ({selectedYear})
                       </div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
                       <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                        {statistics.totalAdvancedSoldier}
+                        {yearStats.competitiveCount}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Chiến sĩ tiên tiến
+                        Tổng thi đua ({selectedYear})
                       </div>
                     </div>
                     <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900 rounded-lg">
                       <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {statistics.totalCompetitiveSoldier}
+                        {yearStats.bkBqpCount}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Chiến sĩ thi đua
+                        BK BQP ({selectedYear})
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-teal-50 dark:bg-teal-900 rounded-lg">
+                      <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
+                        {yearStats.cstdTqCount}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        CSTĐ TQ ({selectedYear})
                       </div>
                     </div>
                   </div>
@@ -405,7 +624,7 @@ const AchievementStatistics = () => {
                         {statistics.eligibleForMinistryReward}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Đủ điều kiện BQP
+                        Đủ điều kiện BK BQP
                       </div>
                     </div>
                     <div className="text-center p-4 bg-teal-50 dark:bg-teal-900 rounded-lg">
@@ -413,7 +632,7 @@ const AchievementStatistics = () => {
                         {statistics.eligibleForNationalReward}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Đủ điều kiện toàn quân
+                        Đủ điều kiện CSTĐTQ
                       </div>
                     </div>
                   </div>
@@ -458,7 +677,7 @@ const AchievementStatistics = () => {
                       <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            Đủ điều kiện BQP
+                            Đủ điều kiện BK BQP
                           </span>
                           <span className="text-sm font-bold text-gray-900 dark:text-white">
                             {statistics.studentsWithAchievements > 0
@@ -516,98 +735,103 @@ const AchievementStatistics = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {students && students.length > 0 ? (
-                            students.map((student) => {
-                              const achievement = achievements[student._id];
-                              const hasAchievements =
-                                achievement &&
-                                achievement.yearlyAchievements.length > 0;
+                          {(() => {
+                            const list = selectedUnit
+                              ? students.filter((s) => s.unit === selectedUnit)
+                              : students;
+                            return list && list.length > 0 ? (
+                              list.map((student) => {
+                                const achievement = achievements[student._id];
+                                const hasAchievements =
+                                  achievement &&
+                                  achievement.yearlyAchievements.length > 0;
 
-                              return (
-                                <tr
-                                  key={student._id}
-                                  className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                return (
+                                  <tr
+                                    key={student._id}
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  >
+                                    <td className="border px-3 py-2 text-center">
+                                      {student.fullName || "Không có tên"}
+                                    </td>
+                                    <td className="border px-3 py-2 text-center">
+                                      {student.studentId || "Không có mã"}
+                                    </td>
+                                    <td className="border px-3 py-2 text-center">
+                                      {student.unit || "Không có đơn vị"}
+                                    </td>
+                                    <td className="border px-3 py-2 text-center">
+                                      <span
+                                        className={`px-2 py-1 rounded text-xs ${
+                                          hasAchievements
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                        }`}
+                                      >
+                                        {hasAchievements
+                                          ? "Có khen thưởng"
+                                          : "Chưa có khen thưởng"}
+                                      </span>
+                                    </td>
+                                    <td className="border px-3 py-2 text-center">
+                                      <div className="flex flex-col space-y-2 w-48 mx-auto">
+                                        <Link
+                                          href={`/admin/achievement/${student._id}`}
+                                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center w-full"
+                                        >
+                                          <svg
+                                            className="w-4 h-4 mr-1"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="2"
+                                              d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
+                                          </svg>
+                                          Quản lý khen thưởng
+                                        </Link>
+                                        <button
+                                          onClick={() => {
+                                            setSelectedStudentForForm(student);
+                                            setShowFormAdd(true);
+                                          }}
+                                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center w-full"
+                                        >
+                                          <svg
+                                            className="w-4 h-4 mr-1"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="2"
+                                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                            />
+                                          </svg>
+                                          Thêm khen thưởng
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td
+                                  className="border px-3 py-2 text-center text-gray-400"
+                                  colSpan="5"
                                 >
-                                  <td className="border px-3 py-2 text-center">
-                                    {student.fullName || "Không có tên"}
-                                  </td>
-                                  <td className="border px-3 py-2 text-center">
-                                    {student.studentId || "Không có mã"}
-                                  </td>
-                                  <td className="border px-3 py-2 text-center">
-                                    {student.unit || "Không có đơn vị"}
-                                  </td>
-                                  <td className="border px-3 py-2 text-center">
-                                    <span
-                                      className={`px-2 py-1 rounded text-xs ${
-                                        hasAchievements
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                                      }`}
-                                    >
-                                      {hasAchievements
-                                        ? "Có khen thưởng"
-                                        : "Chưa có khen thưởng"}
-                                    </span>
-                                  </td>
-                                  <td className="border px-3 py-2 text-center">
-                                    <div className="flex flex-col space-y-1">
-                                      <Link
-                                        href={`/admin/achievement/${student._id}`}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center mx-auto w-fit"
-                                      >
-                                        <svg
-                                          className="w-4 h-4 mr-1"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                          />
-                                        </svg>
-                                        Quản lý khen thưởng
-                                      </Link>
-                                      <button
-                                        onClick={() => {
-                                          setSelectedStudentForForm(student);
-                                          setShowFormAdd(true);
-                                        }}
-                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center justify-center mx-auto w-fit"
-                                      >
-                                        <svg
-                                          className="w-4 h-4 mr-1"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                          />
-                                        </svg>
-                                        Thêm khen thưởng
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          ) : (
-                            <tr>
-                              <td
-                                className="border px-3 py-2 text-center text-gray-400"
-                                colSpan="5"
-                              >
-                                Không có dữ liệu học viên
-                              </td>
-                            </tr>
-                          )}
+                                  Không có dữ liệu học viên
+                                </td>
+                              </tr>
+                            );
+                          })()}
                         </tbody>
                       </table>
                     </div>
@@ -641,7 +865,10 @@ const AchievementStatistics = () => {
                               Chiến sĩ thi đua
                             </th>
                             <th className="border px-3 py-2 text-center">
-                              Đủ điều kiện BQP
+                              Đủ điều kiện BK BQP
+                            </th>
+                            <th className="border px-3 py-2 text-center">
+                              Đủ điều kiện CSTĐ TQ
                             </th>
                             <th className="border px-3 py-2 text-center">
                               Thao tác
@@ -652,6 +879,11 @@ const AchievementStatistics = () => {
                           {(() => {
                             const studentsWithAchievements = students.filter(
                               (student) => {
+                                if (
+                                  selectedUnit &&
+                                  student.unit !== selectedUnit
+                                )
+                                  return false;
                                 const achievement = achievements[student._id];
                                 return (
                                   achievement &&
@@ -700,9 +932,22 @@ const AchievementStatistics = () => {
                                       </span>
                                     </td>
                                     <td className="border px-3 py-2 text-center">
+                                      <span
+                                        className={`px-2 py-1 rounded text-xs ${
+                                          achievement.eligibleForNationalReward
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                        }`}
+                                      >
+                                        {achievement.eligibleForNationalReward
+                                          ? "✓"
+                                          : "✗"}
+                                      </span>
+                                    </td>
+                                    <td className="border px-3 py-2 text-center">
                                       <Link
                                         href={`/admin/achievement/${student._id}`}
-                                        className="text-blue-600 hover:text-blue-800 px-2 py-1 rounded text-sm flex items-center"
+                                        className="inline-flex items-center justify-center gap-1 mx-auto w-fit text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded text-sm transition-colors"
                                       >
                                         <svg
                                           className="w-4 h-4 mr-1"
@@ -756,6 +1001,9 @@ const AchievementStatistics = () => {
                                   <td className="border px-3 py-2 text-center text-gray-400">
                                     -
                                   </td>
+                                  <td className="border px-3 py-2 text-center text-gray-400">
+                                    -
+                                  </td>
                                 </tr>
                               );
                             }
@@ -773,9 +1021,9 @@ const AchievementStatistics = () => {
           {showFormAdd && (
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
               <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-xl font-semibold">
+              <div className="relative mt-16 bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[85vh] overflow-y-auto">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {selectedStudentForForm
                       ? `Thêm khen thưởng cho ${selectedStudentForForm.fullName}`
                       : "Thêm khen thưởng"}
@@ -785,18 +1033,15 @@ const AchievementStatistics = () => {
                       setShowFormAdd(false);
                       setSelectedStudentForForm(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     ✕
                   </button>
                 </div>
-                <form
-                  onSubmit={handleAddYearlyAchievement}
-                  className="p-4 space-y-4"
-                >
+                <form onSubmit={handleAddYearlyAchievement} className="p-4">
                   {!selectedStudentForForm && (
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                         Chọn học viên
                       </label>
                       <select
@@ -807,7 +1052,7 @@ const AchievementStatistics = () => {
                           );
                           setSelectedStudentForForm(student);
                         }}
-                        className="w-full p-2 border rounded-lg"
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         required
                       >
                         <option value="">Chọn học viên</option>
@@ -821,81 +1066,406 @@ const AchievementStatistics = () => {
                       </select>
                     </div>
                   )}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Năm
-                    </label>
-                    <input
-                      type="number"
-                      value={addFormData.year || ""}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          year: parseInt(e.target.value),
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg"
-                      required
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Năm
+                        </label>
+                        <input
+                          type="number"
+                          value={addFormData.year || ""}
+                          onChange={(e) =>
+                            setAddFormData({
+                              ...addFormData,
+                              year: parseInt(e.target.value),
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Số quyết định
+                        </label>
+                        <input
+                          type="text"
+                          value={addFormData.decisionNumber || ""}
+                          onChange={(e) =>
+                            setAddFormData({
+                              ...addFormData,
+                              decisionNumber: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Ngày quyết định
+                        </label>
+                        <input
+                          type="date"
+                          value={addFormData.decisionDate || ""}
+                          onChange={(e) =>
+                            setAddFormData({
+                              ...addFormData,
+                              decisionDate: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Danh hiệu
+                        </label>
+                        <select
+                          value={addFormData.title || ""}
+                          onChange={(e) =>
+                            setAddFormData({
+                              ...addFormData,
+                              title: e.target.value,
+                            })
+                          }
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          required
+                        >
+                          <option value="">Chọn danh hiệu</option>
+                          <option value="chiến sĩ tiên tiến">
+                            Chiến sĩ tiên tiến
+                          </option>
+                          <option value="chiến sĩ thi đua">
+                            Chiến sĩ thi đua
+                          </option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Bằng khen
+                        </label>
+                        <select
+                          value={
+                            addFormData.hasMinistryReward
+                              ? "bằng khen bộ quốc phòng"
+                              : addFormData.hasNationalReward
+                              ? "bằng khen toàn quân"
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setAddFormData({
+                              ...addFormData,
+                              hasMinistryReward:
+                                value === "bằng khen bộ quốc phòng",
+                              hasNationalReward:
+                                value === "bằng khen toàn quân",
+                            });
+                          }}
+                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                          <option value="">Không có bằng khen</option>
+                          <option
+                            value="bằng khen bộ quốc phòng"
+                            disabled={
+                              !selectedStudentForForm ||
+                              !canSelectMinistryRewardFor(
+                                selectedStudentForForm._id
+                              )
+                            }
+                          >
+                            🏆 Bằng khen Bộ Quốc Phòng
+                            {selectedStudentForForm &&
+                              !canSelectMinistryRewardFor(
+                                selectedStudentForForm._id
+                              ) &&
+                              " (Chưa đủ điều kiện)"}
+                          </option>
+                          <option
+                            value="bằng khen toàn quân"
+                            disabled={
+                              !selectedStudentForForm ||
+                              !canSelectNationalRewardFor(
+                                selectedStudentForForm._id
+                              )
+                            }
+                          >
+                            🥇 Bằng khen toàn quân
+                            {selectedStudentForForm &&
+                              !canSelectNationalRewardFor(
+                                selectedStudentForForm._id
+                              ) &&
+                              " (Chưa đủ điều kiện)"}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                          Nghiên cứu khoa học
+                        </label>
+                        <div className="space-y-2">
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="addScientificType"
+                              value="none"
+                              checked={
+                                !addFormData.scientific?.topics?.length &&
+                                !addFormData.scientific?.initiatives?.length
+                              }
+                              onChange={() =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: { topics: [], initiatives: [] },
+                                })
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              Không có
+                            </span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="addScientificType"
+                              value="topic"
+                              checked={
+                                addFormData.scientific?.topics?.length > 0
+                              }
+                              onChange={() =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    topics: [
+                                      {
+                                        title: "",
+                                        description: "",
+                                        year:
+                                          parseInt(addFormData.year) ||
+                                          new Date().getFullYear(),
+                                        status: "pending",
+                                      },
+                                    ],
+                                    initiatives: [],
+                                  },
+                                })
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              Đề tài khoa học
+                            </span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="addScientificType"
+                              value="initiative"
+                              checked={
+                                addFormData.scientific?.initiatives?.length > 0
+                              }
+                              onChange={() =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    topics: [],
+                                    initiatives: [
+                                      {
+                                        title: "",
+                                        description: "",
+                                        year:
+                                          parseInt(addFormData.year) ||
+                                          new Date().getFullYear(),
+                                        status: "pending",
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              Sáng kiến khoa học
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {addFormData.scientific?.topics?.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                            Đề tài khoa học
+                          </label>
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Tên đề tài khoa học"
+                              value={
+                                addFormData.scientific?.topics?.[0]?.title || ""
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    topics: [
+                                      {
+                                        ...addFormData.scientific.topics[0],
+                                        title: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                            <textarea
+                              placeholder="Mô tả đề tài"
+                              value={
+                                addFormData.scientific?.topics?.[0]
+                                  ?.description || ""
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    topics: [
+                                      {
+                                        ...addFormData.scientific.topics[0],
+                                        description: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              rows="4"
+                            />
+                            <select
+                              value={
+                                addFormData.scientific?.topics?.[0]?.status ||
+                                "pending"
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    topics: [
+                                      {
+                                        ...addFormData.scientific.topics[0],
+                                        status: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                              <option value="pending">Chờ duyệt</option>
+                              <option value="approved">Đã duyệt</option>
+                              <option value="rejected">Từ chối</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+
+                      {addFormData.scientific?.initiatives?.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                            Sáng kiến khoa học
+                          </label>
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Tên sáng kiến khoa học"
+                              value={
+                                addFormData.scientific?.initiatives?.[0]
+                                  ?.title || ""
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    initiatives: [
+                                      {
+                                        ...addFormData.scientific
+                                          .initiatives[0],
+                                        title: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                            <textarea
+                              placeholder="Mô tả sáng kiến"
+                              value={
+                                addFormData.scientific?.initiatives?.[0]
+                                  ?.description || ""
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    initiatives: [
+                                      {
+                                        ...addFormData.scientific
+                                          .initiatives[0],
+                                        description: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              rows="4"
+                            />
+                            <select
+                              value={
+                                addFormData.scientific?.initiatives?.[0]
+                                  ?.status || "pending"
+                              }
+                              onChange={(e) =>
+                                setAddFormData({
+                                  ...addFormData,
+                                  scientific: {
+                                    ...addFormData.scientific,
+                                    initiatives: [
+                                      {
+                                        ...addFormData.scientific
+                                          .initiatives[0],
+                                        status: e.target.value,
+                                      },
+                                    ],
+                                  },
+                                })
+                              }
+                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                              <option value="pending">Chờ duyệt</option>
+                              <option value="approved">Đã duyệt</option>
+                              <option value="rejected">Từ chối</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Số quyết định
-                    </label>
-                    <input
-                      type="text"
-                      value={addFormData.decisionNumber || ""}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          decisionNumber: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Ngày quyết định
-                    </label>
-                    <input
-                      type="date"
-                      value={addFormData.decisionDate || ""}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          decisionDate: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Danh hiệu
-                    </label>
-                    <select
-                      value={addFormData.title || ""}
-                      onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          title: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border rounded-lg"
-                      required
-                    >
-                      <option value="">Chọn danh hiệu</option>
-                      <option value="chiến sĩ tiên tiến">
-                        Chiến sĩ tiên tiến
-                      </option>
-                      <option value="chiến sĩ thi đua">Chiến sĩ thi đua</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                       Ghi chú
                     </label>
                     <textarea
@@ -906,24 +1476,24 @@ const AchievementStatistics = () => {
                           notes: e.target.value,
                         })
                       }
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows="3"
                     />
                   </div>
-                  <div className="flex justify-end space-x-2">
+                  <div className="flex justify-end space-x-2 mt-4">
                     <button
                       type="button"
                       onClick={() => {
                         setShowFormAdd(false);
                         setSelectedStudentForForm(null);
                       }}
-                      className="px-4 py-2 bg-gray-200 rounded-lg"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                     >
                       Thêm
                     </button>

@@ -742,14 +742,14 @@ const LearningResults = () => {
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:focus:ring-gray-700"
                   onClick={() => setShowCreateSemester(false)}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
                   Thêm
                 </button>
@@ -787,11 +787,30 @@ const LearningResults = () => {
               </button>
             </div>
             <div className="p-4">
-              <p className="mb-4">Bạn có chắc chắn muốn xóa học kỳ này?</p>
+              <div className="mb-4">
+                <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chọn học kỳ cần xóa
+                </label>
+                <select
+                  value={selectedEditSemesterId}
+                  onChange={handleChangeEditSelect}
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5"
+                >
+                  {semesters.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {getSemesterLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+                Bạn có chắc chắn muốn xóa học kỳ đã chọn? Hành động này không
+                thể hoàn tác.
+              </p>
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:focus:ring-gray-700"
                   onClick={() => setShowConfirmDeleteSemester(false)}
                 >
                   Hủy
@@ -799,7 +818,7 @@ const LearningResults = () => {
                 <button
                   type="button"
                   onClick={handleDeleteSemester}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
                 >
                   Xóa
                 </button>
@@ -887,21 +906,21 @@ const LearningResults = () => {
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:focus:ring-gray-700"
                   onClick={() => setShowEditSemester(false)}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-amber-300 dark:bg-amber-600 dark:hover:bg-amber-700 dark:focus:ring-amber-800"
                 >
                   Lưu
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowConfirmDeleteSemester(true)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
                 >
                   Xóa
                 </button>

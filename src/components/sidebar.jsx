@@ -126,6 +126,15 @@ const SideBar = () => {
 
     setSelectedKeys([currentPath]);
 
+    // User: open training submenu for physical results/violations
+    if (
+      currentPath.startsWith("/users/phisical-result") ||
+      currentPath.startsWith("/users/violations")
+    ) {
+      setOpenKeys(["training-user"]);
+      return;
+    }
+
     // Admin: Auto open submenu if current path is in submenu
     if (
       currentPath.startsWith("/admin/time-table") ||
@@ -360,9 +369,24 @@ const SideBar = () => {
                 Lịch cắt cơm
               </Menu.Item>
 
-              <Menu.Item key="/users/phisical-result" icon={<HeartOutlined />}>
-                Rèn luyện
-              </Menu.Item>
+              <SubMenu
+                key="training-user"
+                icon={<HeartOutlined />}
+                title="Rèn luyện"
+              >
+                <Menu.Item
+                  key="/users/phisical-result"
+                  icon={<HeartOutlined />}
+                >
+                  Kết quả thể lực
+                </Menu.Item>
+                <Menu.Item
+                  key="/users/violations"
+                  icon={<ExclamationCircleOutlined />}
+                >
+                  Lỗi vi phạm
+                </Menu.Item>
+              </SubMenu>
 
               <Menu.Item key="/users/vacation-schedule" icon={<BulbOutlined />}>
                 Tranh thủ

@@ -12,6 +12,10 @@ const Achievement = () => {
   const router = useRouter();
   const [students, setStudents] = useState([]);
   const [achievements, setAchievements] = useState({});
+  const [filterYear, setFilterYear] = useState("");
+  const [filterStudentId, setFilterStudentId] = useState("");
+  const [filterStudentKeyword, setFilterStudentKeyword] = useState("");
+  const [filterClassId, setFilterClassId] = useState("");
   const [showFormAdd, setShowFormAdd] = useState(false);
   const [showFormEdit, setShowFormEdit] = useState(false);
   const [editFormData, setEditFormData] = useState({});
@@ -265,11 +269,11 @@ const Achievement = () => {
     const rewards = [];
 
     if (achievement.hasMinistryReward) {
-      rewards.push("🏆 Bằng khen Bộ Quốc Phòng");
+      rewards.push("🏆 BK BQP");
     }
 
     if (achievement.hasNationalReward) {
-      rewards.push("🥇 Bằng khen toàn quân");
+      rewards.push("🥇 CSTĐ TQ");
     }
 
     if (rewards.length === 0) {
@@ -499,7 +503,7 @@ const Achievement = () => {
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                       />
                     </svg>
-                    Thống kê
+                    Xem thống kê
                   </Link>
                   <button
                     onClick={() => {
@@ -519,109 +523,224 @@ const Achievement = () => {
                   Tổng số học viên: {students ? students.length : 0}
                 </div>
 
+                {/* Form tìm kiếm */}
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Tìm theo năm
+                      </label>
+                      <input
+                        type="number"
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        placeholder="VD: 2024"
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Tìm học viên
+                      </label>
+                      <input
+                        type="text"
+                        value={filterStudentKeyword}
+                        onChange={(e) => {
+                          setFilterStudentKeyword(e.target.value);
+                          setFilterStudentId("");
+                        }}
+                        placeholder="Nhập tên để tìm..."
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        list="student-suggestions"
+                      />
+                      <datalist id="student-suggestions">
+                        {students
+                          .filter((s) =>
+                            filterStudentKeyword
+                              ? s.fullName
+                                  .toLowerCase()
+                                  .includes(filterStudentKeyword.toLowerCase())
+                              : true
+                          )
+                          .slice(0, 10)
+                          .map((s) => (
+                            <option key={s._id} value={s.fullName} />
+                          ))}
+                      </datalist>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        Chọn đơn vị
+                      </label>
+                      <select
+                        value={filterClassId}
+                        onChange={(e) => setFilterClassId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="">Tất cả</option>
+                        <option value="L1 - H5">L1 - H5</option>
+                        <option value="L2 - H5">L2 - H5</option>
+                        <option value="L3 - H5">L3 - H5</option>
+                        <option value="L4 - H5">L4 - H5</option>
+                        <option value="L5 - H5">L5 - H5</option>
+                        <option value="L6 - H5">L6 - H5</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // kích hoạt re-render theo filter hiện có
+                          setFilterYear(String(filterYear || ""));
+                          setFilterStudentId(String(filterStudentId || ""));
+                        }}
+                        className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                      >
+                        Tìm kiếm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterYear("");
+                          setFilterStudentId("");
+                          setFilterStudentKeyword("");
+                          setFilterClassId("");
+                        }}
+                        className="h-10 px-4 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                      >
+                        Đặt lại
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {students && students.length > 0 ? (
                   <div className="space-y-6">
-                    {students.map((student) => {
-                      const achievement = achievements[student._id] || {
-                        yearlyAchievements: [],
-                        totalYears: 0,
-                        totalAdvancedSoldier: 0,
-                        totalCompetitiveSoldier: 0,
-                        totalScientificTopics: 0,
-                        totalScientificInitiatives: 0,
-                        eligibleForMinistryReward: false,
-                        eligibleForNationalReward: false,
-                        nextYearRecommendations: {},
-                      };
+                    {students
+                      .filter((s) =>
+                        filterStudentId
+                          ? s._id === filterStudentId
+                          : filterStudentKeyword
+                          ? s.fullName
+                              .toLowerCase()
+                              .includes(filterStudentKeyword.toLowerCase())
+                          : true
+                      )
+                      .filter((s) =>
+                        !filterClassId
+                          ? true
+                          : (s.unit || "")
+                              .toLowerCase()
+                              .includes(filterClassId.toLowerCase())
+                      )
+                      .map((student) => {
+                        const achievement = achievements[student._id] || {
+                          yearlyAchievements: [],
+                          totalYears: 0,
+                          totalAdvancedSoldier: 0,
+                          totalCompetitiveSoldier: 0,
+                          totalScientificTopics: 0,
+                          totalScientificInitiatives: 0,
+                          eligibleForMinistryReward: false,
+                          eligibleForNationalReward: false,
+                          nextYearRecommendations: {},
+                        };
+                        const rows = Array.isArray(
+                          achievement.yearlyAchievements
+                        )
+                          ? achievement.yearlyAchievements.filter((ya) =>
+                              filterYear
+                                ? String(ya.year) === String(filterYear)
+                                : true
+                            )
+                          : [];
 
-                      return (
-                        <div
-                          key={student._id}
-                          className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-                        >
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                {student?.fullName || "Không có tên"}
-                              </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {student?.unit || "Không có đơn vị"} -{" "}
-                                {student?.studentId || "Không có mã"}
-                              </p>
-                            </div>
-                            <div className="flex space-x-2">
-                              <Link
-                                href={`/admin/achievement/${student._id}`}
-                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center"
-                              >
-                                <svg
-                                  className="w-4 h-4 mr-1"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                        return (
+                          <div
+                            key={student._id}
+                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                          >
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                  {student?.fullName || "Không có tên"}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {student?.unit || "Không có đơn vị"} -{" "}
+                                  {student?.studentId || "Không có mã"}
+                                </p>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Link
+                                  href={`/admin/achievement/${student._id}`}
+                                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                  />
-                                </svg>
-                                Xem chi tiết
-                              </Link>
-                              <button
-                                onClick={() => {
-                                  setSelectedStudentForForm(student);
-                                  setShowFormAdd(true);
-                                }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-                              >
-                                + Thêm khen thưởng
-                              </button>
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                  </svg>
+                                  Xem chi tiết
+                                </Link>
+                                <button
+                                  onClick={() => {
+                                    setSelectedStudentForForm(student);
+                                    setShowFormAdd(true);
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                                >
+                                  + Thêm khen thưởng
+                                </button>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm">
-                              <thead className="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                  <th className="border px-3 py-2 text-left">
-                                    Năm
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Số quyết định
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Ngày quyết định
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Danh hiệu
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Nghiên cứu khoa học
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Bằng khen
-                                  </th>
-                                  <th className="border px-3 py-2 text-left">
-                                    Ghi chú
-                                  </th>
-                                  <th className="border px-3 py-2 text-center">
-                                    Thao tác
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {achievement.yearlyAchievements &&
-                                achievement.yearlyAchievements.length > 0 ? (
-                                  achievement.yearlyAchievements.map(
-                                    (ya, index) => {
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm text-center">
+                                <thead className="bg-gray-50 dark:bg-gray-700">
+                                  <tr>
+                                    <th className="border px-3 py-2 text-center">
+                                      Năm
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Số quyết định
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Ngày quyết định
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Danh hiệu
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Nghiên cứu khoa học
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Bằng khen
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Ghi chú
+                                    </th>
+                                    <th className="border px-3 py-2 text-center">
+                                      Thao tác
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rows && rows.length > 0 ? (
+                                    rows.map((ya, index) => {
                                       console.log(
                                         "Rendering yearly achievement:",
                                         ya
@@ -732,53 +851,57 @@ const Achievement = () => {
                                           </td>
                                         </tr>
                                       );
-                                    }
-                                  )
-                                ) : (
-                                  <tr>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                    <td className="border px-3 py-2 text-center text-gray-400">
-                                      -
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
+                                    })
+                                  ) : (
+                                    <tr>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                      <td className="border px-3 py-2 text-center text-gray-400">
+                                        -
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
 
-                          {/* Hiển thị suggestions */}
-                          {(() => {
-                            console.log(
-                              `Checking suggestions for student ${student._id}:`,
-                              recommendations[student._id]
-                            );
-                            return recommendations[student._id]?.suggestions &&
-                              recommendations[student._id].suggestions.length >
-                                0 ? (
-                              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                                <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                                  💡 Đề xuất khen thưởng:
-                                </h4>
-                                <ul className="space-y-1">
-                                  {recommendations[student._id].suggestions.map(
-                                    (suggestion, index) => (
+                            {/* Hiển thị suggestions */}
+                            {(() => {
+                              console.log(
+                                `Checking suggestions for student ${student._id}:`,
+                                recommendations[student._id]
+                              );
+                              return recommendations[student._id]
+                                ?.suggestions &&
+                                recommendations[student._id].suggestions
+                                  .length > 0 ? (
+                                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                                    💡 Đề xuất khen thưởng:
+                                  </h4>
+                                  <ul className="space-y-1">
+                                    {recommendations[
+                                      student._id
+                                    ].suggestions.map((suggestion, index) => (
                                       <li
                                         key={index}
                                         className="text-sm text-blue-700 dark:text-blue-300 flex items-start"
@@ -786,15 +909,14 @@ const Achievement = () => {
                                         <span className="mr-2">•</span>
                                         {suggestion}
                                       </li>
-                                    )
-                                  )}
-                                </ul>
-                              </div>
-                            ) : null;
-                          })()}
-                        </div>
-                      );
-                    })}
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        );
+                      })}
                   </div>
                 ) : (
                   <div className="text-center py-8">

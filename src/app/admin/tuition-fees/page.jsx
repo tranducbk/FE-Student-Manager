@@ -6,13 +6,21 @@ import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
+import { ConfigProvider, TreeSelect, theme } from "antd";
 
 import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
   const router = useRouter();
   const [tuitionFees, setTuitionFees] = useState(null);
-  const [semester, setSemester] = useState("2023.2");
+  const [selectedSemesters, setSelectedSemesters] = useState([]); // nhiều học kỳ
   const [semesters, setSemesters] = useState([]);
+  const [paymentStats, setPaymentStats] = useState({
+    paidCount: 0,
+    unpaidCount: 0,
+    paidSum: 0,
+    unpaidSum: 0,
+  });
+  const [isDark, setIsDark] = useState(false);
 
   const getSemesterLabel = (s) => {
     if (!s) return "";
@@ -26,21 +34,61 @@ const TuitionFees = () => {
     return s.schoolYear && term ? `HK${term} - ${s.schoolYear}` : code;
   };
 
+  const compareSemestersDesc = (a, b) => {
+    const parse = (s) => {
+      const code = s.code || "";
+      if (code.startsWith("HK")) {
+        const term = parseInt(code.replace("HK", "")) || 0;
+        // schoolYear dạng "2023-2024" → lấy năm sau làm chuẩn
+        let year = 0;
+        if (s.schoolYear && typeof s.schoolYear === "string") {
+          const m = s.schoolYear.match(/(\d{4})\D*(\d{4})/);
+          year = m ? parseInt(m[2]) : 0;
+        }
+        return { year, term };
+      }
+      if (code.includes(".")) {
+        const [y, t] = code.split(".");
+        return { year: parseInt(y) || 0, term: parseInt(t) || 0 };
+      }
+      return { year: 0, term: 0 };
+    };
+    const pa = parse(a);
+    const pb = parse(b);
+    if (pb.year !== pa.year) return pb.year - pa.year;
+    return pb.term - pa.term;
+  };
+
+  // Màu trạng thái học phí
+  const getStatusClasses = (status) => {
+    const s = String(status || "").toLowerCase();
+    const isPaid = s.includes("đã thanh toán") || s.includes("đã đóng");
+    const isUnpaid = s.includes("chưa thanh toán") || s.includes("chưa đóng");
+    const isPending =
+      s.includes("chờ") || s.includes("pending") || s.includes("đang xử lý");
+    if (isPaid)
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (isUnpaid)
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    if (isPending)
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+  };
+
   const fetchTuitionFees = async () => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/tuitionFees?semester=${semester}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const url = `${BASE_URL}/commander/tuitionFees`; // luôn lấy tất cả, lọc client-side
+        const res = await axios.get(url, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         setTuitionFees(res.data);
+        // stats sẽ tính lại trong useEffect theo bộ lọc
       } catch (error) {
         console.log(error);
       }
@@ -55,6 +103,16 @@ const TuitionFees = () => {
     init();
   }, []);
 
+  // Theo dõi chế độ dark/light để đồng bộ màu AntD
+  useEffect(() => {
+    const root = document.documentElement;
+    const update = () => setIsDark(root.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   const fetchSemesters = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -63,11 +121,9 @@ const TuitionFees = () => {
         headers: { token: `Bearer ${token}` },
       });
       const list = res.data || [];
-      setSemesters(list);
-      if (list.length > 0) {
-        const exists = list.find((s) => s.code === semester);
-        if (!exists) setSemester(list[0].code);
-      }
+      const sorted = [...list].sort(compareSemestersDesc);
+      setSemesters(sorted);
+      // Mặc định không chọn (hiển thị tất cả)
     } catch (error) {
       console.log(error);
     }
@@ -75,26 +131,82 @@ const TuitionFees = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push(`/admin/tuition-fees?semester=${semester}`);
+    router.push(`/admin/tuition-fees`);
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/tuitionFees?semester=${semester}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+        const url = `${BASE_URL}/commander/tuitionFees`;
+        const res = await axios.get(url, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
 
         if (res.status === 404) setTuitionFees([]);
 
         setTuitionFees(res.data);
+        // stats sẽ tính lại theo bộ lọc phía dưới
       } catch (error) {
         console.log(error);
       }
+    }
+  };
+
+  // Lọc theo nhiều học kỳ (nếu có chọn)
+  const applySemesterFilter = (list) => {
+    if (!Array.isArray(list)) return [];
+    if (!selectedSemesters || selectedSemesters.length === 0) return list;
+    const setSem = new Set(selectedSemesters);
+    return list.filter((item) => setSem.has(String(item.semester)));
+  };
+
+  // Tính lại thống kê khi dữ liệu hoặc bộ lọc thay đổi
+  useEffect(() => {
+    const list = applySemesterFilter(tuitionFees?.tuitionFees || []);
+    const parseAmount = (v) => {
+      const digits = String(v || "").replace(/[^0-9]/g, "");
+      return digits ? parseInt(digits, 10) : 0;
+    };
+    let paidCount = 0,
+      unpaidCount = 0,
+      paidSum = 0,
+      unpaidSum = 0;
+    list.forEach((item) => {
+      const s = String(item.status || "").toLowerCase();
+      const amt = parseAmount(item.totalAmount);
+      if (s.includes("đã thanh toán") || s.includes("đã đóng")) {
+        paidCount += 1;
+        paidSum += amt;
+      } else if (s.includes("chưa thanh toán") || s.includes("chưa đóng")) {
+        unpaidCount += 1;
+        unpaidSum += amt;
+      }
+    });
+    setPaymentStats({ paidCount, unpaidCount, paidSum, unpaidSum });
+  }, [selectedSemesters, tuitionFees]);
+
+  const filteredTuitionFees = applySemesterFilter(
+    tuitionFees?.tuitionFees || []
+  );
+  const filteredTotalSum = filteredTuitionFees.reduce((sum, item) => {
+    const digits = String(item.totalAmount || "").replace(/[^0-9]/g, "");
+    const val = digits ? parseInt(digits, 10) : 0;
+    return sum + val;
+  }, 0);
+
+  const updatePaymentStatus = async (studentId, feeId, nextStatus) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      await axios.put(
+        `${BASE_URL}/commander/${studentId}/tuitionFee/${feeId}/status`,
+        { status: nextStatus },
+        { headers: { token: `Bearer ${token}` } }
+      );
+      await fetchTuitionFees();
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -146,6 +258,13 @@ const TuitionFees = () => {
       }
     }
   };
+
+  // semesters đã được sort mới → cũ
+  const treeData = semesters.map((s) => ({
+    title: getSemesterLabel(s),
+    value: s.code,
+    key: s._id,
+  }));
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -235,23 +354,56 @@ const TuitionFees = () => {
                     >
                       Chọn học kỳ
                     </label>
-                    <select
-                      id="semester"
-                      value={semester}
-                      onChange={(e) => setSemester(e.target.value)}
-                      className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
+                    <ConfigProvider
+                      theme={{
+                        algorithm: isDark
+                          ? theme.darkAlgorithm
+                          : theme.defaultAlgorithm,
+                        token: {
+                          colorPrimary: "#2563eb",
+                          borderRadius: 8,
+                          controlOutline: "rgba(37,99,235,0.2)",
+                        },
+                      }}
                     >
-                      {semesters.length === 0 && (
-                        <option value="" disabled>
-                          Chưa có học kỳ
-                        </option>
-                      )}
-                      {semesters.map((s) => (
-                        <option key={s._id} value={s.code}>
-                          {getSemesterLabel(s)}
-                        </option>
-                      ))}
-                    </select>
+                      <TreeSelect
+                        treeData={treeData}
+                        treeCheckable
+                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                        placeholder="Chọn học kỳ"
+                        allowClear
+                        showSearch={false}
+                        style={{ width: 360 }}
+                        dropdownStyle={{
+                          backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#111827",
+                          border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                          borderRadius: 8,
+                        }}
+                        tagRender={(props) => {
+                          const { label, onClose } = props;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 mr-1 mb-1"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <span className="text-xs">{label}</span>
+                              <button
+                                onClick={onClose}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+                                aria-label="remove"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        }}
+                        onChange={(values) => setSelectedSemesters(values)}
+                      />
+                    </ConfigProvider>
                   </div>
                 </div>
                 <div className="ml-4">
@@ -264,18 +416,46 @@ const TuitionFees = () => {
                 </div>
               </form>
             </div>
-            {tuitionFees?.tuitionFees && tuitionFees.tuitionFees.length > 0 && (
+            {filteredTuitionFees.length > 0 && (
               <div className="w-full px-5 pb-3">
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="text-blue-800 dark:text-blue-200 font-semibold text-sm">
-                    Tổng học phí của học viên trong học kỳ{" "}
-                    <span className="font-bold">
-                      {tuitionFees?.tuitionFees[0]?.semester}
-                    </span>{" "}
-                    là:{" "}
-                    <span className="font-bold text-lg">
-                      {formatNumberWithCommas(tuitionFees?.totalAmountSum)}đ
-                    </span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="text-blue-800 dark:text-blue-200 font-semibold text-sm">
+                      Tổng học phí (
+                      {selectedSemesters.length > 0
+                        ? `${selectedSemesters.length} học kỳ`
+                        : "Tất cả"}
+                      )
+                    </div>
+                    <div className="text-blue-900 dark:text-blue-100 font-bold text-xl mt-1">
+                      {formatNumberWithCommas(filteredTotalSum)}đ
+                    </div>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="text-green-800 dark:text-green-200 font-semibold text-sm">
+                      Đã thanh toán
+                    </div>
+                    <div className="flex items-end justify-between mt-1">
+                      <div className="text-green-900 dark:text-green-100 font-bold text-xl">
+                        {formatNumberWithCommas(paymentStats.paidSum)}đ
+                      </div>
+                      <div className="text-xs text-green-700 dark:text-green-300">
+                        {paymentStats.paidCount} mục
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div className="text-red-800 dark:text-red-200 font-semibold text-sm">
+                      Chưa thanh toán
+                    </div>
+                    <div className="flex items-end justify-between mt-1">
+                      <div className="text-red-900 dark:text-red-100 font-bold text-xl">
+                        {formatNumberWithCommas(paymentStats.unpaidSum)}đ
+                      </div>
+                      <div className="text-xs text-red-700 dark:text-red-300">
+                        {paymentStats.unpaidCount} mục
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -317,16 +497,21 @@ const TuitionFees = () => {
                       </th>
                       <th
                         scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap border-r border-gray-200 dark:border-gray-600"
                       >
                         TRẠNG THÁI
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        CẬP NHẬT
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {tuitionFees?.tuitionFees &&
-                    tuitionFees.tuitionFees.length > 0 ? (
-                      tuitionFees.tuitionFees.map((item) => (
+                    {filteredTuitionFees && filteredTuitionFees.length > 0 ? (
+                      filteredTuitionFees.map((item) => (
                         <tr
                           key={item._id}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -346,25 +531,54 @@ const TuitionFees = () => {
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center font-medium">
                             {formatNumberWithCommas(item.totalAmount)}đ
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-200 dark:border-gray-600">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.status === "Đã đóng"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                  : item.status === "Chưa đóng"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                              }`}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClasses(
+                                item.status
+                              )}`}
                             >
                               {item.status}
                             </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                            <div
+                              className="inline-flex rounded-md shadow-sm"
+                              role="group"
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updatePaymentStatus(
+                                    item.studentId,
+                                    item._id,
+                                    "Đã thanh toán"
+                                  )
+                                }
+                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-l-md border border-green-600"
+                              >
+                                Đã thanh toán
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updatePaymentStatus(
+                                    item.studentId,
+                                    item._id,
+                                    "Chưa thanh toán"
+                                  )
+                                }
+                                className="px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-r-md border border-red-600"
+                              >
+                                Chưa thanh toán
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="7"
                           className="text-center py-8 text-gray-500 dark:text-gray-400"
                         >
                           <div className="flex flex-col items-center">
