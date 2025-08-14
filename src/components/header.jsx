@@ -387,7 +387,7 @@ const Header = () => {
             className="flex items-center"
           >
             <img src="/logo.png" className="h-8 md:h-10 mr-3" alt="H5 Logo" />
-            <Title level={4} className="theme-title">
+            <Title level={4} className="theme-title mt-3 ">
               HỆ HỌC VIÊN 5
             </Title>
           </Link>

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../components/notify";
 import { ThemeToggle } from "../../components/ThemeToggle";
+import { Input } from "antd";
 import { BASE_URL } from "@/configs";
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -84,6 +85,79 @@ const Login = () => {
     <>
       <ReactNotifications />
 
+      {/* Ant Design Dark Mode Styles */}
+      <style jsx global>{`
+        .ant-input {
+          background-color: rgb(249 250 251) !important;
+          border-color: rgb(209 213 219) !important;
+          color: rgb(17 24 39) !important;
+          border-radius: 8px !important;
+          border-width: 1px !important;
+        }
+
+        .dark .ant-input {
+          background-color: rgb(55 65 81) !important;
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+
+        .ant-input::placeholder {
+          color: rgb(156 163 175) !important;
+        }
+
+        .dark .ant-input::placeholder {
+          color: rgb(107 114 128) !important;
+        }
+
+        .ant-input:focus,
+        .ant-input-focused {
+          border-color: rgb(37 99 235) !important;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+        }
+
+        .dark .ant-input:focus,
+        .dark .ant-input-focused {
+          border-color: rgb(59 130 246) !important;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+
+        .ant-input-password {
+          background-color: rgb(249 250 251) !important;
+          border-color: rgb(209 213 219) !important;
+          color: rgb(17 24 39) !important;
+          border-radius: 8px !important;
+          border-width: 1px !important;
+        }
+
+        .dark .ant-input-password {
+          background-color: rgb(55 65 81) !important;
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+
+        .ant-input-password .ant-input {
+          background-color: transparent !important;
+          border: none !important;
+          color: inherit !important;
+        }
+
+        .ant-input-password .anticon {
+          color: rgb(156 163 175) !important;
+        }
+
+        .dark .ant-input-password .anticon {
+          color: rgb(107 114 128) !important;
+        }
+
+        .ant-input-password .anticon:hover {
+          color: rgb(75 85 99) !important;
+        }
+
+        .dark .ant-input-password .anticon:hover {
+          color: rgb(156 163 175) !important;
+        }
+      `}</style>
+
       {/* Background gradient */}
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
         {/* Theme toggle button */}
@@ -127,7 +201,7 @@ const Login = () => {
                     Tên đăng nhập
                   </label>
                   <div className="mt-2">
-                    <input
+                    <Input
                       id="username"
                       name="username"
                       type="text"
@@ -135,8 +209,9 @@ const Login = () => {
                       required
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 transition-all duration-200"
                       placeholder="Nhập tên đăng nhập"
+                      className="w-full"
+                      size="large"
                     />
                   </div>
                 </div>
@@ -159,16 +234,16 @@ const Login = () => {
                     </div>
                   </div>
                   <div className="mt-2">
-                    <input
+                    <Input.Password
                       id="password"
                       name="password"
-                      type="password"
                       autoComplete="current-password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 transition-all duration-200"
                       placeholder="Nhập mật khẩu"
+                      className="w-full"
+                      size="large"
                     />
                   </div>
                 </div>

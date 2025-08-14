@@ -15,6 +15,7 @@ const LearningInformation = () => {
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
   const [learningResult, setLearningResult] = useState([]);
+  const [semesterResults, setSemesterResults] = useState([]);
   const [timeTable, setTimeTable] = useState([]);
   const [showConfirmTimeTable, setShowConfirmTimeTable] = useState(false);
   const [showConfirmLearn, setShowConfirmLearn] = useState(false);
@@ -31,12 +32,20 @@ const LearningInformation = () => {
   const [editedTuitionFee, setEditedTuitionFee] = useState({});
   const [editedTimeTable, setEditedTimeTable] = useState({});
   const [editedLearningResult, setEditedLearningResult] = useState({});
+  const [editingSemester, setEditingSemester] = useState(null);
+  const [viewingSemester, setViewingSemester] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [addFormDataTuitionFee, setAddFormDataTuitionFee] = useState({});
   const [addFormDataTimeTable, setAddFormDataTimeTable] = useState({});
   const [addFormDataLearn, setAddFormDataLearn] = useState({});
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [gradeSubjects, setGradeSubjects] = useState([
-    { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+    {
+      subjectCode: "",
+      subjectName: "",
+      credits: "",
+      grade10: "",
+    },
   ]);
   const [gradeSemesterCode, setGradeSemesterCode] = useState("");
   const searchParams = useSearchParams();
@@ -67,27 +76,127 @@ const LearningInformation = () => {
 
   // Helpers cho nhập KQHT
   const parseTermFromCode = (code) => {
+    console.log("parseTermFromCode input:", code);
     if (!code) return null;
-    if (code.startsWith("HK")) return parseInt(code.replace("HK", ""), 10);
-    if (code.includes(".")) return parseInt(code.split(".")[1], 10);
+    if (code.startsWith("HK")) {
+      console.log("parseTermFromCode return original:", code);
+      return code; // Trả về nguyên string "HK1", "HK2", "HK3"
+    }
+    if (code.includes(".")) {
+      const result = "HK" + code.split(".")[1]; // Chuyển đổi thành "HK1", "HK2", "HK3"
+      console.log("parseTermFromCode return converted:", result);
+      return result;
+    }
+    console.log("parseTermFromCode return null");
     return null;
   };
   const findSchoolYearByCode = (code) => {
     const s = semesters.find((x) => x.code === code);
     return s?.schoolYear || "";
   };
+
+  // Tính toán GPA và tổng kết
+  const calculateSemesterSummary = () => {
+    if (!gradeSubjects || gradeSubjects.length === 0) {
+      return { totalCredits: 0, gpa4: 0, gpa10: 0 };
+    }
+
+    let totalGradePoints4 = 0;
+    let totalGradePoints10 = 0;
+    let totalCredits = 0;
+
+    gradeSubjects.forEach((subject) => {
+      const credits = parseFloat(subject.credits) || 0;
+      const grade10 = parseFloat(subject.grade10) || 0;
+
+      if (credits > 0 && !isNaN(grade10)) {
+        // Tính điểm chữ từ điểm hệ 10
+        let letterGrade = "F";
+        if (grade10 >= 9.5) letterGrade = "A+";
+        else if (grade10 >= 8.5) letterGrade = "A";
+        else if (grade10 >= 8.0) letterGrade = "B+";
+        else if (grade10 >= 7.0) letterGrade = "B";
+        else if (grade10 >= 6.5) letterGrade = "C+";
+        else if (grade10 >= 5.5) letterGrade = "C";
+        else if (grade10 >= 5.0) letterGrade = "D+";
+        else if (grade10 >= 4.0) letterGrade = "D";
+
+        // Tính điểm hệ 4 từ điểm chữ
+        let grade4 = 0.0;
+        switch (letterGrade) {
+          case "A+":
+            grade4 = 4.0;
+            break;
+          case "A":
+            grade4 = 4.0;
+            break;
+          case "B+":
+            grade4 = 3.5;
+            break;
+          case "B":
+            grade4 = 3.0;
+            break;
+          case "C+":
+            grade4 = 2.5;
+            break;
+          case "C":
+            grade4 = 2.0;
+            break;
+          case "D+":
+            grade4 = 1.5;
+            break;
+          case "D":
+            grade4 = 1.0;
+            break;
+          case "F":
+            grade4 = 0.0;
+            break;
+        }
+
+        totalGradePoints4 += grade4 * credits;
+        totalGradePoints10 += grade10 * credits;
+        totalCredits += credits;
+      }
+    });
+
+    const gpa4 = totalCredits > 0 ? totalGradePoints4 / totalCredits : 0;
+    const gpa10 = totalCredits > 0 ? totalGradePoints10 / totalCredits : 0;
+
+    return {
+      totalCredits,
+      gpa4: gpa4.toFixed(2),
+      gpa10: gpa10.toFixed(2),
+    };
+  };
   const addSubjectRow = () => {
     setGradeSubjects((prev) => [
       ...prev,
-      { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+      {
+        subjectCode: "",
+        subjectName: "",
+        credits: "",
+        grade10: "",
+      },
     ]);
   };
   const removeSubjectRow = (idx) => {
     setGradeSubjects((prev) => {
+      // Cho phép xóa dòng cuối cùng, nhưng sẽ tạo dòng mới trống
       const next = prev.filter((_, i) => i !== idx);
-      return next.length
-        ? next
-        : [{ subjectCode: "", subjectName: "", credits: "", letterGrade: "A" }];
+
+      // Nếu xóa hết dòng, tạo lại 1 dòng trống
+      if (next.length === 0) {
+        return [
+          {
+            subjectCode: "",
+            subjectName: "",
+            credits: "",
+            grade10: "",
+          },
+        ];
+      }
+
+      return next;
     });
   };
   const updateSubjectField = (idx, field, value) => {
@@ -98,6 +207,17 @@ const LearningInformation = () => {
     });
   };
   const openGradeModal = () => {
+    // Reset state khi thêm mới
+    setEditingSemester(null);
+    setGradeSemesterCode("");
+    setGradeSubjects([
+      {
+        subjectCode: "",
+        subjectName: "",
+        credits: "",
+        grade10: "",
+      },
+    ]);
     // chọn mặc định kỳ đầu danh sách nếu chưa có
     if (!gradeSemesterCode) {
       if (semesters && semesters.length > 0)
@@ -116,6 +236,35 @@ const LearningInformation = () => {
       handleNotify("warning", "Thiếu thông tin", "Vui lòng chọn học kỳ hợp lệ");
       return;
     }
+
+    // Validate dữ liệu
+    const validSubjects = gradeSubjects.filter(
+      (subject) =>
+        subject.subjectCode.trim() &&
+        subject.subjectName.trim() &&
+        subject.credits &&
+        subject.grade10 &&
+        parseFloat(subject.grade10) >= 0 &&
+        parseFloat(subject.grade10) <= 10
+    );
+
+    if (validSubjects.length === 0) {
+      handleNotify(
+        "warning",
+        "Thiếu dữ liệu",
+        "Vui lòng nhập đầy đủ thông tin môn học và điểm"
+      );
+      return;
+    }
+
+    if (validSubjects.length !== gradeSubjects.length) {
+      handleNotify(
+        "warning",
+        "Dữ liệu không hợp lệ",
+        "Vui lòng kiểm tra lại thông tin môn học"
+      );
+      return;
+    }
     try {
       const payload = {
         semester: term,
@@ -124,21 +273,49 @@ const LearningInformation = () => {
           subjectCode: s.subjectCode.trim(),
           subjectName: s.subjectName.trim(),
           credits: Number(s.credits || 0),
-          letterGrade: s.letterGrade,
+          gradePoint10: Number(s.grade10 || 0),
         })),
       };
-      await axios.post(`${BASE_URL}/grade/${userId}`, payload, {
-        headers: { token: `Bearer ${token}` },
-      });
-      handleNotify(
-        "success",
-        "Thành công",
-        `Đã nhập KQ học tập HK${term} - ${schoolYear}`
-      );
+
+      // Kiểm tra xem có đang chỉnh sửa hay thêm mới
+      if (editingSemester) {
+        // Cập nhật học kỳ hiện có
+        await axios.put(
+          `${BASE_URL}/grade/${userId}/${term}/${schoolYear}`,
+          payload,
+          {
+            headers: { token: `Bearer ${token}` },
+          }
+        );
+        handleNotify(
+          "success",
+          "Thành công",
+          `Đã cập nhật KQ học tập HK${term} - ${schoolYear}`
+        );
+      } else {
+        // Thêm mới học kỳ
+        await axios.post(`${BASE_URL}/grade/${userId}`, payload, {
+          headers: { token: `Bearer ${token}` },
+        });
+        handleNotify(
+          "success",
+          "Thành công",
+          `Đã nhập KQ học tập HK${term} - ${schoolYear}`
+        );
+      }
+
       setShowGradeModal(false);
+      setEditingSemester(null);
       setGradeSubjects([
-        { subjectCode: "", subjectName: "", credits: "", letterGrade: "A" },
+        {
+          subjectCode: "",
+          subjectName: "",
+          credits: "",
+          grade10: "",
+        },
       ]);
+      // Refresh dữ liệu kết quả học tập
+      fetchSemesterResults();
     } catch (err) {
       handleNotify(
         "danger",
@@ -201,9 +378,28 @@ const LearningInformation = () => {
     setIsOpenTimeTable(true);
   };
 
+  const handleViewSemesterDetail = (semester) => {
+    setViewingSemester(semester);
+    setShowDetailModal(true);
+  };
+
   const handleEditLearningResult = (id) => {
-    setLearnId(id);
-    setIsOpenLearningResult(true);
+    // Tìm học kỳ cần chỉnh sửa
+    const semester = semesterResults.find((item) => item._id === id);
+    if (semester) {
+      setEditingSemester(semester);
+      // Điền dữ liệu vào form
+      setGradeSemesterCode(semester.semester);
+      setGradeSubjects(
+        semester.subjects.map((subject) => ({
+          subjectCode: subject.subjectCode || "",
+          subjectName: subject.subjectName || "",
+          credits: subject.credits?.toString() || "",
+          grade10: subject.gradePoint10?.toString() || "",
+        }))
+      );
+      setShowGradeModal(true);
+    }
   };
 
   const handleUpdateLearningResult = async (e, learnId) => {
@@ -314,11 +510,22 @@ const LearningInformation = () => {
     const token = localStorage.getItem("token");
 
     if (token) {
+      // Kiểm tra và đảm bảo có semester
+      const semester = editedTuitionFee.semester || selectedSemester;
+      if (!semester) {
+        handleNotify("warning", "Cảnh báo", "Vui lòng chọn học kỳ");
+        return;
+      }
+
       try {
         const decodedToken = jwtDecode(token);
+        const payload = {
+          ...editedTuitionFee,
+          semester: semester,
+        };
         await axios.put(
           `${BASE_URL}/student/${decodedToken.id}/tuitionFee/${tuitionFeeId}`,
-          editedTuitionFee,
+          payload,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -334,7 +541,7 @@ const LearningInformation = () => {
           error.response?.data ||
           "Có lỗi xảy ra khi cập nhật học phí";
         handleNotify("danger", "Lỗi!", errorMessage);
-        setIsOpenLearningResult(false);
+        setIsOpenTuitionFee(false);
       }
     }
   };
@@ -432,9 +639,18 @@ const LearningInformation = () => {
   const handleAddFormTuitionFee = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+
+    // Kiểm tra và đảm bảo có semester
+    const semester = addFormDataTuitionFee.semester || selectedSemester;
+    if (!semester) {
+      handleNotify("warning", "Cảnh báo", "Vui lòng chọn học kỳ");
+      return;
+    }
+
     try {
       const payload = {
         ...addFormDataTuitionFee,
+        semester: semester,
         status: "Chưa thanh toán",
       };
       const response = await axios.post(
@@ -449,6 +665,8 @@ const LearningInformation = () => {
       handleNotify("success", "Thành công!", "Thêm học phí thành công");
       setTuitionFee([...tuitionFee, response.data]);
       setShowFormAddTuitionFee(false);
+      // Reset form
+      setAddFormDataTuitionFee({});
     } catch (error) {
       setShowFormAddTuitionFee(false);
       const errorMessage =
@@ -661,6 +879,25 @@ const LearningInformation = () => {
     }
   };
 
+  const fetchSemesterResults = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      try {
+        const res = await axios.get(`${BASE_URL}/grade/${decodedToken.id}`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+
+        setSemesterResults(res.data.semesterResults || []);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
   const fetchTuitionFee = async () => {
     const token = localStorage.getItem("token");
 
@@ -686,6 +923,7 @@ const LearningInformation = () => {
 
   useEffect(() => {
     fetchLearningResult();
+    fetchSemesterResults();
     fetchTuitionFee();
     fetchTimeTable();
   }, []);
@@ -943,28 +1181,9 @@ const LearningInformation = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={openGradeModal}
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 border border-purple-600 hover:border-purple-700 rounded-lg transition-colors duration-200 flex items-center"
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     >
-                      Nhập KQ học tập (môn)
-                    </button>
-                    <button
-                      onClick={() => setShowFormAddLearn(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                      Thêm tóm tắt
+                      Nhập KQ học tập
                     </button>
                   </div>
                 </div>
@@ -983,43 +1202,37 @@ const LearningInformation = () => {
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            GPA
+                            Năm học
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            CPA
+                            GPA (Hệ 4)
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            TC tích lũy
+                            GPA (Hệ 10)
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            TC nợ đăng ký
+                            Tổng tín chỉ
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            Trình độ
+                            Số môn học
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            Cảnh báo
-                          </th>
-                          <th
-                            scope="col"
-                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                          >
-                            Trạng thái
+                            Ngày cập nhật
                           </th>
                           <th
                             scope="col"
@@ -1030,44 +1243,71 @@ const LearningInformation = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800">
-                        {learningResult?.map((item, index) => (
+                        {semesterResults?.map((item, index) => (
                           <tr
                             key={index}
-                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer"
+                            onClick={() => handleViewSemesterDetail(item)}
                           >
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {item.semester}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.GPA}
+                              {item.schoolYear}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.CPA}
+                              {item.averageGrade4?.toFixed(2) || "0.00"}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.cumulativeCredit} tín chỉ
+                              {item.averageGrade10?.toFixed(2) || "0.00"}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.totalDebt} tín chỉ
+                              {item.totalCredits || 0} tín chỉ
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              Năm {item.studentLevel}
+                              {item.subjects?.length || 0} môn
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              Mức {item.warningLevel}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.learningStatus}
+                              {item.updatedAt
+                                ? new Date(item.updatedAt).toLocaleDateString(
+                                    "vi-VN"
+                                  )
+                                : "-"}
                             </td>
                             <td className="flex justify-center items-center space-x-2 py-4 px-4">
                               <button
-                                data-modal-target="authentication-modal"
-                                data-modal-toggle="authentication-modal"
+                                type="button"
+                                onClick={() => handleViewSemesterDetail(item)}
+                                className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors duration-200"
+                                title="Xem chi tiết"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.639 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.639 0-8.573-3.007-9.963-7.178z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
                                 type="button"
                                 onClick={() =>
                                   handleEditLearningResult(item._id)
                                 }
                                 className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+                                title="Chỉnh sửa"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1087,6 +1327,7 @@ const LearningInformation = () => {
                               <button
                                 onClick={() => handleDeleteLearn(item._id)}
                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                                title="Xóa học kỳ"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -1120,10 +1361,15 @@ const LearningInformation = () => {
                 <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
                   <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Nhập kết quả học tập theo môn
+                      {editingSemester
+                        ? "Chỉnh sửa kết quả học tập"
+                        : "Nhập kết quả học tập theo môn"}
                     </h2>
                     <button
-                      onClick={() => setShowGradeModal(false)}
+                      onClick={() => {
+                        setShowGradeModal(false);
+                        setEditingSemester(null);
+                      }}
                       className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <svg
@@ -1143,8 +1389,8 @@ const LearningInformation = () => {
                   </div>
                   <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
                     <form onSubmit={submitSemesterGrades} className="p-4">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                        <div>
+                      <div className="flex justify-between items-end mb-4">
+                        <div className="flex-1 max-w-xs">
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Học kỳ
                           </label>
@@ -1168,23 +1414,51 @@ const LearningInformation = () => {
                             ))}
                           </select>
                         </div>
+                        <button
+                          type="button"
+                          onClick={addSubjectRow}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md flex items-center gap-2 transition-colors duration-200"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                            />
+                          </svg>
+                          Thêm môn học
+                        </button>
                       </div>
 
                       <div className="overflow-x-auto">
                         <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm rounded-lg">
                           <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                              <th className="px-3 py-2 border-r">Mã môn</th>
-                              <th className="px-3 py-2 border-r">Tên môn</th>
-                              <th className="px-3 py-2 border-r">Tín chỉ</th>
-                              <th className="px-3 py-2">Điểm chữ</th>
-                              <th className="px-3 py-2"></th>
+                              <th className="px-3 py-2 border-r w-1/5">
+                                Mã môn
+                              </th>
+                              <th className="px-3 py-2 border-r w-2/5">
+                                Tên môn
+                              </th>
+                              <th className="px-3 py-2 border-r w-1/5">
+                                Tín chỉ
+                              </th>
+                              <th className="px-3 py-2 border-r w-1/5">
+                                Điểm hệ 10
+                              </th>
+                              <th className="px-3 py-2 w-16">Thao tác</th>
                             </tr>
                           </thead>
                           <tbody>
                             {gradeSubjects.map((row, idx) => (
                               <tr key={idx} className="border-t">
-                                <td className="px-2 py-2 border-r">
+                                <td className="px-2 py-2 border-r w-1/5">
                                   <input
                                     type="text"
                                     value={row.subjectCode}
@@ -1196,9 +1470,10 @@ const LearningInformation = () => {
                                       )
                                     }
                                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                    placeholder="Mã môn"
                                   />
                                 </td>
-                                <td className="px-2 py-2 border-r">
+                                <td className="px-2 py-2 border-r w-2/5">
                                   <input
                                     type="text"
                                     value={row.subjectName}
@@ -1210,9 +1485,10 @@ const LearningInformation = () => {
                                       )
                                     }
                                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                    placeholder="Tên môn học"
                                   />
                                 </td>
-                                <td className="px-2 py-2 border-r">
+                                <td className="px-2 py-2 border-r w-1/5">
                                   <input
                                     type="number"
                                     min="0"
@@ -1224,45 +1500,48 @@ const LearningInformation = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="w-24 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                    placeholder="Tín chỉ"
                                   />
                                 </td>
-                                <td className="px-2 py-2">
-                                  <select
-                                    value={row.letterGrade}
+                                <td className="px-2 py-2 border-r w-1/5">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="10"
+                                    step="0.1"
+                                    value={row.grade10 || ""}
                                     onChange={(e) =>
                                       updateSubjectField(
                                         idx,
-                                        "letterGrade",
+                                        "grade10",
                                         e.target.value
                                       )
                                     }
-                                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
-                                  >
-                                    {[
-                                      "A+",
-                                      "A",
-                                      "B+",
-                                      "B",
-                                      "C+",
-                                      "C",
-                                      "D+",
-                                      "D",
-                                      "F",
-                                    ].map((g) => (
-                                      <option key={g} value={g}>
-                                        {g}
-                                      </option>
-                                    ))}
-                                  </select>
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-2 py-1"
+                                    placeholder="0.0"
+                                  />
                                 </td>
-                                <td className="px-2 py-2 text-right">
+                                <td className="px-2 py-2 text-center w-16">
                                   <button
                                     type="button"
                                     onClick={() => removeSubjectRow(idx)}
-                                    className="text-red-600 hover:text-red-800"
+                                    className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    title="Xóa môn học"
                                   >
-                                    Xóa
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
                                   </button>
                                 </td>
                               </tr>
@@ -1271,18 +1550,51 @@ const LearningInformation = () => {
                         </table>
                       </div>
 
-                      <div className="flex justify-between mt-3">
-                        <button
-                          type="button"
-                          onClick={addSubjectRow}
-                          className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md"
-                        >
-                          Thêm dòng
-                        </button>
+                      {/* Tổng kết học kỳ */}
+                      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                          Tổng kết học kỳ
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                              {calculateSemesterSummary().totalCredits}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              Tổng tín chỉ
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              {calculateSemesterSummary().gpa4}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              GPA (Hệ 4)
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                              {calculateSemesterSummary().gpa10}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              GPA (Hệ 10)
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 text-center">
+                          * Điểm hệ 10 sẽ được tự động chuyển đổi sang điểm chữ
+                          và điểm hệ 4
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end mt-3">
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setShowGradeModal(false)}
+                            onClick={() => {
+                              setShowGradeModal(false);
+                              setEditingSemester(null);
+                            }}
                             className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md"
                           >
                             Hủy
@@ -1291,11 +1603,207 @@ const LearningInformation = () => {
                             type="submit"
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md"
                           >
-                            Lưu kết quả
+                            {editingSemester ? "Cập nhật" : "Lưu kết quả"}
                           </button>
                         </div>
                       </div>
                     </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal xem chi tiết kết quả học tập */}
+            {showDetailModal && viewingSemester && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+                <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+                <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      Chi tiết kết quả học tập - HK{viewingSemester.semester} -{" "}
+                      {viewingSemester.schoolYear}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowDetailModal(false);
+                        setViewingSemester(null);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto max-h-[calc(95vh-120px)] p-6">
+                    {/* Thông tin tổng quan */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {viewingSemester.totalCredits || 0}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Tổng tín chỉ
+                        </div>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {viewingSemester.averageGrade4?.toFixed(2) || "0.00"}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          GPA (Hệ 4)
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          {viewingSemester.averageGrade10?.toFixed(2) || "0.00"}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          GPA (Hệ 10)
+                        </div>
+                      </div>
+                      <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                          {viewingSemester.subjects?.length || 0}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Số môn học
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bảng chi tiết môn học */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Chi tiết các môn học
+                        </h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Mã môn
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Tên môn học
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Tín chỉ
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Điểm chữ
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Điểm hệ 4
+                              </th>
+                              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Điểm hệ 10
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {viewingSemester.subjects?.map((subject, index) => (
+                              <tr
+                                key={index}
+                                className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                              >
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                  {subject.subjectCode}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                  {subject.subjectName}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
+                                  {subject.credits}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                  <span
+                                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                      subject.letterGrade === "A+" ||
+                                      subject.letterGrade === "A"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        : subject.letterGrade === "B+" ||
+                                          subject.letterGrade === "B"
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                        : subject.letterGrade === "C+" ||
+                                          subject.letterGrade === "C"
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                        : subject.letterGrade === "D+" ||
+                                          subject.letterGrade === "D"
+                                        ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    }`}
+                                  >
+                                    {subject.letterGrade}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
+                                  {subject.gradePoint4?.toFixed(2) || "0.00"}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white">
+                                  {subject.gradePoint10?.toFixed(2) || "0.00"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Thông tin bổ sung */}
+                    <div className="mt-6 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Thông tin học kỳ
+                          </h4>
+                          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            <div>Học kỳ: {viewingSemester.semester}</div>
+                            <div>Năm học: {viewingSemester.schoolYear}</div>
+                            <div>
+                              Cập nhật lần cuối:{" "}
+                              {viewingSemester.updatedAt
+                                ? new Date(
+                                    viewingSemester.updatedAt
+                                  ).toLocaleDateString("vi-VN")
+                                : "-"}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Đánh giá học tập
+                          </h4>
+                          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                            <div>
+                              Trung bình hệ 4:{" "}
+                              {viewingSemester.averageGrade4?.toFixed(2) ||
+                                "0.00"}
+                            </div>
+                            <div>
+                              Trung bình hệ 10:{" "}
+                              {viewingSemester.averageGrade10?.toFixed(2) ||
+                                "0.00"}
+                            </div>
+                            <div>
+                              Tổng tín chỉ: {viewingSemester.totalCredits || 0}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1977,257 +2485,6 @@ const LearningInformation = () => {
                   Xóa
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Thêm Kết Quả Học Tập */}
-      {currentTab === "results" && showFormAddLearn && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white pr-12">
-                Thêm kết quả học tập
-              </h2>
-              <button
-                onClick={() => setShowFormAddLearn(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
-              <form
-                onSubmit={handleAddFormLearn}
-                className="p-4"
-                id="infoFormLearn"
-              >
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mb-4">
-                    <label
-                      htmlFor="semester2"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Học kỳ
-                    </label>
-                    <input
-                      type="text"
-                      id="semester2"
-                      name="semester2"
-                      value={addFormDataLearn.semester}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          semester: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 2023.2"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="studentLevel1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Trình độ
-                    </label>
-                    <input
-                      type="text"
-                      id="studentLevel1"
-                      name="studentLevel1"
-                      value={addFormDataLearn.studentLevel}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          studentLevel: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 4"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="GPA1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      GPA
-                    </label>
-                    <input
-                      type="text"
-                      id="GPA1"
-                      name="GPA1"
-                      value={addFormDataLearn.GPA}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          GPA: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 3.2"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="CPA1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      CPA
-                    </label>
-                    <input
-                      type="text"
-                      id="CPA1"
-                      name="CPA1"
-                      value={addFormDataLearn.CPA}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          CPA: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 3.6"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="cumulativeCredit1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      TC tích lũy
-                    </label>
-                    <input
-                      type="text"
-                      id="cumulativeCredit1"
-                      name="cumulativeCredit1"
-                      value={addFormDataLearn.cumulativeCredit}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          cumulativeCredit: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 120"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="totalDebt1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      TC nợ đăng ký
-                    </label>
-                    <input
-                      type="text"
-                      id="totalDebt1"
-                      name="totalDebt1"
-                      value={addFormDataLearn.totalDebt}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          totalDebt: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 0"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="warningLevel1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Cảnh báo
-                    </label>
-                    <input
-                      type="text"
-                      id="warningLevel1"
-                      name="warningLevel1"
-                      value={addFormDataLearn.warningLevel}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          warningLevel: e.target.value,
-                        })
-                      }
-                      required
-                      placeholder="vd: 0"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label
-                      htmlFor="learningStatus1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Trạng thái
-                    </label>
-                    <select
-                      id="learningStatus1"
-                      name="learningStatus1"
-                      value={addFormDataLearn.learningStatus || "Học"}
-                      onChange={(e) =>
-                        setAddFormDataLearn({
-                          ...addFormDataLearn,
-                          learningStatus: e.target.value,
-                        })
-                      }
-                      required
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
-                    >
-                      <option value="Học">Học</option>
-                      <option value="Cảnh báo học tập (Mức M1)">
-                        Cảnh báo học tập (Mức M1)
-                      </option>
-                      <option value="Cảnh báo học tập (Mức M2)">
-                        Cảnh báo học tập (Mức M2)
-                      </option>
-                      <option value="Cảnh báo học tập (Mức M3)">
-                        Cảnh báo học tập (Mức M3)
-                      </option>
-                      <option value="Buộc thôi học">Buộc thôi học</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-200"
-                    onClick={() => setShowFormAddLearn(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
-                  >
-                    Thêm
-                  </button>
-                </div>
-              </form>
             </div>
           </div>
         </div>

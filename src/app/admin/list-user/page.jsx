@@ -38,6 +38,28 @@ const ListUser = () => {
   const [profileOrganization, setProfileOrganization] = useState(null);
   const [profileEducationLevel, setProfileEducationLevel] = useState(null);
   const [profileClass, setProfileClass] = useState(null);
+
+  // State cho thông tin gia đình
+  const [showFamilyForm, setShowFamilyForm] = useState(false);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [familyFormData, setFamilyFormData] = useState({
+    relationship: "",
+    fullName: "",
+    birthday: null,
+    occupation: "",
+  });
+
+  // State cho yếu tố nước ngoài
+  const [showForeignForm, setShowForeignForm] = useState(false);
+  const [foreignRelations, setForeignRelations] = useState([]);
+  const [foreignFormData, setForeignFormData] = useState({
+    relationship: "",
+    fullName: "",
+    birthday: null,
+    country: "",
+    reason: "",
+    nationality: "",
+  });
   const [addFormData, setAddFormData] = useState({
     username: "",
     password: "",
@@ -193,6 +215,25 @@ const ListUser = () => {
       currentAddress: "",
       avatar:
         "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+    });
+    // Reset thông tin gia đình và yếu tố nước ngoài
+    setFamilyMembers([]);
+    setForeignRelations([]);
+    setShowFamilyForm(false);
+    setShowForeignForm(false);
+    setFamilyFormData({
+      relationship: "",
+      fullName: "",
+      birthday: null,
+      occupation: "",
+    });
+    setForeignFormData({
+      relationship: "",
+      fullName: "",
+      birthday: null,
+      country: "",
+      reason: "",
+      nationality: "",
     });
   };
 
@@ -496,6 +537,50 @@ const ListUser = () => {
           console.log("No university found for:", res.data.university);
         }
 
+        // Load thông tin gia đình và yếu tố nước ngoài vào state
+        if (res.data.familyMembers && Array.isArray(res.data.familyMembers)) {
+          const formattedFamilyMembers = res.data.familyMembers.map(
+            (member, index) => ({
+              id: member._id || `temp-${Date.now()}-${index}`,
+              relationship: member.relationship || "",
+              fullName: member.fullName || "",
+              birthday: member.birthday ? new Date(member.birthday) : null,
+              occupation: member.occupation || "",
+            })
+          );
+          setFamilyMembers(formattedFamilyMembers);
+          console.log(
+            "Loaded family members for edit:",
+            formattedFamilyMembers
+          );
+        } else {
+          setFamilyMembers([]);
+        }
+
+        if (
+          res.data.foreignRelations &&
+          Array.isArray(res.data.foreignRelations)
+        ) {
+          const formattedForeignRelations = res.data.foreignRelations.map(
+            (relation, index) => ({
+              id: relation._id || `temp-${Date.now()}-${index}`,
+              relationship: relation.relationship || "",
+              fullName: relation.fullName || "",
+              birthday: relation.birthday ? new Date(relation.birthday) : null,
+              country: relation.country || "",
+              reason: relation.reason || "",
+              nationality: relation.nationality || "",
+            })
+          );
+          setForeignRelations(formattedForeignRelations);
+          console.log(
+            "Loaded foreign relations for edit:",
+            formattedForeignRelations
+          );
+        } else {
+          setForeignRelations([]);
+        }
+
         setSelectedStudentId(studentId);
         setShowForm(true);
       } catch (error) {
@@ -546,6 +631,21 @@ const ListUser = () => {
       organization: selectedOrganization, // Tên khoa/viện đã chọn
       educationLevel: selectedLevel, // Trình độ đã chọn
       class: selectedClass?._id || selectedClass, // Lớp đã chọn - gửi ObjectId
+      // Thêm thông tin gia đình và yếu tố nước ngoài
+      familyMembers: familyMembers.map((member) => ({
+        relationship: member.relationship,
+        fullName: member.fullName,
+        birthday: member.birthday,
+        occupation: member.occupation,
+      })),
+      foreignRelations: foreignRelations.map((relation) => ({
+        relationship: relation.relationship,
+        fullName: relation.fullName,
+        birthday: relation.birthday,
+        country: relation.country,
+        reason: relation.reason,
+        nationality: relation.nationality,
+      })),
     };
 
     setIsLoading(true);
@@ -606,6 +706,101 @@ const ListUser = () => {
       ...formData,
       [id]: date,
     });
+  };
+
+  // Hàm xử lý form gia đình
+  const handleFamilyChange = (event) => {
+    setFamilyFormData({
+      ...familyFormData,
+      [event.target.id]: event.target.value,
+    });
+  };
+
+  const handleFamilyDateChange = (id, date) => {
+    setFamilyFormData({
+      ...familyFormData,
+      [id]: date,
+    });
+  };
+
+  const addFamilyMember = () => {
+    if (
+      !familyFormData.relationship ||
+      !familyFormData.fullName ||
+      !familyFormData.birthday ||
+      !familyFormData.occupation
+    ) {
+      handleNotify(
+        "warning",
+        "Cảnh báo!",
+        "Vui lòng điền đầy đủ thông tin người thân"
+      );
+      return;
+    }
+    setFamilyMembers([...familyMembers, { ...familyFormData, id: Date.now() }]);
+    setFamilyFormData({
+      relationship: "",
+      fullName: "",
+      birthday: null,
+      occupation: "",
+    });
+    setShowFamilyForm(false);
+  };
+
+  const removeFamilyMember = (id) => {
+    setFamilyMembers(familyMembers.filter((member) => member.id !== id));
+  };
+
+  // Hàm xử lý form yếu tố nước ngoài
+  const handleForeignChange = (event) => {
+    setForeignFormData({
+      ...foreignFormData,
+      [event.target.id]: event.target.value,
+    });
+  };
+
+  const handleForeignDateChange = (id, date) => {
+    setForeignFormData({
+      ...foreignFormData,
+      [id]: date,
+    });
+  };
+
+  const addForeignRelation = () => {
+    if (
+      !foreignFormData.relationship ||
+      !foreignFormData.fullName ||
+      !foreignFormData.birthday ||
+      !foreignFormData.country ||
+      !foreignFormData.reason ||
+      !foreignFormData.nationality
+    ) {
+      handleNotify(
+        "warning",
+        "Cảnh báo!",
+        "Vui lòng điền đầy đủ thông tin mối quan hệ nước ngoài"
+      );
+      return;
+    }
+    setForeignRelations([
+      ...foreignRelations,
+      { ...foreignFormData, id: Date.now() },
+    ]);
+    setForeignFormData({
+      relationship: "",
+      fullName: "",
+      birthday: null,
+      country: "",
+      reason: "",
+      nationality: "",
+    });
+    setShowForeignForm(false);
+  };
+
+  const removeForeignRelation = (id) => {
+    setForeignRelations(
+      foreignRelations.filter((relation) => relation.id !== id)
+    );
   };
 
   const handleDelete = (id) => {
@@ -765,19 +960,31 @@ const ListUser = () => {
               aria-hidden="true"
               className="fixed inset-0 z-40 flex justify-center items-start"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg relative p-6 max-w-5xl w-full mt-32 mx-auto max-h-[80vh] overflow-y-auto">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg relative p-6 max-w-6xl w-full mt-24 mx-auto max-h-[80vh] overflow-y-auto">
                 <button
-                  className="absolute hover:text-red-500 dark:hover:text-red-400 top-0 z-30 text-4xl right-5 text-gray-500 dark:text-gray-400"
+                  type="button"
                   onClick={() => {
                     setShowProfileDetail(false);
-                    // Reset các state khi đóng form
-                    setProfileUniversity(null);
-                    setProfileOrganization(null);
-                    setProfileEducationLevel(null);
-                    setProfileClass(null);
                   }}
+                  className="absolute top-4 right-4 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-custom rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white z-50"
+                  data-modal-hide="authentication-modal"
                 >
-                  &times;
+                  <svg
+                    className="w-3 h-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 14 14"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                    />
+                  </svg>
+                  <span className="sr-only">Close modal</span>
                 </button>
                 <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg">
                   <div className="bg-white dark:bg-gray-800 rounded-lg w-full">
@@ -912,6 +1119,116 @@ const ListUser = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Thông tin gia đình */}
+                      {profileDetail?.familyMembers &&
+                        profileDetail.familyMembers.length > 0 && (
+                          <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
+                            <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
+                              THÔNG TIN NGƯỜI THÂN
+                            </div>
+                            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                              {profileDetail.familyMembers.map(
+                                (member, index) => (
+                                  <div
+                                    key={index}
+                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
+                                  >
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Quan hệ:
+                                      </span>{" "}
+                                      {member.relationship || "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Họ và tên:
+                                      </span>{" "}
+                                      {member.fullName || "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Ngày sinh:
+                                      </span>{" "}
+                                      {member.birthday
+                                        ? dayjs(member.birthday).format(
+                                            "DD/MM/YYYY"
+                                          )
+                                        : "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Nghề nghiệp:
+                                      </span>{" "}
+                                      {member.occupation || "Chưa có dữ liệu"}
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Yếu tố nước ngoài */}
+                      {profileDetail?.foreignRelations &&
+                        profileDetail.foreignRelations.length > 0 && (
+                          <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
+                            <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
+                              MỐI QUAN HỆ CÓ YẾU TỐ NƯỚC NGOÀI
+                            </div>
+                            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                              {profileDetail.foreignRelations.map(
+                                (relation, index) => (
+                                  <div
+                                    key={index}
+                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
+                                  >
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Quan hệ:
+                                      </span>{" "}
+                                      {relation.relationship ||
+                                        "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Họ và tên:
+                                      </span>{" "}
+                                      {relation.fullName || "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Ngày sinh:
+                                      </span>{" "}
+                                      {relation.birthday
+                                        ? dayjs(relation.birthday).format(
+                                            "DD/MM/YYYY"
+                                          )
+                                        : "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Quốc gia:
+                                      </span>{" "}
+                                      {relation.country || "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">Lý do:</span>{" "}
+                                      {relation.reason || "Chưa có dữ liệu"}
+                                    </div>
+                                    <div className="mb-2 text-gray-900 dark:text-white">
+                                      <span className="font-bold">
+                                        Quốc tịch:
+                                      </span>{" "}
+                                      {relation.nationality ||
+                                        "Chưa có dữ liệu"}
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1590,6 +1907,321 @@ const ListUser = () => {
                             </div>
                           </div>
 
+                          {/* Thông tin gia đình */}
+                          <div className="mt-6 border-t pt-6">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Thông tin người thân
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShowFamilyForm(!showFamilyForm)
+                                }
+                                className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors duration-200"
+                              >
+                                {showFamilyForm ? "Ẩn form" : "Thêm người thân"}
+                              </button>
+                            </div>
+
+                            {showFamilyForm && (
+                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-lg mb-4 shadow-sm">
+                                <div className="grid gap-4 md:grid-cols-2 w-full">
+                                  <div className="w-full">
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Quan hệ
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="relationship"
+                                      value={familyFormData.relationship}
+                                      onChange={handleFamilyChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Bố, Mẹ, Anh, Chị..."
+                                    />
+                                  </div>
+                                  <div className="w-full">
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Họ và tên
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="fullName"
+                                      value={familyFormData.fullName}
+                                      onChange={handleFamilyChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Nguyễn Văn A"
+                                    />
+                                  </div>
+                                  <div className="w-full">
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Ngày sinh
+                                    </label>
+                                    <DatePicker
+                                      selected={familyFormData.birthday}
+                                      onChange={(date) =>
+                                        handleFamilyDateChange("birthday", date)
+                                      }
+                                      dateFormat="dd/MM/yyyy"
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholderText="Ngày/Tháng/Năm"
+                                      wrapperClassName="w-full"
+                                    />
+                                  </div>
+                                  <div className="w-full">
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Nghề nghiệp
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="occupation"
+                                      value={familyFormData.occupation}
+                                      onChange={handleFamilyChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Làm ruộng, Công nhân..."
+                                    />
+                                  </div>
+                                </div>
+                                <div className="mt-4 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={addFamilyMember}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200"
+                                  >
+                                    Thêm vào danh sách
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {familyMembers.length > 0 && (
+                              <div className="space-y-2">
+                                {familyMembers.map((member) => (
+                                  <div
+                                    key={member.id}
+                                    className="flex justify-between items-center bg-gray-100 dark:bg-gray-600 p-3 rounded-lg"
+                                  >
+                                    <div>
+                                      <span className="font-medium">
+                                        {member.relationship}:{" "}
+                                      </span>
+                                      <span>{member.fullName}</span>
+                                      <span className="text-gray-500 ml-2">
+                                        (
+                                        {member.birthday
+                                          ? dayjs(member.birthday).format(
+                                              "DD/MM/YYYY"
+                                            )
+                                          : "Chưa có ngày sinh"}
+                                        )
+                                      </span>
+                                      <span className="text-gray-500 ml-2">
+                                        - {member.occupation}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeFamilyMember(member.id)
+                                      }
+                                      className="text-red-600 hover:text-red-800"
+                                    >
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Yếu tố nước ngoài */}
+                          <div className="mt-6 border-t pt-6">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Mối quan hệ có yếu tố nước ngoài
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setShowForeignForm(!showForeignForm)
+                                }
+                                className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors duration-200"
+                              >
+                                {showForeignForm
+                                  ? "Ẩn form"
+                                  : "Thêm mối quan hệ"}
+                              </button>
+                            </div>
+
+                            {showForeignForm && (
+                              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-lg mb-4 shadow-sm">
+                                <div className="grid gap-4 md:grid-cols-2 w-full">
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Quan hệ
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="relationship"
+                                      value={foreignFormData.relationship}
+                                      onChange={handleForeignChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Chú ruột, Cô ruột..."
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Họ và tên
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="fullName"
+                                      value={foreignFormData.fullName}
+                                      onChange={handleForeignChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Nguyễn Văn B"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Ngày sinh
+                                    </label>
+                                    <DatePicker
+                                      selected={foreignFormData.birthday}
+                                      onChange={(date) =>
+                                        handleForeignDateChange(
+                                          "birthday",
+                                          date
+                                        )
+                                      }
+                                      dateFormat="dd/MM/yyyy"
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholderText="Ngày/Tháng/Năm"
+                                      wrapperClassName="w-full"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Quốc gia
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="country"
+                                      value={foreignFormData.country}
+                                      onChange={handleForeignChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Liên bang Nga, Ý..."
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Lý do
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="reason"
+                                      value={foreignFormData.reason}
+                                      onChange={handleForeignChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Định cư, Du học..."
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block mb-2 text-sm font-medium dark:text-white">
+                                      Quốc tịch
+                                    </label>
+                                    <input
+                                      type="text"
+                                      id="nationality"
+                                      value={foreignFormData.nationality}
+                                      onChange={handleForeignChange}
+                                      className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                      placeholder="vd: Nga, Ý..."
+                                    />
+                                  </div>
+                                </div>
+                                <div className="mt-4 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={addForeignRelation}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200"
+                                  >
+                                    Thêm vào danh sách
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {foreignRelations.length > 0 && (
+                              <div className="space-y-2">
+                                {foreignRelations.map((relation) => (
+                                  <div
+                                    key={relation.id}
+                                    className="flex justify-between items-center bg-gray-100 dark:bg-gray-600 p-3 rounded-lg"
+                                  >
+                                    <div>
+                                      <span className="font-medium">
+                                        {relation.relationship}:{" "}
+                                      </span>
+                                      <span>{relation.fullName}</span>
+                                      <span className="text-gray-500 ml-2">
+                                        (
+                                        {relation.birthday
+                                          ? dayjs(relation.birthday).format(
+                                              "DD/MM/YYYY"
+                                            )
+                                          : "Chưa có ngày sinh"}
+                                        )
+                                      </span>
+                                      <span className="text-gray-500 ml-2">
+                                        - {relation.country}
+                                      </span>
+                                      <span className="text-gray-500 ml-2">
+                                        ({relation.reason})
+                                      </span>
+                                      <span className="text-gray-500 ml-2">
+                                        - {relation.nationality}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        removeForeignRelation(relation.id)
+                                      }
+                                      className="text-red-600 hover:text-red-800"
+                                    >
+                                      <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
                           <div className="grid justify-items-end">
                             <button
                               type="submit"
@@ -1597,7 +2229,7 @@ const ListUser = () => {
                               className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
                                 isLoading
                                   ? "bg-gray-400 cursor-not-allowed"
-                                  : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                  : "bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
                               }`}
                             >
                               {isLoading ? (
@@ -2095,7 +2727,7 @@ const ListUser = () => {
               aria-hidden="true"
               className="fixed top-0 right-0 left-0 z-10 justify-center items-center"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-32 mx-auto max-w-3xl max-h-[80vh] overflow-y-auto">
+              <div className="bg-white dark:bg-gray-800 rounded-lg relative mt-24 mx-auto max-w-3xl max-h-[80vh] overflow-y-auto">
                 <div className="relative z-20 bg-white dark:bg-gray-800 rounded-lg shadow">
                   <div className="w-full">
                     <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
@@ -2127,7 +2759,7 @@ const ListUser = () => {
                       </button>
                     </div>
 
-                    <div className="w-full max-w-3xl p-5 mb-5">
+                    <div className="w-full max-w-3xl p-5">
                       <form
                         onSubmit={(e) =>
                           handleSubmit(e, selectedStudentId, profile?.students)
@@ -2591,14 +3223,343 @@ const ListUser = () => {
                           </div>
                         </div>
 
+                        {/* Thông tin gia đình */}
+                        <div className="mt-6 border-t pt-6">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              Thông tin người thân
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => setShowFamilyForm(!showFamilyForm)}
+                              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors duration-200"
+                            >
+                              {showFamilyForm ? "Ẩn form" : "Thêm người thân"}
+                            </button>
+                          </div>
+
+                          {showFamilyForm && (
+                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-lg mb-4 shadow-sm">
+                              <div className="grid gap-4 md:grid-cols-2 w-full">
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Quan hệ
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="relationship"
+                                    value={familyFormData.relationship}
+                                    onChange={handleFamilyChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Bố, Mẹ, Anh, Chị..."
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Họ và tên
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="fullName"
+                                    value={familyFormData.fullName}
+                                    onChange={handleFamilyChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Nguyễn Văn A"
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Ngày sinh
+                                  </label>
+                                  <DatePicker
+                                    selected={familyFormData.birthday}
+                                    onChange={(date) =>
+                                      handleFamilyDateChange("birthday", date)
+                                    }
+                                    dateFormat="dd/MM/yyyy"
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholderText="Ngày/Tháng/Năm"
+                                    wrapperClassName="w-full"
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Nghề nghiệp
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="occupation"
+                                    value={familyFormData.occupation}
+                                    onChange={handleFamilyChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Làm ruộng, Công nhân..."
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-4 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={addFamilyMember}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200"
+                                >
+                                  Thêm vào danh sách
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {familyMembers.length > 0 && (
+                            <div className="space-y-2">
+                              {familyMembers.map((member) => (
+                                <div
+                                  key={member.id}
+                                  className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 p-4 rounded-lg shadow-sm"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-semibold text-blue-700 dark:text-blue-300">
+                                        {member.relationship}:
+                                      </span>
+                                      <span className="font-medium text-gray-900 dark:text-white">
+                                        {member.fullName}
+                                      </span>
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                                      <span className="font-medium">
+                                        Ngày sinh:
+                                      </span>{" "}
+                                      {member.birthday
+                                        ? dayjs(member.birthday).format(
+                                            "DD/MM/YYYY"
+                                          )
+                                        : "Chưa có ngày sinh"}
+                                      {" • "}
+                                      <span className="font-medium">
+                                        Nghề nghiệp:
+                                      </span>{" "}
+                                      {member.occupation}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeFamilyMember(member.id)
+                                    }
+                                    className="text-red-600 hover:text-red-800"
+                                  >
+                                    <svg
+                                      className="w-5 h-5"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Yếu tố nước ngoài */}
+                        <div className="mt-6 border-t pt-6">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              Mối quan hệ có yếu tố nước ngoài
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowForeignForm(!showForeignForm)
+                              }
+                              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition-colors duration-200"
+                            >
+                              {showForeignForm ? "Ẩn form" : "Thêm mối quan hệ"}
+                            </button>
+                          </div>
+
+                          {showForeignForm && (
+                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-lg mb-4 shadow-sm">
+                              <div className="grid gap-4 md:grid-cols-2 w-full">
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Quan hệ
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="relationship"
+                                    value={foreignFormData.relationship}
+                                    onChange={handleForeignChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Chú ruột, Cô ruột..."
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Họ và tên
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="fullName"
+                                    value={foreignFormData.fullName}
+                                    onChange={handleForeignChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Nguyễn Văn B"
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Ngày sinh
+                                  </label>
+                                  <DatePicker
+                                    selected={foreignFormData.birthday}
+                                    onChange={(date) =>
+                                      handleForeignDateChange("birthday", date)
+                                    }
+                                    dateFormat="dd/MM/yyyy"
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholderText="Ngày/Tháng/Năm"
+                                    wrapperClassName="w-full"
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Quốc gia
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="country"
+                                    value={foreignFormData.country}
+                                    onChange={handleForeignChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Liên bang Nga, Ý..."
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Lý do
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="reason"
+                                    value={foreignFormData.reason}
+                                    onChange={handleForeignChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Định cư, Du học..."
+                                  />
+                                </div>
+                                <div className="w-full">
+                                  <label className="block mb-2 text-sm font-medium dark:text-white">
+                                    Quốc tịch
+                                  </label>
+                                  <input
+                                    type="text"
+                                    id="nationality"
+                                    value={foreignFormData.nationality}
+                                    onChange={handleForeignChange}
+                                    className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                    placeholder="vd: Nga, Ý..."
+                                  />
+                                </div>
+                              </div>
+                              <div className="mt-4 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={addForeignRelation}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200"
+                                >
+                                  Thêm vào danh sách
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {foreignRelations.length > 0 && (
+                            <div className="space-y-2">
+                              {foreignRelations.map((relation) => (
+                                <div
+                                  key={relation.id}
+                                  className="flex justify-between items-center bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 p-4 rounded-lg shadow-sm"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-semibold text-purple-700 dark:text-purple-300">
+                                        {relation.relationship}:
+                                      </span>
+                                      <span className="font-medium text-gray-900 dark:text-white">
+                                        {relation.fullName}
+                                      </span>
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                                      <div>
+                                        <span className="font-medium">
+                                          Ngày sinh:
+                                        </span>{" "}
+                                        {relation.birthday
+                                          ? dayjs(relation.birthday).format(
+                                              "DD/MM/YYYY"
+                                            )
+                                          : "Chưa có ngày sinh"}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Quốc gia:
+                                        </span>{" "}
+                                        {relation.country}
+                                        {" • "}
+                                        <span className="font-medium">
+                                          Lý do:
+                                        </span>{" "}
+                                        {relation.reason}
+                                        {" • "}
+                                        <span className="font-medium">
+                                          Quốc tịch:
+                                        </span>{" "}
+                                        {relation.nationality}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      removeForeignRelation(relation.id)
+                                    }
+                                    className="text-red-600 hover:text-red-800"
+                                  >
+                                    <svg
+                                      className="w-5 h-5"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
                         <div className="grid justify-items-end">
                           <button
                             type="submit"
                             disabled={isLoading}
-                            className={`text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
+                            className={`text-white mt-2 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 transition-colors duration-200 ${
                               isLoading
                                 ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                : "bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
                             }`}
                           >
                             {isLoading ? (

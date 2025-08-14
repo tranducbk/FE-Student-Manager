@@ -139,6 +139,7 @@ const SideBar = () => {
     if (
       currentPath.startsWith("/admin/time-table") ||
       currentPath.startsWith("/admin/learning-results") ||
+      currentPath.startsWith("/admin/semester-management") ||
       currentPath.startsWith("/admin/tuition-fees")
     ) {
       setOpenKeys(["learning"]);
@@ -240,6 +241,12 @@ const SideBar = () => {
                   icon={<TrophyOutlined />}
                 >
                   Kết quả học tập
+                </Menu.Item>
+                <Menu.Item
+                  key="/admin/semester-management"
+                  icon={<CalendarOutlined />}
+                >
+                  Quản lý các kì học
                 </Menu.Item>
                 <Menu.Item key="/admin/tuition-fees" icon={<DollarOutlined />}>
                   Học phí
