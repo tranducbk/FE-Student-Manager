@@ -3,12 +3,12 @@
 import Link from "next/link";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { BASE_URL } from "@/configs";
 
-const Achievement = () => {
+const AchievementContent = () => {
   const [achievement, setAchievement] = useState(null);
   const searchParams = useSearchParams();
 
@@ -352,6 +352,14 @@ const Achievement = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const Achievement = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AchievementContent />
+    </Suspense>
   );
 };
 

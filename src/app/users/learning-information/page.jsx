@@ -4,13 +4,13 @@ import axios from "axios";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
-const LearningInformation = () => {
+const LearningInformationContent = () => {
   const [tuitionFee, setTuitionFee] = useState([]);
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
@@ -2997,6 +2997,14 @@ const LearningInformation = () => {
         </div>
       )}
     </>
+  );
+};
+
+const LearningInformation = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LearningInformationContent />
+    </Suspense>
   );
 };
 
