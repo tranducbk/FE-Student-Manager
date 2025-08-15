@@ -20,14 +20,6 @@ const LearningResults = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentDetail, setStudentDetail] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editStudentId, setEditStudentId] = useState(null);
-  const [editedLearningResult, setEditedLearningResult] = useState({});
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState({
-    studentId: null,
-    learnId: null,
-  });
 
   // Phát hiện theme hiện tại
   useEffect(() => {
@@ -129,11 +121,37 @@ const LearningResults = () => {
     if (!token) return;
 
     try {
+      // Gọi API từ bên học viên để lấy chi tiết điểm
       const res = await axios.get(
-        `${BASE_URL}/grade/${studentId}/${semester}/${schoolYear}`,
+        `${BASE_URL}/grade/student/${studentId}/${semester}/${schoolYear}`,
         { headers: { token: `Bearer ${token}` } }
       );
-      setStudentDetail(res.data);
+
+      // Kiểm tra và format dữ liệu trả về
+      const data = res.data;
+      if (data && data.subjects) {
+        // Đảm bảo dữ liệu có đầy đủ thông tin cần thiết
+        setStudentDetail({
+          ...data,
+          totalCredits:
+            data.totalCredits ||
+            data.subjects.reduce((sum, sub) => sum + (sub.credits || 0), 0),
+          averageGrade4:
+            data.averageGrade4 ||
+            data.subjects.reduce(
+              (sum, sub) => sum + (sub.gradePoint4 || 0),
+              0
+            ) / data.subjects.length,
+          averageGrade10:
+            data.averageGrade10 ||
+            data.subjects.reduce(
+              (sum, sub) => sum + (sub.gradePoint10 || 0),
+              0
+            ) / data.subjects.length,
+        });
+      } else {
+        setStudentDetail(data);
+      }
     } catch (error) {
       console.log("Error fetching student detail:", error);
       handleNotify("error", "Lỗi", "Không thể tải chi tiết điểm của sinh viên");
@@ -145,99 +163,6 @@ const LearningResults = () => {
     setShowDetailModal(true);
     await fetchStudentDetail(row.studentId, row.semester, row.schoolYear);
   };
-
-  // Mở modal sửa (giống user): sửa các trường lẻ của learning_information
-  const openEditModal = (row) => {
-    setEditStudentId(row.studentId);
-    setEditedLearningResult({
-      semester: row.semester,
-      schoolYear: row.schoolYear,
-      GPA: row.GPA,
-      CPA: row.CPA,
-      cumulativeCredit: row.cumulativeCredit,
-      totalDebt: row.totalDebt,
-      studentLevel: row.studentLevel,
-      warningLevel: row.warningLevel,
-      learningStatus: row.learningStatus || "Học",
-    });
-    setShowEditModal(true);
-  };
-
-  const handleUpdateLearningResult = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token || !editStudentId) return;
-
-    try {
-      // Tìm learnId từ danh sách theo key kết hợp semester+schoolYear
-      const current = learningResults.find(
-        (x) =>
-          x.studentId === editStudentId &&
-          x.semester === editedLearningResult.semester &&
-          x.schoolYear === editedLearningResult.schoolYear
-      );
-      const learnId = current?._id;
-      if (!learnId) {
-        handleNotify(
-          "warning",
-          "Thiếu dữ liệu",
-          "Không tìm thấy học kỳ cần sửa"
-        );
-        return;
-      }
-
-      await axios.put(
-        `${BASE_URL}/student/${editStudentId}/learningResult/${learnId}`,
-        editedLearningResult,
-        { headers: { token: `Bearer ${token}` } }
-      );
-
-      handleNotify(
-        "success",
-        "Thành công",
-        "Cập nhật kết quả học tập thành công"
-      );
-      setShowEditModal(false);
-      setEditStudentId(null);
-      setEditedLearningResult({});
-      fetchLearningResults();
-    } catch (error) {
-      handleNotify(
-        "error",
-        "Lỗi",
-        error?.response?.data?.message || "Không thể cập nhật kết quả học tập"
-      );
-    }
-  };
-
-  // Xóa kết quả học tập
-  const openConfirmDelete = (row) => {
-    setDeleteTarget({ studentId: row.studentId, learnId: row._id });
-    setShowConfirmDelete(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    const token = localStorage.getItem("token");
-    if (!token || !deleteTarget.studentId || !deleteTarget.learnId) return;
-    try {
-      await axios.delete(
-        `${BASE_URL}/student/${deleteTarget.studentId}/learning-information/${deleteTarget.learnId}`,
-        { headers: { token: `Bearer ${token}` } }
-      );
-      handleNotify("success", "Thành công", "Đã xóa kết quả học tập");
-      setShowConfirmDelete(false);
-      setDeleteTarget({ studentId: null, learnId: null });
-      fetchLearningResults();
-    } catch (error) {
-      handleNotify(
-        "error",
-        "Lỗi",
-        error?.response?.data?.message || "Không thể xóa"
-      );
-    }
-  };
-
-  // (removed duplicate fetchStudentDetail)
 
   const handleExportPDF = async () => {
     const token = localStorage.getItem("token");
@@ -658,7 +583,7 @@ const LearningResults = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.university}
+                              {item.className}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {item.GPA}
@@ -718,50 +643,6 @@ const LearningResults = () => {
                                     />
                                   </svg>
                                 </button>
-                                <button
-                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                  title="Chỉnh sửa"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openEditModal(item);
-                                  }}
-                                >
-                                  <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                  </svg>
-                                </button>
-                                <button
-                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                  title="Xóa"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openConfirmDelete(item);
-                                  }}
-                                >
-                                  <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                </button>
                               </div>
                             </td>
                           </tr>
@@ -806,269 +687,6 @@ const LearningResults = () => {
           </div>
         </div>
       </div>
-
-      {/* Modal chỉnh sửa kết quả học tập */}
-      {showEditModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Chỉnh sửa kết quả học tập
-              </h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[calc(95vh-120px)]">
-              <form onSubmit={handleUpdateLearningResult} className="p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Học kỳ
-                    </label>
-                    <input
-                      type="text"
-                      value={editedLearningResult.semester || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          semester: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Năm học
-                    </label>
-                    <input
-                      type="text"
-                      value={editedLearningResult.schoolYear || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          schoolYear: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      GPA
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editedLearningResult.GPA || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          GPA: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      CPA
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={editedLearningResult.CPA || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          CPA: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      TC tích lũy
-                    </label>
-                    <input
-                      type="number"
-                      value={editedLearningResult.cumulativeCredit || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          cumulativeCredit: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      TC nợ
-                    </label>
-                    <input
-                      type="number"
-                      value={editedLearningResult.totalDebt || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          totalDebt: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Trình độ
-                    </label>
-                    <input
-                      type="text"
-                      value={editedLearningResult.studentLevel || ""}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          studentLevel: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Cảnh báo
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="3"
-                      value={editedLearningResult.warningLevel || 0}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          warningLevel: Number(e.target.value),
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Trạng thái
-                    </label>
-                    <select
-                      value={editedLearningResult.learningStatus || "Học"}
-                      onChange={(e) =>
-                        setEditedLearningResult({
-                          ...editedLearningResult,
-                          learningStatus: e.target.value,
-                        })
-                      }
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    >
-                      <option value="Học">Học</option>
-                      <option value="Cảnh báo học tập (Mức M1)">
-                        Cảnh báo học tập (Mức M1)
-                      </option>
-                      <option value="Cảnh báo học tập (Mức M2)">
-                        Cảnh báo học tập (Mức M2)
-                      </option>
-                      <option value="Cảnh báo học tập (Mức M3)">
-                        Cảnh báo học tập (Mức M3)
-                      </option>
-                      <option value="Buộc thôi học">Buộc thôi học</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
-                    onClick={() => setShowEditModal(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
-                  >
-                    Cập nhật
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal xác nhận xóa */}
-      {showConfirmDelete && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Xác nhận xóa
-              </h2>
-              <button
-                onClick={() => setShowConfirmDelete(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="p-5">
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Bạn có chắc chắn muốn xóa kết quả học tập này?
-              </p>
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
-                  onClick={() => setShowConfirmDelete(false)}
-                >
-                  Hủy
-                </button>
-                <button
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg"
-                  onClick={handleConfirmDelete}
-                >
-                  Xóa
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal chi tiết điểm */}
       {showDetailModal && selectedStudent && (
