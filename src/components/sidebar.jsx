@@ -1,7 +1,7 @@
 "use client";
 
 import { jwtDecode } from "jwt-decode";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import "core-js/stable/atob";
 import axios from "axios";
@@ -60,7 +60,7 @@ import {
 
 const { SubMenu } = Menu;
 
-const SideBarContent = () => {
+const SideBar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -434,14 +434,6 @@ const SideBarContent = () => {
       </div>
     );
   }
-};
-
-const SideBar = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SideBarContent />
-    </Suspense>
-  );
 };
 
 export default SideBar;
