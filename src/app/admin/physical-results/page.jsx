@@ -14,6 +14,7 @@ const PhysicalResults = () => {
   const [physicalResults, setPhysicalResults] = useState(null);
   const [unit, setUnit] = useState("");
   const [semester, setSemester] = useState("");
+  const [semesters, setSemesters] = useState([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [physicalResultId, setPhysicalResultId] = useState(null);
   const [studentId, setStudentId] = useState(null);
@@ -133,19 +134,40 @@ const PhysicalResults = () => {
     }
   };
 
+  const fetchSemesters = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/semester`, {
+        headers: { token: `Bearer ${token}` },
+      });
+      const list = res.data || [];
+      setSemesters(list);
+    } catch (error) {
+      console.log("Error fetching semesters:", error);
+      setSemesters([]);
+    }
+  };
+
   useEffect(() => {
     fetchPhysicalResults();
+    fetchSemesters();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push(`/admin/physical-results?semester=${semester}&unit=${unit}`);
+    // Tìm semester từ ID để lấy code
+    const selectedSemester = semesters.find((s) => s._id === semester);
+    const semesterCode = selectedSemester?.code || semester;
+    router.push(
+      `/admin/physical-results?semester=${semesterCode}&unit=${unit}`
+    );
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
         const res = await axios.get(
-          `${BASE_URL}/commander/physicalResults?semester=${semester}&unit=${unit}`,
+          `${BASE_URL}/commander/physicalResults?semester=${semesterCode}&unit=${unit}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -610,12 +632,11 @@ const PhysicalResults = () => {
                         className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
                       >
                         <option value="">Tất cả</option>
-                        <option value="2022.1">2022.1</option>
-                        <option value="2022.2">2022.2</option>
-                        <option value="2022.3">2022.3</option>
-                        <option value="2023.1">2023.1</option>
-                        <option value="2023.2">2023.2</option>
-                        <option value="2023.3">2023.3</option>
+                        {semesters.map((sem) => (
+                          <option key={sem._id} value={sem._id}>
+                            {sem.code} - {sem.schoolYear}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div className="ml-4">

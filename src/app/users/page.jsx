@@ -326,11 +326,11 @@ export default function Home() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Tổng quan học tập
+              Tổng quan học tập và rèn luyện
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Chào mừng bạn trở lại! Đây là tổng quan về tình hình học tập của
-              bạn.
+              Chào mừng bạn trở lại! Đây là tổng quan về tình hình học tập và
+              rèn luyện của bạn.
             </p>
           </div>
 

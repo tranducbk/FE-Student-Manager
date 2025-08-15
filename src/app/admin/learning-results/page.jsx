@@ -63,7 +63,7 @@ const LearningResults = () => {
       console.log("Semesters data:", list);
       setSemesters(list);
       if (list.length > 0) {
-        setSelectedSemesters([list[0].code]);
+        setSelectedSemesters([list[0]._id]);
       }
     } catch (error) {
       console.log("Error fetching semesters:", error);
@@ -79,11 +79,11 @@ const LearningResults = () => {
     setLoading(true);
     try {
       // Tạo array chứa thông tin semester và schoolYear
-      const semesterData = selectedSemesters.map((semesterCode) => {
-        const semester = semesters.find((s) => s.code === semesterCode);
+      const semesterData = selectedSemesters.map((semesterId) => {
+        const semester = semesters.find((s) => s._id === semesterId);
         return {
-          semester: semesterCode,
-          schoolYear: semester?.schoolYear || "2024-2025",
+          semester: semester?.code || "",
+          schoolYear: semester?.schoolYear || "",
         };
       });
 
@@ -207,8 +207,8 @@ const LearningResults = () => {
   // Tạo tree data cho TreeSelect
   const treeData = semesters.map((semester) => ({
     title: getSemesterLabel(semester),
-    value: semester.code,
-    key: semester.code,
+    value: semester._id,
+    key: semester._id,
   }));
 
   const getFilteredResults = () => {

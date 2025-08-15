@@ -157,8 +157,15 @@ const TuitionFees = () => {
   const applySemesterFilter = (list) => {
     if (!Array.isArray(list)) return [];
     if (!selectedSemesters || selectedSemesters.length === 0) return list;
-    const setSem = new Set(selectedSemesters);
-    return list.filter((item) => setSem.has(String(item.semester)));
+
+    // Tạo set các semester code từ selectedSemesters
+    const selectedCodes = new Set(
+      selectedSemesters.map((semesterId) => {
+        const semester = semesters.find((s) => s._id === semesterId);
+        return semester?.code;
+      })
+    );
+    return list.filter((item) => selectedCodes.has(String(item.semester)));
   };
 
   // Tính lại thống kê khi dữ liệu hoặc bộ lọc thay đổi
@@ -228,14 +235,23 @@ const TuitionFees = () => {
     return parts.join(".");
   };
 
-  const handleExportFilePdf = async (e, semester) => {
+  const handleExportFilePdf = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
+        const semesterParam =
+          selectedSemesters.length > 0
+            ? selectedSemesters
+                .map((semesterId) => {
+                  const semester = semesters.find((s) => s._id === semesterId);
+                  return semester?.code;
+                })
+                .join(",")
+            : "all";
         const response = await axios.get(
-          `${BASE_URL}/commander/tuitionFee/pdf?semester=${semester}`,
+          `${BASE_URL}/commander/tuitionFee/pdf?semester=${semesterParam}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -248,7 +264,18 @@ const TuitionFees = () => {
         link.href = url;
         link.setAttribute(
           "download",
-          `Thong_ke_hoc_phi_he5_hoc_ky_${semester}.pdf`
+          `Thong_ke_hoc_phi_he5_${
+            selectedSemesters.length > 0
+              ? selectedSemesters
+                  .map((semesterId) => {
+                    const semester = semesters.find(
+                      (s) => s._id === semesterId
+                    );
+                    return semester?.code;
+                  })
+                  .join("_")
+              : "tat_ca_hoc_ky"
+          }.pdf`
         );
         document.body.appendChild(link);
         link.click();
@@ -262,7 +289,7 @@ const TuitionFees = () => {
   // semesters đã được sort mới → cũ
   const treeData = semesters.map((s) => ({
     title: getSemesterLabel(s),
-    value: s.code,
+    value: s._id,
     key: s._id,
   }));
 
@@ -322,7 +349,7 @@ const TuitionFees = () => {
               </div>
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                onClick={(e) => handleExportFilePdf(e, semester)}
+                onClick={(e) => handleExportFilePdf(e)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

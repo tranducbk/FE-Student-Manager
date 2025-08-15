@@ -56,7 +56,7 @@ const SemesterManagement = () => {
       await axios.post(
         `${BASE_URL}/semester`,
         {
-          code: newTerm,
+          code: `HK${newTerm}`,
           schoolYear: schoolYear,
         },
         {
@@ -99,7 +99,7 @@ const SemesterManagement = () => {
       await axios.put(
         `${BASE_URL}/semester/${selectedEditSemesterId}`,
         {
-          code: editTerm,
+          code: `HK${editTerm}`,
           schoolYear: schoolYear,
         },
         {
@@ -199,7 +199,7 @@ const SemesterManagement = () => {
             </nav>
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5 flex justify-center">
-            <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-7xl shadow-lg">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-8xl shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white text-lg">
                   QUẢN LÝ HỌC KỲ
@@ -260,7 +260,7 @@ const SemesterManagement = () => {
                                 schoolYear: sem.schoolYear || "",
                               });
                               // Điền sẵn thông tin cho form edit
-                              setEditTerm(sem.code || "1");
+                              setEditTerm(sem.code?.replace("HK", "") || "1");
                               const yearParts = (sem.schoolYear || "").split(
                                 "-"
                               );
@@ -286,7 +286,9 @@ const SemesterManagement = () => {
                                       schoolYear: sem.schoolYear || "",
                                     });
                                     // Điền sẵn thông tin cho form edit
-                                    setEditTerm(sem.code || "1");
+                                    setEditTerm(
+                                      sem.code?.replace("HK", "") || "1"
+                                    );
                                     const yearParts = (
                                       sem.schoolYear || ""
                                     ).split("-");

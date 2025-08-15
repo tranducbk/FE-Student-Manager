@@ -857,6 +857,58 @@ const LearningInformation = () => {
     }
   };
 
+  // Hàm sắp xếp và gộp dữ liệu theo thứ và giờ
+  const processTimeTableData = (data) => {
+    if (!data || data.length === 0) return [];
+
+    // Nhóm theo thứ
+    const groupedByDay = {};
+    data.forEach((item) => {
+      if (!groupedByDay[item.day]) {
+        groupedByDay[item.day] = [];
+      }
+      groupedByDay[item.day].push(item);
+    });
+
+    // Sắp xếp theo thứ tự thứ và giờ
+    const dayOrder = {
+      "Thứ 2": 1,
+      "Thứ 3": 2,
+      "Thứ 4": 3,
+      "Thứ 5": 4,
+      "Thứ 6": 5,
+      "Thứ 7": 6,
+      "Chủ nhật": 7,
+    };
+
+    // Sắp xếp các thứ theo thứ tự
+    const sortedDays = Object.keys(groupedByDay).sort(
+      (a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999)
+    );
+
+    const processedData = [];
+    sortedDays.forEach((day) => {
+      const dayItems = groupedByDay[day];
+
+      // Sắp xếp theo giờ bắt đầu
+      dayItems.sort((a, b) => {
+        const timeA = a.startTime || "";
+        const timeB = b.startTime || "";
+        return timeA.localeCompare(timeB);
+      });
+
+      // Thêm dữ liệu đã xử lý
+      dayItems.forEach((item, index) => {
+        processedData.push({
+          ...item,
+          rowSpan: index === 0 ? dayItems.length : 0, // Gộp ô cho thứ
+        });
+      });
+    });
+
+    return processedData;
+  };
+
   const fetchLearningResult = async () => {
     const token = localStorage.getItem("token");
 
@@ -910,7 +962,16 @@ const LearningInformation = () => {
             headers: {
               token: `Bearer ${token}`,
             },
-            params: selectedSemester ? { semester: selectedSemester } : {},
+            params: selectedSemester
+              ? {
+                  semester: (() => {
+                    const semester = semesters.find(
+                      (s) => s._id === selectedSemester
+                    );
+                    return semester?.code || selectedSemester;
+                  })(),
+                }
+              : {},
           }
         );
 
@@ -1100,14 +1161,19 @@ const LearningInformation = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-gray-800">
-                        {timeTable?.map((item) => (
+                        {processTimeTableData(timeTable)?.map((item) => (
                           <tr
                             key={item._id}
-                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                            className="border-b border-gray-200 dark:border-gray-600"
                           >
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.day}
-                            </td>
+                            {item.rowSpan > 0 ? (
+                              <td
+                                className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4"
+                                rowSpan={item.rowSpan}
+                              >
+                                {item.day}
+                              </td>
+                            ) : null}
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {item.startTime} - {item.endTime}
                             </td>
@@ -1825,12 +1891,8 @@ const LearningInformation = () => {
                       >
                         <option value="">Tất cả học kỳ</option>
                         {semesters.map((s) => (
-                          <option key={s._id} value={s.code}>
-                            {s.code.startsWith("HK") && s.schoolYear
-                              ? `${s.code} - ${s.schoolYear}`
-                              : s.schoolYear && s.code.includes(".")
-                              ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
-                              : s.code}
+                          <option key={s._id} value={s._id}>
+                            {s.code} - {s.schoolYear}
                           </option>
                         ))}
                       </select>
