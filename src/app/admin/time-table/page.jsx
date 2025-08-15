@@ -15,6 +15,7 @@ const TimeTable = () => {
   const [fullName, setFullName] = useState("");
   const [unit, setUnit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [allStudents, setAllStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
 
   const fetchTimeTable = async () => {
@@ -66,6 +67,7 @@ const TimeTable = () => {
           weeks: [...new Set(student.weeks)], // Loại bỏ trùng lặp cho tuần học
         }));
 
+        setAllStudents(students);
         setFilteredStudents(students);
       } catch (error) {
         console.log(error);
@@ -82,7 +84,7 @@ const TimeTable = () => {
 
   // Hàm lọc dữ liệu theo tên và đơn vị
   const filterData = () => {
-    let filtered = [...filteredStudents];
+    let filtered = [...allStudents];
 
     if (fullName) {
       filtered = filtered.filter((item) =>
@@ -97,10 +99,10 @@ const TimeTable = () => {
     setFilteredStudents(filtered);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Lọc tự động khi thay đổi giá trị
+  useEffect(() => {
     filterData();
-  };
+  }, [fullName, unit]);
 
   const handleRowClick = (studentId) => {
     router.push(`/admin/time-table/${studentId}`);
@@ -248,10 +250,7 @@ const TimeTable = () => {
             </div>
 
             <div className="w-full pt-2 pl-5 pb-5 pr-5">
-              <form
-                className="flex items-end gap-4"
-                onSubmit={(e) => handleSubmit(e)}
-              >
+              <div className="flex items-end gap-4">
                 <div className="flex gap-4">
                   <div>
                     <label
@@ -292,26 +291,19 @@ const TimeTable = () => {
                     </select>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200"
-                  >
-                    Tìm kiếm
-                  </button>
+                <div>
                   <button
                     type="button"
                     onClick={() => {
                       setFullName("");
                       setUnit("");
-                      fetchTimeTable();
                     }}
                     className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200"
                   >
                     Xóa bộ lọc
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Thống kê */}

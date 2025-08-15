@@ -123,6 +123,26 @@ const ListGuardDetail = ({ params }) => {
               <div className="text-gray-900 dark:text-white text-lg">
                 CHI TIẾT DANH SÁCH GÁC ĐÊM
               </div>
+              <Link
+                href="/admin/list-guard"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                Quay lại
+              </Link>
             </div>
             <div className="w-full pt-5 pl-5 pb-5 pr-5">
               <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">

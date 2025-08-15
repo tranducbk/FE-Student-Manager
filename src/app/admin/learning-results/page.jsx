@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "@/components/notify";
 import { BASE_URL } from "@/configs";
-import { TreeSelect, ConfigProvider, theme } from "antd";
+import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
 
 const LearningResults = () => {
@@ -15,7 +15,9 @@ const LearningResults = () => {
   const [selectedSemesters, setSelectedSemesters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedUnit, setSelectedUnit] = useState("all");
+  const [availableUnits, setAvailableUnits] = useState([]);
+
   const [isDark, setIsDark] = useThemeState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -63,7 +65,8 @@ const LearningResults = () => {
       console.log("Semesters data:", list);
       setSemesters(list);
       if (list.length > 0) {
-        setSelectedSemesters([list[0]._id]);
+        // Chọn tất cả các kỳ ban đầu
+        setSelectedSemesters(list.map((semester) => semester.code));
       }
     } catch (error) {
       console.log("Error fetching semesters:", error);
@@ -79,11 +82,11 @@ const LearningResults = () => {
     setLoading(true);
     try {
       // Tạo array chứa thông tin semester và schoolYear
-      const semesterData = selectedSemesters.map((semesterId) => {
-        const semester = semesters.find((s) => s._id === semesterId);
+      const semesterData = selectedSemesters.map((semesterCode) => {
+        const semester = semesters.find((s) => s.code === semesterCode);
         return {
-          semester: semester?.code || "",
-          schoolYear: semester?.schoolYear || "",
+          semester: semesterCode,
+          schoolYear: semester?.schoolYear || "2024-2025",
         };
       });
 
@@ -107,6 +110,16 @@ const LearningResults = () => {
 
       console.log("Learning results data:", res.data);
       setLearningResults(res.data || []);
+
+      // Lấy danh sách các đơn vị có sẵn từ dữ liệu
+      const units = [
+        ...new Set(
+          res.data
+            .map((item) => item.unit)
+            .filter((unit) => unit && unit.trim())
+        ),
+      ];
+      setAvailableUnits(units);
     } catch (error) {
       console.log("Error fetching learning results:", error);
       setLearningResults([]);
@@ -207,8 +220,8 @@ const LearningResults = () => {
   // Tạo tree data cho TreeSelect
   const treeData = semesters.map((semester) => ({
     title: getSemesterLabel(semester),
-    value: semester._id,
-    key: semester._id,
+    value: semester.code,
+    key: semester.code,
   }));
 
   const getFilteredResults = () => {
@@ -216,15 +229,16 @@ const LearningResults = () => {
 
     let filtered = learningResults.filter((item) => {
       const matchesSearch =
+        searchTerm === "" ||
         item.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.studentId?.toLowerCase().includes(searchTerm.toLowerCase());
+        item.studentCode?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesFilter =
-        filterStatus === "all" ||
-        (filterStatus === "warning" && item.warningLevel > 0) ||
-        (filterStatus === "good" && item.warningLevel === 0);
+      const matchesUnit =
+        selectedUnit === "all" ||
+        item.unit === selectedUnit ||
+        item.className === selectedUnit;
 
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesUnit;
     });
 
     return filtered;
@@ -387,6 +401,39 @@ const LearningResults = () => {
                         />
                       </ConfigProvider>
                     </div>
+
+                    <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Đơn vị
+                      </label>
+                      <ConfigProvider
+                        theme={{
+                          algorithm: isDark
+                            ? theme.darkAlgorithm
+                            : theme.defaultAlgorithm,
+                          token: {
+                            colorPrimary: "#2563eb",
+                            borderRadius: 8,
+                            controlOutline: "rgba(37,99,235,0.2)",
+                          },
+                        }}
+                      >
+                        <Select
+                          value={selectedUnit}
+                          onChange={setSelectedUnit}
+                          style={{ width: 128 }}
+                          options={[
+                            { value: "all", label: "Tất cả đơn vị" },
+                            { value: "L1 - H5", label: "L1 - H5" },
+                            { value: "L2 - H5", label: "L2 - H5" },
+                            { value: "L3 - H5", label: "L3 - H5" },
+                            { value: "L4 - H5", label: "L4 - H5" },
+                            { value: "L5 - H5", label: "L5 - H5" },
+                            { value: "L6 - H5", label: "L6 - H5" },
+                          ]}
+                        />
+                      </ConfigProvider>
+                    </div>
                     <div>
                       <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                         Tìm kiếm
@@ -400,18 +447,28 @@ const LearningResults = () => {
                       />
                     </div>
                     <div>
-                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Trạng thái
-                      </label>
-                      <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="bg-gray-50 dark:bg-gray-700 border w-32 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
+                      <button
+                        onClick={() => {
+                          setSearchTerm("");
+                          setSelectedUnit("all");
+                        }}
+                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center mr-2"
                       >
-                        <option value="all">Tất cả</option>
-                        <option value="good">Tốt</option>
-                        <option value="warning">Cảnh báo</option>
-                      </select>
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        Xóa bộ lọc
+                      </button>
                     </div>
                     <div>
                       <Link
@@ -505,7 +562,10 @@ const LearningResults = () => {
                           HỌ VÀ TÊN
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TRƯỜNG
+                          LỚP
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          ĐƠN VỊ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           GPA
@@ -586,6 +646,9 @@ const LearningResults = () => {
                               {item.className}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.unit || "N/A"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {item.GPA}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
@@ -650,7 +713,7 @@ const LearningResults = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="11"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">

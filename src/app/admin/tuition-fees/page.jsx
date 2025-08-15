@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
-import { ConfigProvider, TreeSelect, theme } from "antd";
+import { ConfigProvider, TreeSelect, Select, theme } from "antd";
 
 import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
@@ -14,6 +14,16 @@ const TuitionFees = () => {
   const [tuitionFees, setTuitionFees] = useState(null);
   const [selectedSemesters, setSelectedSemesters] = useState([]); // nhiều học kỳ
   const [semesters, setSemesters] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(""); // lọc theo lớp
+  // Danh sách lớp cố định
+  const classes = [
+    { _id: "1", className: "L1 - H5" },
+    { _id: "2", className: "L2 - H5" },
+    { _id: "3", className: "L3 - H5" },
+    { _id: "4", className: "L4 - H5" },
+    { _id: "5", className: "L5 - H5" },
+    { _id: "6", className: "L6 - H5" },
+  ];
   const [paymentStats, setPaymentStats] = useState({
     paidCount: 0,
     unpaidCount: 0,
@@ -153,19 +163,39 @@ const TuitionFees = () => {
     }
   };
 
-  // Lọc theo nhiều học kỳ (nếu có chọn)
+  // Lọc theo nhiều học kỳ và lớp (nếu có chọn)
   const applySemesterFilter = (list) => {
     if (!Array.isArray(list)) return [];
-    if (!selectedSemesters || selectedSemesters.length === 0) return list;
 
-    // Tạo set các semester code từ selectedSemesters
-    const selectedCodes = new Set(
-      selectedSemesters.map((semesterId) => {
+    let filtered = list;
+
+    // Lọc theo học kỳ
+    if (selectedSemesters && selectedSemesters.length > 0) {
+      const selectedSemesterData = selectedSemesters.map((semesterId) => {
         const semester = semesters.find((s) => s._id === semesterId);
-        return semester?.code;
-      })
-    );
-    return list.filter((item) => selectedCodes.has(String(item.semester)));
+        return {
+          code: semester?.code,
+          schoolYear: semester?.schoolYear,
+        };
+      });
+
+      filtered = filtered.filter((item) => {
+        return selectedSemesterData.some(
+          (selected) =>
+            selected.code === item.semester &&
+            selected.schoolYear === item.schoolYear
+        );
+      });
+    }
+
+    // Lọc theo lớp
+    if (selectedClass && selectedClass !== "Tất cả các lớp") {
+      filtered = filtered.filter((item) => {
+        return item.unit === selectedClass;
+      });
+    }
+
+    return filtered;
   };
 
   // Tính lại thống kê khi dữ liệu hoặc bộ lọc thay đổi
@@ -191,7 +221,7 @@ const TuitionFees = () => {
       }
     });
     setPaymentStats({ paidCount, unpaidCount, paidSum, unpaidSum });
-  }, [selectedSemesters, tuitionFees]);
+  }, [selectedSemesters, selectedClass, tuitionFees]);
 
   const filteredTuitionFees = applySemesterFilter(
     tuitionFees?.tuitionFees || []
@@ -432,14 +462,57 @@ const TuitionFees = () => {
                       />
                     </ConfigProvider>
                   </div>
+                  <div className="ml-4">
+                    <label
+                      htmlFor="class"
+                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Chọn lớp
+                    </label>
+                    <ConfigProvider
+                      theme={{
+                        algorithm: isDark
+                          ? theme.darkAlgorithm
+                          : theme.defaultAlgorithm,
+                        token: {
+                          colorPrimary: "#2563eb",
+                          borderRadius: 8,
+                          controlOutline: "rgba(37,99,235,0.2)",
+                        },
+                      }}
+                    >
+                      <Select
+                        placeholder="Chọn lớp"
+                        allowClear
+                        style={{ width: 224 }}
+                        value={selectedClass || undefined}
+                        onChange={(value) => setSelectedClass(value || "")}
+                        dropdownStyle={{
+                          backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                          color: isDark ? "#e5e7eb" : "#111827",
+                          border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                          borderRadius: 8,
+                        }}
+                        options={[
+                          { value: "Tất cả các lớp", label: "Tất cả các lớp" },
+                          { value: "L1 - H5", label: "L1 - H5" },
+                          { value: "L2 - H5", label: "L2 - H5" },
+                          { value: "L3 - H5", label: "L3 - H5" },
+                          { value: "L4 - H5", label: "L4 - H5" },
+                          { value: "L5 - H5", label: "L5 - H5" },
+                          { value: "L6 - H5", label: "L6 - H5" },
+                        ]}
+                      />
+                    </ConfigProvider>
+                  </div>
                 </div>
                 <div className="ml-4">
-                  <button
+                  {/* <button
                     type="submit"
                     className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
                   >
                     Tìm kiếm
-                  </button>
+                  </button> */}
                 </div>
               </form>
             </div>
@@ -502,6 +575,12 @@ const TuitionFees = () => {
                         scope="col"
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                       >
+                        NĂM HỌC
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
                         HỌ VÀ TÊN
                       </th>
                       <th
@@ -509,6 +588,12 @@ const TuitionFees = () => {
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                       >
                         TRƯỜNG
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        LỚP
                       </th>
                       <th
                         scope="col"
@@ -544,13 +629,19 @@ const TuitionFees = () => {
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.semester}
+                            {item.semester || "Chưa có học kỳ"}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.schoolYear || "Chưa có năm học"}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.fullName}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.university}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.unit || "Chưa có lớp"}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.content}
@@ -605,7 +696,7 @@ const TuitionFees = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="7"
+                          colSpan="9"
                           className="text-center py-8 text-gray-500 dark:text-gray-400"
                         >
                           <div className="flex flex-col items-center">

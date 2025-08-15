@@ -225,8 +225,7 @@ export default function Home() {
                 Trang tổng quan
               </Title>
               <Text className="text-gray-600 dark:text-gray-400 text-lg font-semibold">
-                Tổng quan hệ thống quản lý học viên -{" "}
-                {dayjs(new Date()).format("DD/MM/YYYY")}
+                Tổng quan hệ thống quản lý học viên
               </Text>
             </div>
             <div className="text-right">

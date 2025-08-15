@@ -517,11 +517,17 @@ const LearningInformation = () => {
         return;
       }
 
+      // Tìm semester để lấy schoolYear
+      const selectedSemesterData = semesters.find((s) => s._id === semester);
+      const schoolYear =
+        selectedSemesterData?.schoolYear || editedTuitionFee.schoolYear;
+
       try {
         const decodedToken = jwtDecode(token);
         const payload = {
           ...editedTuitionFee,
-          semester: semester,
+          semester: selectedSemesterData?.code || semester,
+          schoolYear: schoolYear,
         };
         await axios.put(
           `${BASE_URL}/student/${decodedToken.id}/tuitionFee/${tuitionFeeId}`,
@@ -647,10 +653,16 @@ const LearningInformation = () => {
       return;
     }
 
+    // Tìm semester để lấy schoolYear
+    const selectedSemesterData = semesters.find((s) => s._id === semester);
+    const schoolYear =
+      selectedSemesterData?.schoolYear || addFormDataTuitionFee.schoolYear;
+
     try {
       const payload = {
         ...addFormDataTuitionFee,
-        semester: semester,
+        semester: selectedSemesterData?.code || semester,
+        schoolYear: schoolYear,
         status: "Chưa thanh toán",
       };
       const response = await axios.post(
@@ -772,8 +784,33 @@ const LearningInformation = () => {
   };
 
   const handleConfirmDeleteFee = (feeId) => {
-    setFeeId(feeId);
-    setShowConfirmFee(true);
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      axios
+        .delete(
+          `${BASE_URL}/student/${jwtDecode(token).id}/tuitionFee/${feeId}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        )
+        .then(() => {
+          setTuitionFee(tuitionFee.filter((fee) => fee._id !== feeId));
+          handleNotify("success", "Thành công!", "Xóa học phí thành công");
+          fetchTuitionFee();
+        })
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.response?.data ||
+            "Có lỗi xảy ra khi xóa học phí";
+          handleNotify("danger", "Lỗi!", errorMessage);
+        });
+    }
+
+    setShowConfirmFee(false);
   };
 
   // Function để cập nhật lịch cắt cơm tự động
@@ -1343,7 +1380,10 @@ const LearningInformation = () => {
                             <td className="flex justify-center items-center space-x-2 py-4 px-4">
                               <button
                                 type="button"
-                                onClick={() => handleViewSemesterDetail(item)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewSemesterDetail(item);
+                                }}
                                 className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors duration-200"
                                 title="Xem chi tiết"
                               >
@@ -1369,9 +1409,10 @@ const LearningInformation = () => {
                               </button>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleEditLearningResult(item._id)
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditLearningResult(item._id);
+                                }}
                                 className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
                                 title="Chỉnh sửa"
                               >
@@ -1391,7 +1432,10 @@ const LearningInformation = () => {
                                 </svg>
                               </button>
                               <button
-                                onClick={() => handleDeleteLearn(item._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteLearn(item._id);
+                                }}
                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                                 title="Xóa học kỳ"
                               >
@@ -1933,6 +1977,12 @@ const LearningInformation = () => {
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
+                            Năm học
+                          </th>
+                          <th
+                            scope="col"
+                            className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+                          >
                             Loại tiền phải đóng
                           </th>
                           <th
@@ -1963,6 +2013,9 @@ const LearningInformation = () => {
                           >
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {child.semester}
+                            </td>
+                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                              {child.schoolYear || "N/A"}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {child.content}
@@ -2486,7 +2539,7 @@ const LearningInformation = () => {
         </div>
       )}
 
-      {/* Modal Xác nhận xóa */}
+      {/* Modal Xác nhận xóa thời khóa biểu */}
       {currentTab === "time-table" && showConfirmTimeTable && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
@@ -2542,6 +2595,138 @@ const LearningInformation = () => {
                 </button>
                 <button
                   onClick={() => handleConfirmDeleteTimeTable(timeTableId)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Xác nhận xóa kết quả học tập */}
+      {currentTab === "results" && showConfirmLearn && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Xác nhận xóa
+              </h2>
+              <button
+                onClick={() => setShowConfirmLearn(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <svg
+                  className="w-12 h-12 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  ></path>
+                </svg>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-center mb-6">
+                Bạn có chắc chắn muốn xóa kết quả học tập này?
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowConfirmLearn(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-200"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => handleConfirmDeleteLearn(learnId)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Xác nhận xóa học phí */}
+      {currentTab === "tuition" && showConfirmFee && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Xác nhận xóa
+              </h2>
+              <button
+                onClick={() => setShowConfirmFee(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <svg
+                  className="w-12 h-12 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  ></path>
+                </svg>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-center mb-6">
+                Bạn có chắc chắn muốn xóa học phí này?
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowConfirmFee(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors duration-200"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => handleConfirmDeleteFee(feeId)}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
                 >
                   Xóa
@@ -2845,12 +3030,8 @@ const LearningInformation = () => {
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   >
                     {semesters.map((s) => (
-                      <option key={s._id} value={s.code}>
-                        {s.code.startsWith("HK") && s.schoolYear
-                          ? `${s.code} - ${s.schoolYear}`
-                          : s.schoolYear && s.code.includes(".")
-                          ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
-                          : s.code}
+                      <option key={s._id} value={s._id}>
+                        {s.code} - {s.schoolYear}
                       </option>
                     ))}
                   </select>
@@ -2980,12 +3161,8 @@ const LearningInformation = () => {
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   >
                     {semesters.map((s) => (
-                      <option key={s._id} value={s.code}>
-                        {s.code.startsWith("HK") && s.schoolYear
-                          ? `${s.code} - ${s.schoolYear}`
-                          : s.schoolYear && s.code.includes(".")
-                          ? `HK${s.code.split(".")[1]} - ${s.schoolYear}`
-                          : s.code}
+                      <option key={s._id} value={s._id}>
+                        {s.code} - {s.schoolYear}
                       </option>
                     ))}
                   </select>

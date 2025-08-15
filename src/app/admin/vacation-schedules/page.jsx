@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
+import { useTheme } from "@/hooks/useTheme";
 
 import { BASE_URL } from "@/configs";
 const VacationSchedules = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [vacationSchedules, setVacationSchedules] = useState([]);
   const [unit, setUnit] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
@@ -224,7 +226,11 @@ const VacationSchedules = () => {
           {showFormEdit ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div
+                className={`relative rounded-lg shadow-lg w-6/12 ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
                 <button
                   onClick={() => setShowFormEdit(false)}
                   className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
@@ -249,14 +255,20 @@ const VacationSchedules = () => {
                   className="px-6 pt-6 pb-3 z-10"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2
+                    className={`text-xl font-semibold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Chỉnh sửa học viên đi tranh thủ
                   </h2>
 
                   <div className="mb-4">
                     <label
                       htmlFor="reason1"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Lí do
                     </label>
@@ -279,7 +291,9 @@ const VacationSchedules = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="address1"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Địa chỉ
                     </label>
@@ -302,7 +316,9 @@ const VacationSchedules = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="time1"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Thời gian
                     </label>
@@ -325,7 +341,9 @@ const VacationSchedules = () => {
                   <div className="mb-6">
                     <label
                       htmlFor="dayoff1"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Ngày tranh thủ
                     </label>
@@ -370,7 +388,11 @@ const VacationSchedules = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
                 <div className="fixed top-0 left-0 z-20 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow sm:p-5">
+                  <div
+                    className={`relative p-4 text-center rounded-lg shadow sm:p-5 ${
+                      isDark ? "bg-gray-800" : "bg-white"
+                    }`}
+                  >
                     <button
                       onClick={handleCancelDelete}
                       type="button"
@@ -405,7 +427,11 @@ const VacationSchedules = () => {
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                    <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    <p
+                      className={`mb-4 ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Bạn có chắc chắn muốn xóa?
                     </p>
                     <div className="flex justify-center items-center space-x-4">
@@ -672,7 +698,11 @@ const VacationSchedules = () => {
           {showFormAdd ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div
+                className={`relative rounded-lg shadow-lg w-6/12 ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
                 <button
                   onClick={() => setShowFormAdd(false)}
                   className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
@@ -697,12 +727,21 @@ const VacationSchedules = () => {
                   className="px-6 pt-6 pb-3 z-10"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2
+                    className={`text-xl font-semibold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Thêm học viên đi tranh thủ
                   </h2>
 
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium">
+                    <label
+                      htmlFor="name"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Học viên
                     </label>
                     <input
@@ -725,7 +764,9 @@ const VacationSchedules = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="reason"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Lí do
                     </label>
@@ -749,7 +790,9 @@ const VacationSchedules = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="address"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Địa chỉ
                     </label>
@@ -771,7 +814,12 @@ const VacationSchedules = () => {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="time" className="block text-sm font-medium">
+                    <label
+                      htmlFor="time"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Thời gian
                     </label>
                     <input
@@ -794,7 +842,9 @@ const VacationSchedules = () => {
                   <div className="mb-6">
                     <label
                       htmlFor="dayoff"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Ngày tranh thủ
                     </label>

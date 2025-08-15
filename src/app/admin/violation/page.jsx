@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
+import { useTheme } from "@/hooks/useTheme";
 
 import { BASE_URL } from "@/configs";
 const Violation = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [violation, setViolation] = useState([]);
   const [fullName, setFullName] = useState("");
   const [unit, setUnit] = useState("");
@@ -244,7 +246,11 @@ const Violation = () => {
           {showFormEdit ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div
+                className={`relative rounded-lg shadow-lg w-6/12 ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
                 <button
                   onClick={() => setShowFormEdit(false)}
                   className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
@@ -269,14 +275,20 @@ const Violation = () => {
                   className="px-6 pt-6 pb-3 z-10"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2
+                    className={`text-xl font-semibold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Chỉnh sửa vi phạm của học viên
                   </h2>
 
                   <div className="mb-4">
                     <label
                       htmlFor="content4"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Nội dung vi phạm
                     </label>
@@ -299,7 +311,9 @@ const Violation = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="penalty2"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Hình thức xử lý
                     </label>
@@ -322,7 +336,9 @@ const Violation = () => {
                   <div className="mb-6">
                     <label
                       htmlFor="dateOfViolation2"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Ngày vi phạm
                     </label>
@@ -367,7 +383,11 @@ const Violation = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
                 <div className="fixed top-0 left-0 z-20 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow sm:p-5">
+                  <div
+                    className={`relative p-4 text-center rounded-lg shadow sm:p-5 ${
+                      isDark ? "bg-gray-800" : "bg-white"
+                    }`}
+                  >
                     <button
                       onClick={handleCancelDelete}
                       type="button"
@@ -402,7 +422,11 @@ const Violation = () => {
                         clipRule="evenodd"
                       ></path>
                     </svg>
-                    <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    <p
+                      className={`mb-4 ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Bạn có chắc chắn muốn xóa?
                     </p>
                     <div className="flex justify-center items-center space-x-4">
@@ -667,7 +691,11 @@ const Violation = () => {
           {showFormAdd ? (
             <div className="fixed text-start inset-0 mt-16 flex items-center justify-center z-30">
               <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
-              <div className="relative bg-white rounded-lg shadow-lg w-6/12">
+              <div
+                className={`relative rounded-lg shadow-lg w-6/12 ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
                 <button
                   onClick={() => setShowFormAdd(false)}
                   className="absolute top-1 right-1 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
@@ -692,12 +720,21 @@ const Violation = () => {
                   className="px-6 pt-6 pb-3 z-10"
                   id="infoForm"
                 >
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2
+                    className={`text-xl font-semibold mb-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
                     Thêm lỗi vi phạm của học viên
                   </h2>
 
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium">
+                    <label
+                      htmlFor="name"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Học viên
                     </label>
                     <input
@@ -720,7 +757,9 @@ const Violation = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="content"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Nội dung vi phạm
                     </label>
@@ -744,7 +783,9 @@ const Violation = () => {
                   <div className="mb-4">
                     <label
                       htmlFor="penalty"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Hình thức xử lý
                     </label>
@@ -768,7 +809,9 @@ const Violation = () => {
                   <div className="mb-6">
                     <label
                       htmlFor="dateOfViolation"
-                      className="block text-sm font-medium"
+                      className={`block text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
                     >
                       Ngày vi phạm
                     </label>

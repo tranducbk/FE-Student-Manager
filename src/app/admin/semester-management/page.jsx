@@ -228,19 +228,14 @@ const SemesterManagement = () => {
               <div className="p-6">
                 {/* Bảng danh sách học kỳ */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Danh sách học kỳ
-                    </h3>
-                  </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
                       <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Mã học kỳ
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Năm học
                           </th>
                           <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -269,10 +264,10 @@ const SemesterManagement = () => {
                               setShowEditSemester(true);
                             }}
                           >
-                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white text-center">
                               {sem.code}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
                               {sem.schoolYear}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-center">

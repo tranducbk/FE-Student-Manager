@@ -10,10 +10,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import SideBar from "@/components/sidebar";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
+import { useTheme } from "@/hooks/useTheme";
 
 import { BASE_URL } from "@/configs";
 const ListGuard = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [listGuard, setListGuard] = useState([]);
   const [date, setDate] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
@@ -220,8 +222,16 @@ const ListGuard = () => {
           </div>
           {showFormEdit ? (
             <div className="fixed top-0 left-0 mt-8 w-full h-full bg-gray-900 bg-opacity-50 z-20 flex justify-center items-center">
-              <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl relative">
-                <h2 className="text-xl font-bold mb-4 pt-6 pl-6">
+              <div
+                className={`rounded-lg shadow-lg w-full max-w-3xl relative ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
+                <h2
+                  className={`text-xl font-bold mb-4 pt-6 pl-6 ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Chỉnh sửa lịch gác đêm
                 </h2>
                 <button
@@ -251,7 +261,9 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="dayGuard1"
                       >
                         Ngày gác
@@ -266,14 +278,20 @@ const ListGuard = () => {
                             dayGuard: date,
                           })
                         }
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white"
+                            : "bg-white border-gray-300 text-gray-900"
+                        }`}
                         placeholderText="Ngày/Tháng/Năm"
                         wrapperClassName="w-full"
                       />
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location1"
                       >
                         Vọng 1 (Cầu thang tòa S1)
@@ -282,9 +300,13 @@ const ListGuard = () => {
                         {editFormData.location1?.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
@@ -307,13 +329,19 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="question1"
                       >
                         Hỏi
                       </label>
                       <input
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
                         id="question1"
                         type="text"
                         placeholder="vd: Hà Nội"
@@ -331,7 +359,9 @@ const ListGuard = () => {
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location2"
                       >
                         Vọng 2 (Đối diện tòa S2)
@@ -340,9 +370,13 @@ const ListGuard = () => {
                         {editFormData.location2?.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
@@ -365,13 +399,19 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="answer1"
                       >
                         Đáp
                       </label>
                       <input
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
                         id="answer1"
                         type="text"
                         placeholder="vd: Hà Tĩnh"
@@ -389,7 +429,9 @@ const ListGuard = () => {
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location3"
                       >
                         Vọng 3 (Đằng sau tòa S3)
@@ -398,9 +440,13 @@ const ListGuard = () => {
                         {editFormData.location3?.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
@@ -443,7 +489,11 @@ const ListGuard = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             {showConfirm && (
               <div className="fixed top-0 left-0 z-20 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                <div className="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                <div
+                  className={`relative p-4 text-center rounded-lg shadow sm:p-5 ${
+                    isDark ? "bg-gray-800" : "bg-white"
+                  }`}
+                >
                   <button
                     onClick={handleCancelDelete}
                     type="button"
@@ -478,7 +528,11 @@ const ListGuard = () => {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  <p className="mb-4 dark:text-gray-300">
+                  <p
+                    className={`mb-4 ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     Bạn có chắc chắn muốn xóa?
                   </p>
                   <div className="flex justify-center items-center space-x-4">
@@ -708,8 +762,16 @@ const ListGuard = () => {
           </div>
           {showFormAdd ? (
             <div className="fixed top-0 left-0 mt-8 w-full h-full bg-gray-900 bg-opacity-50 flex justify-center items-center">
-              <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl relative">
-                <h2 className="text-xl font-bold mb-4 pt-6 pl-6">
+              <div
+                className={`rounded-lg shadow-lg w-full max-w-3xl relative ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
+                <h2
+                  className={`text-xl font-bold mb-4 pt-6 pl-6 ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
                   Thêm lịch gác đêm
                 </h2>
                 <button
@@ -739,7 +801,9 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="dayGuard"
                       >
                         Ngày gác
@@ -755,14 +819,20 @@ const ListGuard = () => {
                           })
                         }
                         required
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white"
+                            : "bg-white border-gray-300 text-gray-900"
+                        }`}
                         placeholderText="Ngày/Tháng/Năm"
                         wrapperClassName="w-full"
                       />
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location1"
                       >
                         Vọng 1 (Cầu thang tòa S1)
@@ -771,9 +841,13 @@ const ListGuard = () => {
                         {addFormData.location1.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
@@ -797,13 +871,19 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="question"
                       >
                         Hỏi
                       </label>
                       <input
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
                         id="question"
                         type="text"
                         placeholder="vd: Hà Nội"
@@ -822,7 +902,9 @@ const ListGuard = () => {
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location2"
                       >
                         Vọng 2 (Đối diện tòa S2)
@@ -831,9 +913,13 @@ const ListGuard = () => {
                         {addFormData.location2.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
@@ -857,13 +943,19 @@ const ListGuard = () => {
                   <div className="col-span-1">
                     <div className="mb-2">
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="answer"
                       >
                         Đáp
                       </label>
                       <input
-                        className="shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                        className={`shadow text-sm appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                          isDark
+                            ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
                         id="answer"
                         type="text"
                         placeholder="vd: Hà Tĩnh"
@@ -882,7 +974,9 @@ const ListGuard = () => {
                     </div>
                     <div>
                       <label
-                        className="block text-sm font-bold mb-1"
+                        className={`block text-sm font-bold mb-1 ${
+                          isDark ? "text-gray-300" : "text-gray-700"
+                        }`}
                         htmlFor="location3"
                       >
                         Vọng 3 (Đằng sau tòa S3)
@@ -891,9 +985,13 @@ const ListGuard = () => {
                         {addFormData.location3.map((item, index) => (
                           <li key={index}>
                             <input
-                              className="shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline"
+                              className={`shadow text-sm mt-1 appearance-none border rounded w-full py-2.5 px-3 leading-tight focus:outline-none focus:shadow-outline ${
+                                isDark
+                                  ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
                               type="text"
-                              placeholder="vd: Bùi Thức Nam"
+                              placeholder="vd: Nguyễn Văn A"
                               value={item}
                               onChange={(e) => {
                                 const updatedLocations = [
