@@ -209,11 +209,67 @@ const CutRice = () => {
   };
 
   const [showExportModal, setShowExportModal] = useState(false);
+  const [
+    showExportExcelWithScheduleModal,
+    setShowExportExcelWithScheduleModal,
+  ] = useState(false);
   const [exportSelectedUnits, setExportSelectedUnits] = useState([]);
+  const [
+    exportExcelWithScheduleSelectedUnits,
+    setExportExcelWithScheduleSelectedUnits,
+  ] = useState([]);
 
   const handleExportFileExcel = async (e) => {
     e.preventDefault();
     setShowExportModal(true);
+  };
+
+  const handleExportFileExcelWithSchedule = async (e) => {
+    e.preventDefault();
+    setShowExportExcelWithScheduleModal(true);
+  };
+
+  const handleConfirmExportExcelWithSchedule = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const unitParam =
+          exportExcelWithScheduleSelectedUnits.length > 0
+            ? exportExcelWithScheduleSelectedUnits.join(",")
+            : "all";
+
+        const response = await axios.get(
+          `${BASE_URL}/commander/cutRice/excel-with-schedule?unit=${unitParam}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+            responseType: "blob",
+          }
+        );
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "");
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+
+        setShowExportExcelWithScheduleModal(false);
+        setExportExcelWithScheduleSelectedUnits([]);
+        handleNotify(
+          "success",
+          "Thành công!",
+          "Xuất file Excel lịch cắt cơm và học tập thành công"
+        );
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message || "Có lỗi xảy ra khi xuất file Excel";
+        handleNotify("danger", "Lỗi!", errorMessage);
+      }
+    }
   };
 
   const handleConfirmExport = async () => {
@@ -260,7 +316,9 @@ const CutRice = () => {
         setExportSelectedUnits([]);
         handleNotify("success", "Thành công!", "Xuất file Excel thành công");
       } catch (error) {
-        handleNotify("danger", "Lỗi!", error);
+        const errorMessage =
+          error.response?.data?.message || "Có lỗi xảy ra khi xuất file Excel";
+        handleNotify("danger", "Lỗi!", errorMessage);
       }
     }
   };
@@ -540,6 +598,26 @@ const CutRice = () => {
                     </svg>
                     Xuất Excel
                   </button>
+                  {/* <button
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                    onClick={handleExportFileExcelWithSchedule}
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Xuất Excel (Lịch học)
+                  </button> */}
                 </div>
               </div>
               <div className="w-full pt-2 pl-5 pb-5 pr-5">
@@ -986,7 +1064,7 @@ const CutRice = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="8"
+                            colSpan="10"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -1195,6 +1273,94 @@ const CutRice = () => {
                   type="button"
                   className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                   onClick={handleConfirmExport}
+                >
+                  Xuất Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal xuất Excel với lịch học */}
+      {showExportExcelWithScheduleModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Xuất Excel (Lịch học)
+              </h2>
+              <button
+                onClick={() => {
+                  setShowExportExcelWithScheduleModal(false);
+                  setExportExcelWithScheduleSelectedUnits([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chọn đơn vị
+                </label>
+                <ConfigProvider
+                  theme={{
+                    algorithm: isDark
+                      ? theme.darkAlgorithm
+                      : theme.defaultAlgorithm,
+                  }}
+                >
+                  <Select
+                    mode="multiple"
+                    style={{ width: "100%" }}
+                    placeholder="Chọn đơn vị để xuất Excel với lịch học"
+                    allowClear
+                    value={exportExcelWithScheduleSelectedUnits}
+                    onChange={setExportExcelWithScheduleSelectedUnits}
+                    options={[
+                      { value: "L1 - H5", label: "L1 - H5" },
+                      { value: "L2 - H5", label: "L2 - H5" },
+                      { value: "L3 - H5", label: "L3 - H5" },
+                      { value: "L4 - H5", label: "L4 - H5" },
+                      { value: "L5 - H5", label: "L5 - H5" },
+                      { value: "L6 - H5", label: "L6 - H5" },
+                    ]}
+                  />
+                </ConfigProvider>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Chọn nhiều đơn vị hoặc để trống để xuất tất cả đơn vị.
+                </p>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900"
+                  onClick={() => {
+                    setShowExportExcelWithScheduleModal(false);
+                    setExportExcelWithScheduleSelectedUnits([]);
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+                  onClick={handleConfirmExportExcelWithSchedule}
                 >
                   Xuất Excel
                 </button>

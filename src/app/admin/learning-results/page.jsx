@@ -22,6 +22,12 @@ const LearningResults = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentDetail, setStudentDetail] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateFormData, setUpdateFormData] = useState({
+    partyRating: "",
+    trainingRating: "",
+    decisionNumber: "",
+  });
 
   // Phát hiện theme hiện tại
   useEffect(() => {
@@ -185,6 +191,53 @@ const LearningResults = () => {
     setSelectedStudent(row);
     setShowDetailModal(true);
     await fetchStudentDetail(row.studentId, row.semester, row.schoolYear);
+  };
+
+  const handleUpdateRating = (row) => {
+    setSelectedStudent(row);
+    setUpdateFormData({
+      partyRating: row.semesterResults?.[0]?.partyRating?.rating || "",
+      trainingRating: row.semesterResults?.[0]?.trainingRating || "",
+      decisionNumber:
+        row.semesterResults?.[0]?.partyRating?.decisionNumber || "",
+    });
+    setShowUpdateModal(true);
+  };
+
+  const handleSubmitUpdate = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !selectedStudent) return;
+
+    try {
+      const semesterResultId = selectedStudent.semesterResults?.[0]?._id;
+
+      if (!semesterResultId) {
+        handleNotify("danger", "Lỗi!", "Không tìm thấy kết quả học kỳ");
+        return;
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/commander/updateStudentRating/${semesterResultId}`,
+        {
+          partyRating: updateFormData.partyRating,
+          trainingRating: updateFormData.trainingRating,
+          decisionNumber: updateFormData.decisionNumber,
+        },
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        handleNotify("success", "Thành công", "Cập nhật xếp loại thành công");
+        setShowUpdateModal(false);
+        // Refresh data
+        fetchLearningResults();
+      }
+    } catch (error) {
+      console.log("Error updating rating:", error);
+      handleNotify("error", "Lỗi", "Không thể cập nhật xếp loại");
+    }
   };
 
   const handleExportPDF = async () => {
@@ -619,6 +672,36 @@ const LearningResults = () => {
                   </div>
                 )}
 
+                {/* Nút thống kê theo năm */}
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => {
+                      // TODO: Implement yearly statistics
+                      handleNotify(
+                        "info",
+                        "Thông báo",
+                        "Tính năng thống kê theo năm đang được phát triển"
+                      );
+                    }}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
+                    Thống kê theo năm
+                  </button>
+                </div>
+
                 <div className="overflow-x-auto">
                   <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
                     <thead className="bg-gray-50 dark:bg-gray-700">
@@ -648,10 +731,10 @@ const LearningResults = () => {
                           TC NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TRÌNH ĐỘ
+                          XẾP LOẠI ĐẢNG VIÊN
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          CẢNH BÁO
+                          XẾP LOẠI RÈN LUYỆN
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
@@ -738,26 +821,39 @@ const LearningResults = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.cumulativeCredit || "Chưa có"} tín chỉ
+                              <div className="flex flex-col">
+                                <div className="font-medium">
+                                  {item.cumulativeCredit || "Chưa có"} tín chỉ
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Năm {item.studentLevel}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {item.totalDebt || "0"} tín chỉ
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              Năm {item.studentLevel}
+                              <div className="flex flex-col">
+                                <div className="font-medium">
+                                  {item.positionParty &&
+                                  item.positionParty !== "Không"
+                                    ? item.semesterResults?.[0]?.partyRating
+                                        ?.rating || "Chưa xếp loại"
+                                    : "Chưa là Đảng viên"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.positionParty &&
+                                  item.positionParty !== "Không"
+                                    ? item.semesterResults?.[0]?.partyRating
+                                        ?.decisionNumber || ""
+                                    : ""}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  item.warningLevel === 0
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    : item.warningLevel === 1
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                }`}
-                              >
-                                Mức {item.warningLevel}
-                              </span>
+                              {item.semesterResults?.[0]?.trainingRating ||
+                                "Chưa xếp loại"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
                               <div className="flex justify-center space-x-2">
@@ -786,6 +882,28 @@ const LearningResults = () => {
                                       strokeLinejoin="round"
                                       strokeWidth="2"
                                       d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                  title="Cập nhật xếp loại"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateRating(item);
+                                  }}
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                     />
                                   </svg>
                                 </button>
@@ -995,6 +1113,190 @@ const LearningResults = () => {
                   </span>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal cập nhật xếp loại */}
+      {showUpdateModal && selectedStudent && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Cập nhật xếp loại - {selectedStudent.fullName}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowUpdateModal(false);
+                  setSelectedStudent(null);
+                  setUpdateFormData({
+                    partyRating: "",
+                    trainingRating: "",
+                    decisionNumber: "",
+                  });
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Xếp loại rèn luyện
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                    }}
+                  >
+                    <Select
+                      value={updateFormData.trainingRating}
+                      onChange={(value) =>
+                        setUpdateFormData((prev) => ({
+                          ...prev,
+                          trainingRating: value,
+                        }))
+                      }
+                      placeholder="Chọn xếp loại rèn luyện"
+                      style={{ width: "100%" }}
+                      options={[
+                        { value: "Tốt", label: "Tốt" },
+                        { value: "Khá", label: "Khá" },
+                        { value: "Trung bình", label: "Trung bình" },
+                        { value: "Yếu", label: "Yếu" },
+                      ]}
+                    />
+                  </ConfigProvider>
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Xếp loại đảng viên
+                    {selectedStudent &&
+                      selectedStudent.positionParty &&
+                      selectedStudent.positionParty !== "Không" && (
+                        <span className="text-green-600 ml-2">(Đảng viên)</span>
+                      )}
+                    {selectedStudent &&
+                      (!selectedStudent.positionParty ||
+                        selectedStudent.positionParty === "Không") && (
+                        <span className="text-red-600 ml-2">
+                          (Chưa là Đảng viên)
+                        </span>
+                      )}
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                    }}
+                  >
+                    <Select
+                      value={updateFormData.partyRating}
+                      onChange={(value) =>
+                        setUpdateFormData((prev) => ({
+                          ...prev,
+                          partyRating: value,
+                        }))
+                      }
+                      placeholder={
+                        selectedStudent &&
+                        selectedStudent.positionParty &&
+                        selectedStudent.positionParty !== "Không"
+                          ? "Chọn xếp loại đảng viên"
+                          : "Chỉ cập nhật được khi là đảng viên"
+                      }
+                      style={{ width: "100%" }}
+                      disabled={
+                        !selectedStudent ||
+                        !selectedStudent.positionParty ||
+                        selectedStudent.positionParty === "Không"
+                      }
+                      options={[
+                        {
+                          value: "HTXSNV",
+                          label: "Hoàn thành xuất sắc nhiệm vụ",
+                        },
+                        { value: "HTTNV", label: "Hoàn thành tốt nhiệm vụ" },
+                        { value: "HTNV", label: "Hoàn thành nhiệm vụ" },
+                        { value: "KHTNV", label: "Không hoàn thành nhiệm vụ" },
+                      ]}
+                    />
+                  </ConfigProvider>
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Số quyết định
+                  </label>
+                  <input
+                    type="text"
+                    value={updateFormData.decisionNumber}
+                    onChange={(e) =>
+                      setUpdateFormData((prev) => ({
+                        ...prev,
+                        decisionNumber: e.target.value,
+                      }))
+                    }
+                    placeholder={
+                      selectedStudent &&
+                      selectedStudent.positionParty &&
+                      selectedStudent.positionParty !== "Không"
+                        ? "Nhập số quyết định"
+                        : "Chỉ cập nhật được khi là đảng viên"
+                    }
+                    disabled={
+                      !selectedStudent ||
+                      !selectedStudent.positionParty ||
+                      selectedStudent.positionParty === "Không"
+                    }
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900"
+                  onClick={() => {
+                    setShowUpdateModal(false);
+                    setSelectedStudent(null);
+                    setUpdateFormData({
+                      partyRating: "",
+                      trainingRating: "",
+                      decisionNumber: "",
+                    });
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  onClick={handleSubmitUpdate}
+                >
+                  Cập nhật
+                </button>
+              </div>
             </div>
           </div>
         </div>
