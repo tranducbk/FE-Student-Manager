@@ -793,13 +793,13 @@ const YearlyStatistics = () => {
                           TC TÍCH LŨY
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TC NỢ
+                          SỐ MÔN NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           XẾP LOẠI ĐẢNG VIÊN
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XẾP LOẠI RÈN LUYỆN
+                          XLRL
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
@@ -880,7 +880,7 @@ const YearlyStatistics = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-red-600 dark:text-red-400">
-                                {item.totalDebt || 0} tín chỉ
+                                {item.failedSubjects || 0} môn
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
