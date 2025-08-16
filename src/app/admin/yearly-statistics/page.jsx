@@ -1035,18 +1035,16 @@ const YearlyStatistics = () => {
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           HỌ VÀ TÊN
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          LỚP
-                        </th>
+
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           NĂM HỌC
                         </th>
 
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          GPA NĂM
+                          GPA
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          CPA TÍCH LŨY
+                          CPA
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           TC TÍCH LŨY
@@ -1055,10 +1053,10 @@ const YearlyStatistics = () => {
                           TC NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XẾP LOẠI ĐẢNG VIÊN
+                          XL ĐẢNG VIÊN
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XẾP LOẠI RÈN LUYỆN
+                          XLRL
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
@@ -1069,7 +1067,7 @@ const YearlyStatistics = () => {
                       {loading ? (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="9"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -1115,11 +1113,12 @@ const YearlyStatistics = () => {
                                 <div className="text-xs text-gray-500">
                                   Mã: {item.studentCode || "Chưa có mã SV"}
                                 </div>
+                                <div className="text-xs text-gray-500">
+                                  Lớp: {item.className || "Chưa có lớp"}
+                                </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.className || "Chưa có lớp"}
-                            </td>
+
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div>
                                 <div className="font-medium">
@@ -1251,7 +1250,7 @@ const YearlyStatistics = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="9"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">

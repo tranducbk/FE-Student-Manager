@@ -49,7 +49,19 @@ const YearlyStatistics = () => {
         (semester.averageGrade4 || 0) * (semester.totalCredits || 0);
       totalGradePoints10 +=
         (semester.averageGrade10 || 0) * (semester.totalCredits || 0);
-      totalDebt += semester.totalDebt || 0;
+
+      // Tính số môn nợ dựa trên subjects có điểm F
+      if (semester.subjects) {
+        const failedSubjects = semester.subjects.filter(
+          (subject) => subject.letterGrade === "F" || subject.gradePoint4 === 0
+        );
+        totalDebt += failedSubjects.reduce(
+          (sum, subject) => sum + (subject.credits || 0),
+          0
+        );
+      } else {
+        totalDebt += semester.totalDebt || 0;
+      }
     });
 
     // Tính GPA trung bình của năm học
@@ -204,22 +216,7 @@ const YearlyStatistics = () => {
 
       const semesterResults = res.data.semesterResults || [];
       const yearlyResults = res.data.yearlyResults || [];
-
-      console.log("User data:", { semesterResults, yearlyResults });
-      console.log(
-        "Yearly results details:",
-        yearlyResults.map((item) => ({
-          schoolYear: item.schoolYear,
-          averageGrade4: item.averageGrade4,
-          averageGrade10: item.averageGrade10,
-          cumulativeGrade4: item.cumulativeGrade4,
-          cumulativeGrade10: item.cumulativeGrade10,
-          cumulativeCredits: item.cumulativeCredits,
-          semesters: item.semesters?.length,
-          partyRating: item.partyRating,
-          trainingRating: item.trainingRating,
-        }))
-      );
+      const positionParty = res.data.positionParty || "Không";
 
       let finalResults = [];
 
@@ -238,7 +235,30 @@ const YearlyStatistics = () => {
           );
 
           if (filteredYearlyResults.length > 0) {
-            finalResults.push(...filteredYearlyResults);
+            // Thêm positionParty vào mỗi kết quả năm học và tính toán totalDebt
+            const resultsWithPositionParty = filteredYearlyResults.map(
+              (result) => {
+                // Tính toán totalDebt từ subjects nếu có
+                let calculatedTotalDebt = result.totalDebt || 0;
+                if (result.subjects) {
+                  const failedSubjects = result.subjects.filter(
+                    (subject) =>
+                      subject.letterGrade === "F" || subject.gradePoint4 === 0
+                  );
+                  calculatedTotalDebt = failedSubjects.reduce(
+                    (sum, subject) => sum + (subject.credits || 0),
+                    0
+                  );
+                }
+
+                return {
+                  ...result,
+                  positionParty: positionParty,
+                  totalDebt: calculatedTotalDebt,
+                };
+              }
+            );
+            finalResults.push(...resultsWithPositionParty);
           } else {
             // Tạo từ dữ liệu học kỳ nếu không có kết quả năm học
             const semestersInYear = semesterResults.filter(
@@ -251,7 +271,11 @@ const YearlyStatistics = () => {
                 year,
                 semesterResults
               );
-              finalResults.push(yearlyResult);
+              // Thêm positionParty vào kết quả tính toán
+              finalResults.push({
+                ...yearlyResult,
+                positionParty: positionParty,
+              });
             }
           }
         });
@@ -275,10 +299,36 @@ const YearlyStatistics = () => {
               selectedSchoolYear,
               semesterResults
             );
-            finalResults = [yearlyResult];
+            // Thêm positionParty vào kết quả tính toán
+            finalResults = [
+              {
+                ...yearlyResult,
+                positionParty: positionParty,
+              },
+            ];
           }
         } else {
-          finalResults = filteredYearlyResults;
+          // Thêm positionParty vào mỗi kết quả năm học và tính toán totalDebt
+          finalResults = filteredYearlyResults.map((result) => {
+            // Tính toán totalDebt từ subjects nếu có
+            let calculatedTotalDebt = result.totalDebt || 0;
+            if (result.subjects) {
+              const failedSubjects = result.subjects.filter(
+                (subject) =>
+                  subject.letterGrade === "F" || subject.gradePoint4 === 0
+              );
+              calculatedTotalDebt = failedSubjects.reduce(
+                (sum, subject) => sum + (subject.credits || 0),
+                0
+              );
+            }
+
+            return {
+              ...result,
+              positionParty: positionParty,
+              totalDebt: calculatedTotalDebt,
+            };
+          });
         }
       }
 
@@ -354,6 +404,7 @@ const YearlyStatistics = () => {
         });
 
         const semesterResults = res.data.semesterResults || [];
+        const positionParty = res.data.positionParty;
         const semestersInYear = semesterResults.filter(
           (result) => result.schoolYear === row.schoolYear
         );
@@ -368,8 +419,9 @@ const YearlyStatistics = () => {
             cumulativeGrade4: parseFloat(row.cumulativeGrade4) || 0,
             cumulativeGrade10: parseFloat(row.cumulativeGrade10) || 0,
             cumulativeCredits: parseFloat(row.cumulativeCredits) || 0,
-            partyRating: row.partyRating,
+            positionParty: positionParty,
             trainingRating: row.trainingRating,
+            partyRating: row.partyRating, // Thêm partyRating từ row
             subjects: [],
           };
 
@@ -379,7 +431,6 @@ const YearlyStatistics = () => {
               combinedData.subjects.push(...semester.subjects);
             }
           });
-
           setStudentDetail(combinedData);
         }
       } catch (error) {
@@ -657,10 +708,38 @@ const YearlyStatistics = () => {
                     </div>
                     {selectedSchoolYear !== "all" && (
                       <>
-                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                          <div className="text-sm font-bold mb-2 text-orange-600 dark:text-orange-400 flex items-center justify-center h-8">
-                            Chưa là Đảng viên
-                          </div>
+                        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                          {(() => {
+                            // Sử dụng positionParty từ yearlyResults đầu tiên
+                            const positionParty =
+                              yearlyResults[0]?.positionParty;
+                            const partyRating = yearlyResults[0]?.partyRating;
+
+                            if (positionParty === "Không") {
+                              return (
+                                <div className="text-sm font-bold text-red-600 mb-1 dark:text-red-400 flex items-center justify-center h-8">
+                                  Chưa là Đảng viên
+                                </div>
+                              );
+                            } else if (partyRating && partyRating.rating) {
+                              return (
+                                <div className="flex flex-col items-center justify-center h-8">
+                                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                    {partyRating.rating}
+                                  </div>
+                                  <div className="text-xs text-red-600 dark:text-red-400">
+                                    Số QĐ: {partyRating.decisionNumber}
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="text-sm font-bold text-red-600 mb-1 dark:text-red-400 flex items-center justify-center h-8">
+                                  Chưa cập nhật
+                                </div>
+                              );
+                            }
+                          })()}
                           <div className="text-sm text-gray-600 dark:text-gray-400">
                             Xếp loại Đảng viên
                           </div>
@@ -705,7 +784,7 @@ const YearlyStatistics = () => {
                           SỐ HỌC KỲ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          GPA NĂM
+                          GPA
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           CPA TÍCH LŨY
@@ -800,11 +879,37 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.totalDebt || 0} tín chỉ
+                              <div className="font-medium text-red-600 dark:text-red-400">
+                                {item.totalDebt || 0} tín chỉ
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-orange-600 dark:text-orange-400">
-                                Chưa là Đảng viên
+                                {(() => {
+                                  // Sử dụng positionParty từ từng item
+                                  const positionParty = item.positionParty;
+                                  const partyRating = item.partyRating;
+
+                                  if (positionParty === "Không") {
+                                    return "Chưa là Đảng viên";
+                                  } else if (
+                                    partyRating &&
+                                    partyRating.rating
+                                  ) {
+                                    return (
+                                      <div className="flex flex-col">
+                                        <div className="font-bold">
+                                          {partyRating.rating}
+                                        </div>
+                                        <div className="text-xs">
+                                          Số QĐ: {partyRating.decisionNumber}
+                                        </div>
+                                      </div>
+                                    );
+                                  } else {
+                                    return "Chưa cập nhật";
+                                  }
+                                })()}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
@@ -957,9 +1062,31 @@ const YearlyStatistics = () => {
                       </div>
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                      <div className="text-sm font-bold mb-1 text-red-600 dark:text-red-400">
-                        Chưa là Đảng viên
-                      </div>
+                      {(() => {
+                        // Sử dụng positionParty từ studentDetail
+                        const positionParty = studentDetail.positionParty;
+                        const partyRating = studentDetail.partyRating;
+
+                        if (positionParty === "Không") {
+                          return (
+                            <div className="text-sm font-bold text-red-600 mb-1 dark:text-red-400 flex items-center justify-center h-8">
+                              Chưa là Đảng viên
+                            </div>
+                          );
+                        } else if (partyRating && partyRating.rating) {
+                          return (
+                            <div className="text-2xl mb-2 font-bold text-red-600 dark:text-red-400 flex items-center justify-center h-8">
+                              {partyRating.rating}
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="text-sm font-bold text-red-600 mb-1 dark:text-red-400 flex items-center justify-center h-8">
+                              Chưa cập nhật
+                            </div>
+                          );
+                        }
+                      })()}
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         Xếp loại Đảng viên
                       </div>

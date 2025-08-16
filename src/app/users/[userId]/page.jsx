@@ -58,60 +58,6 @@ const UserProfile = ({ params }) => {
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
   });
 
-  // useEffect để debug state changes - không cần thiết nữa vì dùng trực tiếp từ profile
-
-  // Debug selected states
-  useEffect(() => {
-    console.log("selectedUniversity changed:", selectedUniversity);
-  }, [selectedUniversity]);
-
-  useEffect(() => {
-    console.log("selectedOrganization changed:", selectedOrganization);
-  }, [selectedOrganization]);
-
-  useEffect(() => {
-    console.log("selectedLevel changed:", selectedLevel);
-  }, [selectedLevel]);
-
-  useEffect(() => {
-    console.log("selectedClass changed:", selectedClass);
-  }, [selectedClass]);
-
-  // Debug when form is shown
-  useEffect(() => {
-    if (showForm) {
-      console.log("Form is now shown with states:");
-      console.log("selectedUniversity:", selectedUniversity);
-      console.log("selectedOrganization:", selectedOrganization);
-      console.log("selectedLevel:", selectedLevel);
-      console.log("selectedClass:", selectedClass);
-    }
-  }, [
-    showForm,
-    selectedUniversity,
-    selectedOrganization,
-    selectedLevel,
-    selectedClass,
-  ]);
-
-  // Debug organizations and education levels
-  useEffect(() => {
-    console.log("organizations changed:", organizations);
-  }, [organizations]);
-
-  useEffect(() => {
-    console.log("educationLevels changed:", educationLevels);
-  }, [educationLevels]);
-
-  useEffect(() => {
-    console.log("classes changed:", classes);
-  }, [classes]);
-
-  // Debug form data
-  useEffect(() => {
-    console.log("formData changed:", formData);
-  }, [formData]);
-
   // Fetch functions cho cascading dropdowns
   const fetchUniversities = async () => {
     const token = localStorage.getItem("token");
@@ -385,31 +331,17 @@ const UserProfile = ({ params }) => {
                     selectedClassId
                   );
                 } else {
-                  // Nếu là classUniversity name, tìm class object
                   const selectedClassObj = classes.find(
                     (cls) => cls.className === profile.classUniversity
                   );
                   selectedClassId = selectedClassObj?._id;
-                  console.log(
-                    "Class found by classUniversity name:",
-                    selectedClassObj
-                  );
                 }
               }
 
-              console.log("Final selectedClassId:", selectedClassId);
-
               if (selectedClassId) {
-                console.log("Setting selectedClass:", selectedClassId);
                 setSelectedClass(selectedClassId);
-              } else {
-                console.log("No class ID found");
               }
-            } else {
-              console.log("No education level ID found");
             }
-          } else {
-            console.log("No organization ID found");
           }
 
           // Thêm một delay nhỏ để đảm bảo state được update
@@ -547,12 +479,6 @@ const UserProfile = ({ params }) => {
         });
 
         setProfile(res.data);
-        console.log("API response data:", res.data);
-        console.log("familyMembers from API:", res.data.familyMembers);
-        console.log("foreignRelations from API:", res.data.foreignRelations);
-
-        // Không cần set state cho familyMembers và foreignRelations nữa
-        // Vì sẽ sử dụng trực tiếp từ profile để hiển thị
       } catch (error) {
         console.log(error);
       }

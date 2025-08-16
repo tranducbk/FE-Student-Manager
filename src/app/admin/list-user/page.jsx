@@ -2467,12 +2467,7 @@ const ListUser = () => {
                         >
                           Chức vụ
                         </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
-                        >
-                          Lớp
-                        </th>
+
                         <th
                           scope="col"
                           className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
@@ -2512,6 +2507,10 @@ const ListUser = () => {
                                   </div>
                                   <div className="text-sm text-gray-600 dark:text-gray-400">
                                     Mã HV: {item.studentId}
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Lớp:{" "}
+                                    {item.class?.className || "Chưa có dữ liệu"}
                                   </div>
                                 </div>
                               </div>
