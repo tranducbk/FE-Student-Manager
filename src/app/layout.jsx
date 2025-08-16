@@ -4,6 +4,11 @@ import "./globals.css";
 export const metadata = {
   title: "Student Manager",
   description: "Hệ thống quản lý sinh viên",
+  icons: {
+    icon: "/image.png",
+    shortcut: "/image.png",
+    apple: "/image.png",
+  },
 };
 
 export default function RootLayout({ children }) {
