@@ -759,17 +759,12 @@ const LearningInformation = () => {
           }
         )
         .then(() => {
-          setLearningResult(
-            learningResult.filter(
-              (learningResult) => learningResult.id !== learnId
-            )
-          );
           handleNotify(
             "success",
             "Thành công!",
             "Xóa kết quả học tập thành công"
           );
-          fetchLearningResult();
+          fetchSemesterResults();
         })
         .catch((error) => {
           const errorMessage =
@@ -999,20 +994,25 @@ const LearningInformation = () => {
             headers: {
               token: `Bearer ${token}`,
             },
-            params: selectedSemester
-              ? {
-                  semester: (() => {
-                    const semester = semesters.find(
-                      (s) => s._id === selectedSemester
-                    );
-                    return semester?.code || selectedSemester;
-                  })(),
-                }
-              : {},
           }
         );
 
-        setTuitionFee(res.data);
+        // Lọc dữ liệu theo học kỳ đã chọn
+        let filteredData = res.data;
+
+        if (selectedSemester) {
+          const semester = semesters.find((s) => s._id === selectedSemester);
+          if (semester) {
+            // Lọc theo cả học kỳ và năm học
+            filteredData = res.data.filter(
+              (fee) =>
+                fee.semester === semester.code &&
+                fee.schoolYear === semester.schoolYear
+            );
+          }
+        }
+
+        setTuitionFee(filteredData);
       } catch (error) {
         console.log(error);
       }
@@ -1150,7 +1150,7 @@ const LearningInformation = () => {
                           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
-                      Thêm
+                      Thêm lịch học
                     </button>
                   </div>
                 </div>
@@ -1284,9 +1284,24 @@ const LearningInformation = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={openGradeModal}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                     >
-                      Nhập KQ học tập
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="w-5 h-5 mr-2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 4.5v15m7.5-7.5h-15"
+                        />
+                      </svg>
+                      Thêm kết quả học tập
                     </button>
                   </div>
                 </div>
@@ -1730,8 +1745,8 @@ const LearningInformation = () => {
                 <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
                   <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      Chi tiết kết quả học tập - HK{viewingSemester.semester} -{" "}
-                      {viewingSemester.schoolYear}
+                      Chi tiết kết quả học tập - {viewingSemester.semester} -{" "}
+                      Năm học {viewingSemester.schoolYear}
                     </h2>
                     <button
                       onClick={() => {
@@ -1959,7 +1974,7 @@ const LearningInformation = () => {
                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                       />
                     </svg>
-                    Thêm
+                    Thêm học phí
                   </button>
                 </div>
                 <div className="w-full pl-6 pb-6 pr-6 mt-4">
@@ -3020,12 +3035,24 @@ const LearningInformation = () => {
                   </label>
                   <select
                     value={addFormDataTuitionFee.semester || selectedSemester}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const selectedSemesterId = e.target.value;
+                      const selectedSemesterData = semesters.find(
+                        (s) => s._id === selectedSemesterId
+                      );
+
+                      // Tự động điền gợi ý cho content
+                      let suggestedContent = "";
+                      if (selectedSemesterData) {
+                        suggestedContent = `Tổng học phí ${selectedSemesterData.code} năm học ${selectedSemesterData.schoolYear}`;
+                      }
+
                       setAddFormDataTuitionFee({
                         ...addFormDataTuitionFee,
-                        semester: e.target.value,
-                      })
-                    }
+                        semester: selectedSemesterId,
+                        content: suggestedContent,
+                      });
+                    }}
                     required
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   >

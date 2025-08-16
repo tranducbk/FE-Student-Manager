@@ -28,6 +28,7 @@ import {
   ScheduleOutlined,
   HeartOutlined,
   BulbOutlined,
+  CheckSquareOutlined,
   CrownOutlined,
   AuditOutlined,
   NotificationOutlined,
@@ -253,13 +254,16 @@ const SideBarContent = () => {
                   Học phí
                 </Menu.Item>
               </SubMenu>
+              <Menu.Item key="/admin/cut-rice" icon={<CheckSquareOutlined />}>
+                Cắt cơm học viên
+              </Menu.Item>
 
-              <Menu.Item
+              {/* <Menu.Item
                 key="/admin/vacation-schedules"
                 icon={<CalendarOutlined />}
               >
                 Tranh thủ học viên
-              </Menu.Item>
+              </Menu.Item> */}
 
               <SubMenu
                 key="training"
@@ -284,13 +288,9 @@ const SideBarContent = () => {
                 Danh sách gác đêm
               </Menu.Item>
 
-              <Menu.Item key="/admin/list-help-cooking" icon={<FireOutlined />}>
+              {/* <Menu.Item key="/admin/list-help-cooking" icon={<FireOutlined />}>
                 Danh sách giúp bếp
-              </Menu.Item>
-
-              <Menu.Item key="/admin/cut-rice" icon={<StarOutlined />}>
-                Cắt cơm học viên
-              </Menu.Item>
+              </Menu.Item> */}
 
               <Menu.Item
                 key="/admin/regulatory-documents"

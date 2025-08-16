@@ -67,8 +67,21 @@ const TimeTable = () => {
           weeks: [...new Set(student.weeks)], // Loại bỏ trùng lặp cho tuần học
         }));
 
-        setAllStudents(students);
-        setFilteredStudents(students);
+        // Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
+        const sortedStudents = students.sort((a, b) => {
+          const unitOrder = {
+            "L1 - H5": 1,
+            "L2 - H5": 2,
+            "L3 - H5": 3,
+            "L4 - H5": 4,
+            "L5 - H5": 5,
+            "L6 - H5": 6,
+          };
+          return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
+        });
+
+        setAllStudents(sortedStudents);
+        setFilteredStudents(sortedStudents);
       } catch (error) {
         console.log(error);
         handleNotify("danger", "Lỗi!", "Không thể tải dữ liệu lịch học");
@@ -99,10 +112,17 @@ const TimeTable = () => {
     setFilteredStudents(filtered);
   };
 
-  // Lọc tự động khi thay đổi giá trị
-  useEffect(() => {
+  // Hàm xử lý tìm kiếm khi bấm nút
+  const handleSearch = () => {
     filterData();
-  }, [fullName, unit]);
+  };
+
+  // Hàm xóa bộ lọc
+  const handleClearFilter = () => {
+    setFullName("");
+    setUnit("");
+    setFilteredStudents(allStudents);
+  };
 
   const handleRowClick = (studentId) => {
     router.push(`/admin/time-table/${studentId}`);
@@ -227,7 +247,7 @@ const TimeTable = () => {
                     {isLoading ? "Đang tải..." : "Làm mới"}
                   </button>
                   <button
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 mr-4 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={handleGenerateAutoCutRice}
                   >
                     <svg
@@ -291,13 +311,30 @@ const TimeTable = () => {
                     </select>
                   </div>
                 </div>
-                <div>
+                <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setFullName("");
-                      setUnit("");
-                    }}
+                    onClick={handleSearch}
+                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200 flex items-center"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                    Tìm kiếm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearFilter}
                     className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200"
                   >
                     Xóa bộ lọc
@@ -442,43 +479,43 @@ const TimeTable = () => {
                     <tr>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
-                      >
-                        Họ và tên
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
                         Đơn vị
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                      >
+                        Họ và tên
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
                         Số lịch học
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
                         Môn học
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
                         Phòng học
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        className="px-2 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                       >
                         Tuần học
                       </th>
                       <th
                         scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                       >
                         Thao tác
                       </th>
@@ -489,15 +526,14 @@ const TimeTable = () => {
                       filteredStudents.map((student, index) => (
                         <tr
                           key={student.studentId || index}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
+                          onClick={() => handleRowClick(student.studentId)}
                         >
+                          <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
+                            {student.unit}
+                          </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6 font-medium">
                             {student.fullName}
-                          </td>
-                          <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                              {student.unit}
-                            </span>
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -554,7 +590,7 @@ const TimeTable = () => {
                               )}
                             </div>
                           </td>
-                          <td className="text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
+                          <td className="text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-2">
                             <div className="flex flex-wrap gap-1 justify-center">
                               {student.weeks.length > 0 ? (
                                 <>
@@ -563,13 +599,13 @@ const TimeTable = () => {
                                     .map((week, idx) => (
                                       <span
                                         key={idx}
-                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-r border-orange-300 dark:border-orange-700 pr-2 last:border-r-0"
+                                        className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-r border-orange-300 dark:border-orange-700 pr-1 last:border-r-0"
                                       >
-                                        Tuần {week}
+                                        {week}
                                       </span>
                                     ))}
                                   {student.weeks.length > 3 && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 pl-2">
+                                    <span className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 pl-1">
                                       +{student.weeks.length - 3}
                                     </span>
                                   )}
@@ -581,7 +617,10 @@ const TimeTable = () => {
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white text-center py-4 px-6">
                             <button
-                              onClick={() => handleRowClick(student.studentId)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Ngăn event bubbling lên tr
+                                handleRowClick(student.studentId);
+                              }}
                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                             >
                               <svg

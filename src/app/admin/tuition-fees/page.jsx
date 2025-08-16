@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ConfigProvider, TreeSelect, Select, theme } from "antd";
+import { handleNotify } from "@/components/notify";
 
 import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
@@ -15,14 +16,17 @@ const TuitionFees = () => {
   const [selectedSemesters, setSelectedSemesters] = useState([]); // nhiều học kỳ
   const [semesters, setSemesters] = useState([]);
   const [selectedClass, setSelectedClass] = useState(""); // lọc theo lớp
-  // Danh sách lớp cố định
-  const classes = [
-    { _id: "1", className: "L1 - H5" },
-    { _id: "2", className: "L2 - H5" },
-    { _id: "3", className: "L3 - H5" },
-    { _id: "4", className: "L4 - H5" },
-    { _id: "5", className: "L5 - H5" },
-    { _id: "6", className: "L6 - H5" },
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSelectedSemesters, setExportSelectedSemesters] = useState([]);
+  const [exportSelectedUnits, setExportSelectedUnits] = useState([]);
+  // Danh sách đơn vị cố định
+  const units = [
+    { _id: "1", unitName: "L1 - H5" },
+    { _id: "2", unitName: "L2 - H5" },
+    { _id: "3", unitName: "L3 - H5" },
+    { _id: "4", unitName: "L4 - H5" },
+    { _id: "5", unitName: "L5 - H5" },
+    { _id: "6", unitName: "L6 - H5" },
   ];
   const [paymentStats, setPaymentStats] = useState({
     paidCount: 0,
@@ -225,7 +229,42 @@ const TuitionFees = () => {
 
   const filteredTuitionFees = applySemesterFilter(
     tuitionFees?.tuitionFees || []
-  );
+  ).sort((a, b) => {
+    // 1. Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
+    const unitOrder = {
+      "L1 - H5": 1,
+      "L2 - H5": 2,
+      "L3 - H5": 3,
+      "L4 - H5": 4,
+      "L5 - H5": 5,
+      "L6 - H5": 6,
+    };
+    const unitA = unitOrder[a.unit] || 999;
+    const unitB = unitOrder[b.unit] || 999;
+    if (unitA !== unitB) return unitA - unitB;
+
+    // 2. Trong cùng đơn vị, sắp xếp theo tên học viên
+    if (a.fullName !== b.fullName) {
+      return a.fullName.localeCompare(b.fullName, "vi");
+    }
+
+    // 3. Trong cùng học viên, sắp xếp theo năm học (mới đến cũ)
+    const yearA = a.schoolYear || "";
+    const yearB = b.schoolYear || "";
+    if (yearA !== yearB) {
+      return yearB.localeCompare(yearA); // Năm mới trước
+    }
+
+    // 4. Trong cùng năm học, sắp xếp theo học kỳ (HK1, HK2, HK3)
+    const semesterOrder = {
+      HK1: 1,
+      HK2: 2,
+      HK3: 3,
+    };
+    const semesterA = semesterOrder[a.semester] || 999;
+    const semesterB = semesterOrder[b.semester] || 999;
+    return semesterA - semesterB;
+  });
   const filteredTotalSum = filteredTuitionFees.reduce((sum, item) => {
     const digits = String(item.totalAmount || "").replace(/[^0-9]/g, "");
     const val = digits ? parseInt(digits, 10) : 0;
@@ -265,23 +304,48 @@ const TuitionFees = () => {
     return parts.join(".");
   };
 
-  const handleExportFilePdf = async (e) => {
-    e.preventDefault();
+  const handleExportFilePdf = async () => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
+        // Tạo tham số cho API
         const semesterParam =
-          selectedSemesters.length > 0
-            ? selectedSemesters
+          exportSelectedSemesters.length > 0
+            ? exportSelectedSemesters
                 .map((semesterId) => {
                   const semester = semesters.find((s) => s._id === semesterId);
                   return semester?.code;
                 })
                 .join(",")
             : "all";
+
+        const schoolYearParam =
+          exportSelectedSemesters.length > 0
+            ? exportSelectedSemesters
+                .map((semesterId) => {
+                  const semester = semesters.find((s) => s._id === semesterId);
+                  return semester?.schoolYear;
+                })
+                .filter(Boolean)
+                .join(",")
+            : "all";
+
+        const unitParam =
+          exportSelectedUnits.length > 0
+            ? exportSelectedUnits.join(",")
+            : "all";
+
+        console.log("Frontend - Export parameters:", {
+          semesterParam,
+          schoolYearParam,
+          unitParam,
+          exportSelectedSemesters,
+          exportSelectedUnits,
+        });
+
         const response = await axios.get(
-          `${BASE_URL}/commander/tuitionFee/pdf?semester=${semesterParam}`,
+          `${BASE_URL}/commander/tuitionFee/pdf?semester=${semesterParam}&schoolYear=${schoolYearParam}&unit=${unitParam}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -289,29 +353,64 @@ const TuitionFees = () => {
             responseType: "blob",
           }
         );
+
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute(
-          "download",
-          `Thong_ke_hoc_phi_he5_${
-            selectedSemesters.length > 0
-              ? selectedSemesters
-                  .map((semesterId) => {
-                    const semester = semesters.find(
-                      (s) => s._id === semesterId
-                    );
-                    return semester?.code;
-                  })
-                  .join("_")
-              : "tat_ca_hoc_ky"
-          }.pdf`
-        );
+        // Tạo tên file động dựa trên các tham số được chọn
+        let fileName = "Thong_ke_hoc_phi_he_hoc_vien_5";
+
+        // Thêm thông tin học kỳ
+        if (exportSelectedSemesters.length > 0) {
+          const semesterCodes = exportSelectedSemesters
+            .map((semesterId) => {
+              const semester = semesters.find((s) => s._id === semesterId);
+              return semester?.code;
+            })
+            .filter(Boolean);
+          fileName += `_${semesterCodes.join("_")}`;
+        } else {
+          fileName += "_tat_ca_hoc_ky";
+        }
+
+        // Thêm thông tin năm học
+        if (exportSelectedSemesters.length > 0) {
+          const schoolYears = exportSelectedSemesters
+            .map((semesterId) => {
+              const semester = semesters.find((s) => s._id === semesterId);
+              return semester?.schoolYear;
+            })
+            .filter(Boolean);
+          // Loại bỏ các năm học trùng lặp
+          const uniqueSchoolYears = [...new Set(schoolYears)];
+          fileName += `_${uniqueSchoolYears.join("_")}`;
+        } else {
+          fileName += "_tat_ca_nam_hoc";
+        }
+
+        // Thêm thông tin đơn vị
+        if (exportSelectedUnits.length > 0) {
+          fileName += `_${exportSelectedUnits.join("_")}`;
+        } else {
+          fileName += "_tat_ca_don_vi";
+        }
+
+        fileName += ".pdf";
+
+        link.setAttribute("download", fileName);
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
+
+        // Đóng modal và reset
+        setShowExportModal(false);
+        setExportSelectedSemesters([]);
+        setExportSelectedUnits([]);
+
+        handleNotify("success", "Thành công", "Đã xuất file PDF");
       } catch (error) {
         console.error("Lỗi tải xuống file", error);
+        handleNotify("error", "Lỗi", "Không thể xuất file PDF");
       }
     }
   };
@@ -379,7 +478,7 @@ const TuitionFees = () => {
               </div>
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                onClick={(e) => handleExportFilePdf(e)}
+                onClick={() => setShowExportModal(true)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -569,13 +668,7 @@ const TuitionFees = () => {
                         scope="col"
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                       >
-                        HỌC KỲ
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
-                        NĂM HỌC
+                        ĐƠN VỊ
                       </th>
                       <th
                         scope="col"
@@ -593,7 +686,13 @@ const TuitionFees = () => {
                         scope="col"
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                       >
-                        LỚP
+                        HỌC KỲ
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
+                      >
+                        NĂM HỌC
                       </th>
                       <th
                         scope="col"
@@ -629,10 +728,7 @@ const TuitionFees = () => {
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.semester || "Chưa có học kỳ"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.schoolYear || "Chưa có năm học"}
+                            {item.unit || "Chưa có lớp"}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.fullName}
@@ -641,7 +737,10 @@ const TuitionFees = () => {
                             {item.university}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.unit || "Chưa có lớp"}
+                            {item.semester || "Chưa có học kỳ"}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                            {item.schoolYear || "Chưa có năm học"}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.content}
@@ -659,10 +758,7 @@ const TuitionFees = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
-                            <div
-                              className="inline-flex rounded-md shadow-sm"
-                              role="group"
-                            >
+                            <div className="flex flex-col gap-1">
                               <button
                                 type="button"
                                 onClick={() =>
@@ -672,7 +768,7 @@ const TuitionFees = () => {
                                     "Đã thanh toán"
                                   )
                                 }
-                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-l-md border border-green-600"
+                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md border border-green-600 transition-colors duration-200"
                               >
                                 Đã thanh toán
                               </button>
@@ -685,7 +781,7 @@ const TuitionFees = () => {
                                     "Chưa thanh toán"
                                   )
                                 }
-                                className="px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-r-md border border-red-600"
+                                className="px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md border border-red-600 transition-colors duration-200"
                               >
                                 Chưa thanh toán
                               </button>
@@ -731,6 +827,209 @@ const TuitionFees = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal xuất PDF */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Xuất PDF học phí
+              </h2>
+              <button
+                onClick={() => {
+                  setShowExportModal(false);
+                  setExportSelectedSemesters([]);
+                  setExportSelectedClasses([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Chọn học kỳ */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Chọn học kỳ
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                      token: {
+                        colorPrimary: "#2563eb",
+                        borderRadius: 8,
+                        controlOutline: "rgba(37,99,235,0.2)",
+                      },
+                    }}
+                  >
+                    <TreeSelect
+                      treeData={treeData}
+                      treeCheckable
+                      showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                      placeholder="Chọn học kỳ để xuất PDF"
+                      allowClear
+                      showSearch={false}
+                      style={{ width: "100%" }}
+                      dropdownStyle={{
+                        backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                        color: isDark ? "#e5e7eb" : "#111827",
+                        border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                        borderRadius: 8,
+                      }}
+                      tagRender={(props) => {
+                        const { label, onClose } = props;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 mr-1 mb-1"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <span className="text-xs">{label}</span>
+                            <button
+                              onClick={onClose}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+                              aria-label="remove"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      }}
+                      onChange={(values) => setExportSelectedSemesters(values)}
+                    />
+                  </ConfigProvider>
+                </div>
+
+                {/* Chọn lớp */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Chọn đơn vị
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                      token: {
+                        colorPrimary: "#2563eb",
+                        borderRadius: 8,
+                        controlOutline: "rgba(37,99,235,0.2)",
+                      },
+                    }}
+                  >
+                    <Select
+                      mode="multiple"
+                      placeholder="Chọn đơn vị để xuất PDF"
+                      allowClear
+                      style={{ width: "100%" }}
+                      value={exportSelectedUnits}
+                      onChange={setExportSelectedUnits}
+                      dropdownStyle={{
+                        backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                        color: isDark ? "#e5e7eb" : "#111827",
+                        border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                        borderRadius: 8,
+                      }}
+                      options={[
+                        { value: "L1 - H5", label: "L1 - H5" },
+                        { value: "L2 - H5", label: "L2 - H5" },
+                        { value: "L3 - H5", label: "L3 - H5" },
+                        { value: "L4 - H5", label: "L4 - H5" },
+                        { value: "L5 - H5", label: "L5 - H5" },
+                        { value: "L6 - H5", label: "L6 - H5" },
+                      ]}
+                    />
+                  </ConfigProvider>
+                </div>
+
+                {/* Thông báo */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="text-sm text-blue-800 dark:text-blue-200">
+                      <p className="font-medium">Lưu ý:</p>
+                      <ul className="mt-1 list-disc list-inside space-y-1">
+                        <li>
+                          Để trống cả hai trường để xuất tất cả học kỳ và đơn vị
+                        </li>
+                        <li>
+                          Có thể chọn nhiều học kỳ và nhiều đơn vị cùng lúc
+                        </li>
+                        <li>File PDF sẽ được tải xuống tự động</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:focus:ring-gray-700"
+                  onClick={() => {
+                    setShowExportModal(false);
+                    setExportSelectedSemesters([]);
+                    setExportSelectedUnits([]);
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 flex items-center"
+                  onClick={handleExportFilePdf}
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                    />
+                  </svg>
+                  Xuất PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

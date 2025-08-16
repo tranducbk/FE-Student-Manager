@@ -507,9 +507,6 @@ export default function UniversityOrganizations() {
                                   <TeamOutlined className="mr-2" />
                                   {row.class.className}
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {row.class.studentCount || 0} học viên
-                                </div>
                               </td>
                             );
                           } else if (

@@ -66,7 +66,7 @@ const LearningResults = () => {
       setSemesters(list);
       if (list.length > 0) {
         // Chọn tất cả các kỳ ban đầu
-        setSelectedSemesters(list.map((semester) => semester.code));
+        setSelectedSemesters(list.map((semester) => semester._id));
       }
     } catch (error) {
       console.log("Error fetching semesters:", error);
@@ -81,14 +81,24 @@ const LearningResults = () => {
 
     setLoading(true);
     try {
-      // Tạo array chứa thông tin semester và schoolYear
-      const semesterData = selectedSemesters.map((semesterCode) => {
-        const semester = semesters.find((s) => s.code === semesterCode);
-        return {
-          semester: semesterCode,
-          schoolYear: semester?.schoolYear || "2024-2025",
-        };
-      });
+      // Xử lý khi chọn "Tất cả học kỳ"
+      let semesterData = [];
+      if (selectedSemesters.includes("all")) {
+        // Nếu chọn "Tất cả học kỳ", lấy tất cả semesters
+        semesterData = semesters.map((semester) => ({
+          semester: semester.code,
+          schoolYear: semester.schoolYear || "2024-2025",
+        }));
+      } else {
+        // Nếu chọn từng học kỳ cụ thể
+        semesterData = selectedSemesters.map((semesterId) => {
+          const semester = semesters.find((s) => s._id === semesterId);
+          return {
+            semester: semester?.code || semesterId,
+            schoolYear: semester?.schoolYear || "2024-2025",
+          };
+        });
+      }
 
       // Tách riêng semester và schoolYear để gửi lên API
       const semesterParam = semesterData.map((item) => item.semester).join(",");
@@ -182,7 +192,20 @@ const LearningResults = () => {
     if (!token || selectedSemesters.length === 0) return;
 
     try {
-      const semesterParam = selectedSemesters.join(",");
+      // Chuyển đổi từ _id sang code cho API export
+      let semesterParam;
+      if (selectedSemesters.includes("all")) {
+        // Nếu chọn "Tất cả học kỳ", lấy tất cả codes
+        semesterParam = semesters.map((semester) => semester.code).join(",");
+      } else {
+        // Nếu chọn từng học kỳ cụ thể
+        semesterParam = selectedSemesters
+          .map((semesterId) => {
+            const semester = semesters.find((s) => s._id === semesterId);
+            return semester?.code || semesterId;
+          })
+          .join(",");
+      }
       const res = await axios.get(
         `${BASE_URL}/commander/learningResult/pdf?semester=${semesterParam}`,
         {
@@ -217,12 +240,19 @@ const LearningResults = () => {
     return s.code;
   };
 
-  // Tạo tree data cho TreeSelect
-  const treeData = semesters.map((semester) => ({
-    title: getSemesterLabel(semester),
-    value: semester.code,
-    key: semester.code,
-  }));
+  // Tạo tree data cho TreeSelect với option "Tất cả học kỳ"
+  const treeData = [
+    {
+      title: "Tất cả học kỳ",
+      value: "all",
+      key: "all",
+    },
+    ...semesters.map((semester) => ({
+      title: getSemesterLabel(semester),
+      value: semester._id,
+      key: semester._id,
+    })),
+  ];
 
   const getFilteredResults = () => {
     if (!learningResults) return [];
@@ -241,7 +271,43 @@ const LearningResults = () => {
       return matchesSearch && matchesUnit;
     });
 
-    return filtered;
+    // Sắp xếp theo thứ tự: đơn vị → tên → năm học → học kỳ
+    return filtered.sort((a, b) => {
+      // 1. Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
+      const unitOrder = {
+        "L1 - H5": 1,
+        "L2 - H5": 2,
+        "L3 - H5": 3,
+        "L4 - H5": 4,
+        "L5 - H5": 5,
+        "L6 - H5": 6,
+      };
+      const unitA = unitOrder[a.unit] || 999;
+      const unitB = unitOrder[b.unit] || 999;
+      if (unitA !== unitB) return unitA - unitB;
+
+      // 2. Trong cùng đơn vị, sắp xếp theo tên học viên A-Z
+      if (a.fullName !== b.fullName) {
+        return a.fullName.localeCompare(b.fullName, "vi");
+      }
+
+      // 3. Trong cùng học viên, sắp xếp theo năm học (mới đến cũ)
+      const yearA = a.schoolYear || "";
+      const yearB = b.schoolYear || "";
+      if (yearA !== yearB) {
+        return yearB.localeCompare(yearA); // Năm mới trước
+      }
+
+      // 4. Trong cùng năm học, sắp xếp theo học kỳ (HK3, HK2, HK1)
+      const semesterOrder = {
+        HK3: 3,
+        HK2: 2,
+        HK1: 1,
+      };
+      const semesterA = semesterOrder[a.semester] || 0;
+      const semesterB = semesterOrder[b.semester] || 0;
+      return semesterB - semesterA; // Kỳ mới trước
+    });
   };
 
   // Đếm số sinh viên có điểm F
@@ -314,7 +380,7 @@ const LearningResults = () => {
                 <div className="text-gray-900 dark:text-white text-lg">
                   KẾT QUẢ HỌC TẬP HỌC VIÊN
                 </div>
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2">
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={handleExportPDF}
@@ -335,7 +401,7 @@ const LearningResults = () => {
                     </svg>
                     Xuất PDF
                   </button>
-                </div>
+                </div> */}
               </div>
 
               <div className="w-full p-5">
@@ -376,6 +442,7 @@ const LearningResults = () => {
                             }`,
                             borderRadius: 8,
                           }}
+                          popupClassName="custom-tree-select-dropdown"
                           tagRender={(props) => {
                             const { label, onClose } = props;
                             return (
@@ -439,6 +506,7 @@ const LearningResults = () => {
                         Tìm kiếm
                       </label>
                       <input
+                        size="small"
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -556,7 +624,7 @@ const LearningResults = () => {
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          HỌC KỲ
+                          ĐƠN VỊ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           HỌ VÀ TÊN
@@ -565,7 +633,7 @@ const LearningResults = () => {
                           LỚP
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          ĐƠN VỊ
+                          HỌC KỲ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           GPA
@@ -630,7 +698,7 @@ const LearningResults = () => {
                             onClick={() => handleViewDetail(item)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.semester} - {item.schoolYear}
+                              {item.unit || "Chưa có đơn vị"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div>
@@ -638,27 +706,42 @@ const LearningResults = () => {
                                   {item.fullName}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  Mã: {item.studentCode}
+                                  Mã: {item.studentCode || "Chưa có mã SV"}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.className}
+                              {item.className || "Chưa có lớp"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.unit || "N/A"}
+                              {item.semester} NH {item.schoolYear}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.GPA}
+                              <div className="flex flex-col">
+                                <div className="font-medium text-blue-600 dark:text-blue-400">
+                                  {item.GPA || "Chưa có điểm"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.averageGrade10 || "Chưa có điểm"}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.CPA}
+                              <div className="flex flex-col">
+                                <div className="font-medium text-green-600 dark:text-green-400">
+                                  {item.CPA || "Chưa có điểm"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.cumulativeGrade10FromCpa4 ||
+                                    "Chưa có điểm"}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.cumulativeCredit} tín chỉ
+                              {item.cumulativeCredit || "Chưa có"} tín chỉ
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.totalDebt} tín chỉ
+                              {item.totalDebt || "0"} tín chỉ
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               Năm {item.studentLevel}

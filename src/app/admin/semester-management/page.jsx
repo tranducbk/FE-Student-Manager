@@ -36,7 +36,28 @@ const SemesterManagement = () => {
       const res = await axios.get(`${BASE_URL}/semester`, {
         headers: { token: `Bearer ${token}` },
       });
-      setSemesters(res.data || []);
+
+      // Sắp xếp từ năm mới nhất đến cũ, trong cùng năm thì từ kỳ mới nhất đến cũ
+      const sortedSemesters = (res.data || []).sort((a, b) => {
+        // So sánh năm học trước
+        const yearA = a.schoolYear || "";
+        const yearB = b.schoolYear || "";
+        if (yearA !== yearB) {
+          return yearB.localeCompare(yearA); // Năm mới trước
+        }
+
+        // Trong cùng năm, so sánh học kỳ
+        const semesterOrder = {
+          HK3: 3,
+          HK2: 2,
+          HK1: 1,
+        };
+        const semesterA = semesterOrder[a.code] || 0;
+        const semesterB = semesterOrder[b.code] || 0;
+        return semesterB - semesterA; // Kỳ mới trước
+      });
+
+      setSemesters(sortedSemesters);
     } catch (error) {
       console.log("Error fetching semesters:", error);
       handleNotify("error", "Lỗi", "Không thể tải danh sách học kỳ");
@@ -229,13 +250,13 @@ const SemesterManagement = () => {
                 {/* Bảng danh sách học kỳ */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                             Mã học kỳ
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                             Năm học
                           </th>
                           <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -264,10 +285,10 @@ const SemesterManagement = () => {
                               setShowEditSemester(true);
                             }}
                           >
-                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white text-center">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white text-center border-r border-gray-200 dark:border-gray-600">
                               {sem.code}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center border-r border-gray-200 dark:border-gray-600">
                               {sem.schoolYear}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-center">

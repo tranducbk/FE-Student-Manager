@@ -616,8 +616,10 @@ const UserProfile = ({ params }) => {
       );
       setProfile(response.data);
       setShowForm(false);
+      document.body.style.overflow = "unset";
     } catch (error) {
       handleNotify("danger", "Lỗi!", error.response.data);
+      document.body.style.overflow = "unset";
     }
   };
 
@@ -2111,7 +2113,7 @@ const UserProfile = ({ params }) => {
                         )}
                       </div>
 
-                      <div className="flex justify-end space-x-3">
+                      <div className="flex mt-4 justify-end space-x-3">
                         <button
                           type="button"
                           onClick={closeForm}

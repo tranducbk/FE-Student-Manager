@@ -569,7 +569,7 @@ const PhysicalResults = () => {
                 <div className="text-gray-900 dark:text-white text-lg">
                   KẾT QUẢ THỂ LỰC HỌC VIÊN
                 </div>
-                <div className="flex space-x-2">
+                {/* <div className="flex space-x-2">
                   <button
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={(e) => handleExportFilePdf(e, semester)}
@@ -610,7 +610,7 @@ const PhysicalResults = () => {
                     </svg>
                     Thêm
                   </button>
-                </div>
+                </div> */}
               </div>
               <div className="w-full p-5">
                 <form

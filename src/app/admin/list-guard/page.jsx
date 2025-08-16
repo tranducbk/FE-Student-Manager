@@ -41,6 +41,7 @@ const ListGuard = () => {
   const handleShowFormUpdate = (guardId) => {
     setGuardId(guardId);
     setShowFormEdit(true);
+    document.body.style.overflow = "hidden";
   };
 
   const handleUpdate = async (e, guardId) => {
@@ -60,10 +61,12 @@ const ListGuard = () => {
           "Chỉnh sửa ca gác đêm thành công"
         );
         setShowFormEdit(false);
+        document.body.style.overflow = "unset";
         fetchListGuard();
       } catch (error) {
         handleNotify("danger", "Lỗi!", error);
         setShowFormEdit(false);
+        document.body.style.overflow = "unset";
       }
     }
   };
@@ -80,9 +83,11 @@ const ListGuard = () => {
       handleNotify("success", "Thành công!", "Thêm ca gác đêm thành công");
       setListGuard([...listGuard, response.data]);
       setShowFormAdd(false);
+      document.body.style.overflow = "unset";
       fetchListGuard();
     } catch (error) {
       setShowFormAdd(false);
+      document.body.style.overflow = "unset";
       handleNotify("danger", "Lỗi!", error.response.data);
     }
   };
@@ -124,6 +129,13 @@ const ListGuard = () => {
 
   useEffect(() => {
     fetchListGuard();
+  }, []);
+
+  // Cleanup function để khôi phục scroll khi component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, []);
 
   const fetchListGuard = async () => {
@@ -235,7 +247,10 @@ const ListGuard = () => {
                   Chỉnh sửa lịch gác đêm
                 </h2>
                 <button
-                  onClick={() => setShowFormEdit(false)}
+                  onClick={() => {
+                    setShowFormEdit(false);
+                    document.body.style.overflow = "unset";
+                  }}
                   className="absolute top-0 right-0 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
                 >
                   <svg
@@ -469,7 +484,10 @@ const ListGuard = () => {
                     <button
                       type="button"
                       className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
-                      onClick={() => setShowFormEdit(false)}
+                      onClick={() => {
+                        setShowFormEdit(false);
+                        document.body.style.overflow = "unset";
+                      }}
                     >
                       Hủy
                     </button>
@@ -561,7 +579,10 @@ const ListGuard = () => {
                   LỊCH GÁC ĐÊM
                 </div>
                 <button
-                  onClick={() => setShowFormAdd(true)}
+                  onClick={() => {
+                    setShowFormAdd(true);
+                    document.body.style.overflow = "hidden";
+                  }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                 >
                   <svg
@@ -775,7 +796,10 @@ const ListGuard = () => {
                   Thêm lịch gác đêm
                 </h2>
                 <button
-                  onClick={() => setShowFormAdd(false)}
+                  onClick={() => {
+                    setShowFormAdd(false);
+                    document.body.style.overflow = "unset";
+                  }}
                   className="absolute top-0 right-0 m-4 p-1 rounded-md text-gray-400 cursor-pointer hover:bg-gray-200 hover:text-gray-700"
                 >
                   <svg
@@ -1015,7 +1039,10 @@ const ListGuard = () => {
                     <button
                       type="button"
                       className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
-                      onClick={() => setShowFormAdd(false)}
+                      onClick={() => {
+                        setShowFormAdd(false);
+                        document.body.style.overflow = "unset";
+                      }}
                     >
                       Hủy
                     </button>

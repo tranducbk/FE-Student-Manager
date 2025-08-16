@@ -6,10 +6,39 @@ import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import { Select, ConfigProvider, theme } from "antd";
 
 import { BASE_URL } from "@/configs";
 const CutRice = () => {
   const router = useRouter();
+
+  // Detect dark mode
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDarkMode = document.documentElement.classList.contains("dark");
+      setIsDark(isDarkMode);
+    };
+
+    checkDarkMode();
+
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Lấy ngày hiện tại
+  const getCurrentDay = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
+    return dayOfWeek;
+  };
   const [cutRice, setCutRice] = useState(null);
   const [unit, setUnit] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
@@ -44,6 +73,70 @@ const CutRice = () => {
     "L6 - H5": 6,
   };
 
+  // Hàm tính toán thống kê cắt cơm theo từng thứ
+  const calculateStatistics = () => {
+    if (!cutRice || cutRice.length === 0) {
+      return {
+        monday: { breakfast: 0, lunch: 0, dinner: 0 },
+        tuesday: { breakfast: 0, lunch: 0, dinner: 0 },
+        wednesday: { breakfast: 0, lunch: 0, dinner: 0 },
+        thursday: { breakfast: 0, lunch: 0, dinner: 0 },
+        friday: { breakfast: 0, lunch: 0, dinner: 0 },
+        saturday: { breakfast: 0, lunch: 0, dinner: 0 },
+        sunday: { breakfast: 0, lunch: 0, dinner: 0 },
+      };
+    }
+
+    const stats = {
+      monday: { breakfast: 0, lunch: 0, dinner: 0 },
+      tuesday: { breakfast: 0, lunch: 0, dinner: 0 },
+      wednesday: { breakfast: 0, lunch: 0, dinner: 0 },
+      thursday: { breakfast: 0, lunch: 0, dinner: 0 },
+      friday: { breakfast: 0, lunch: 0, dinner: 0 },
+      saturday: { breakfast: 0, lunch: 0, dinner: 0 },
+      sunday: { breakfast: 0, lunch: 0, dinner: 0 },
+    };
+
+    cutRice.forEach((item) => {
+      // Thứ 2
+      if (item.monday?.breakfast) stats.monday.breakfast++;
+      if (item.monday?.lunch) stats.monday.lunch++;
+      if (item.monday?.dinner) stats.monday.dinner++;
+
+      // Thứ 3
+      if (item.tuesday?.breakfast) stats.tuesday.breakfast++;
+      if (item.tuesday?.lunch) stats.tuesday.lunch++;
+      if (item.tuesday?.dinner) stats.tuesday.dinner++;
+
+      // Thứ 4
+      if (item.wednesday?.breakfast) stats.wednesday.breakfast++;
+      if (item.wednesday?.lunch) stats.wednesday.lunch++;
+      if (item.wednesday?.dinner) stats.wednesday.dinner++;
+
+      // Thứ 5
+      if (item.thursday?.breakfast) stats.thursday.breakfast++;
+      if (item.thursday?.lunch) stats.thursday.lunch++;
+      if (item.thursday?.dinner) stats.thursday.dinner++;
+
+      // Thứ 6
+      if (item.friday?.breakfast) stats.friday.breakfast++;
+      if (item.friday?.lunch) stats.friday.lunch++;
+      if (item.friday?.dinner) stats.friday.dinner++;
+
+      // Thứ 7
+      if (item.saturday?.breakfast) stats.saturday.breakfast++;
+      if (item.saturday?.lunch) stats.saturday.lunch++;
+      if (item.saturday?.dinner) stats.saturday.dinner++;
+
+      // Chủ nhật
+      if (item.sunday?.breakfast) stats.sunday.breakfast++;
+      if (item.sunday?.lunch) stats.sunday.lunch++;
+      if (item.sunday?.dinner) stats.sunday.dinner++;
+    });
+
+    return stats;
+  };
+
   const fetchCutRice = async () => {
     const token = localStorage.getItem("token");
 
@@ -55,7 +148,19 @@ const CutRice = () => {
           },
         });
 
-        setCutRice(res.data);
+        // Sắp xếp theo thứ tự lớp từ 1 đến 6
+        const sortedData = res.data.sort((a, b) => {
+          const unitOrder = {
+            "L1 - H5": 1,
+            "L2 - H5": 2,
+            "L3 - H5": 3,
+            "L4 - H5": 4,
+            "L5 - H5": 5,
+            "L6 - H5": 6,
+          };
+          return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
+        });
+        setCutRice(sortedData);
       } catch (error) {
         console.log(error);
       }
@@ -84,21 +189,45 @@ const CutRice = () => {
 
         if (res.status === 404) setCutRice([]);
 
-        setCutRice(res.data);
+        // Sắp xếp theo thứ tự lớp từ 1 đến 6
+        const sortedData = res.data.sort((a, b) => {
+          const unitOrder = {
+            "L1 - H5": 1,
+            "L2 - H5": 2,
+            "L3 - H5": 3,
+            "L4 - H5": 4,
+            "L5 - H5": 5,
+            "L6 - H5": 6,
+          };
+          return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
+        });
+        setCutRice(sortedData);
       } catch (error) {
         console.log(error);
       }
     }
   };
 
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSelectedUnits, setExportSelectedUnits] = useState([]);
+
   const handleExportFileExcel = async (e) => {
     e.preventDefault();
+    setShowExportModal(true);
+  };
+
+  const handleConfirmExport = async () => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
+        const unitParam =
+          exportSelectedUnits.length > 0
+            ? exportSelectedUnits.join(",")
+            : "all";
+
         const response = await axios.get(
-          `${BASE_URL}/commander/cutRice/excel`,
+          `${BASE_URL}/commander/cutRice/excel?unit=${unitParam}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -107,13 +236,29 @@ const CutRice = () => {
           }
         );
 
+        // Tạo tên file theo đơn vị được chọn
+        let fileName = "Danh_sach_cat_com_he_hoc_vien_5";
+        if (exportSelectedUnits.length > 0) {
+          const unitNames = exportSelectedUnits.map((unit) =>
+            unit.replace(/\s+/g, "_")
+          );
+          fileName += `_${unitNames.join("_")}`;
+        } else {
+          fileName += "_tat_ca_don_vi";
+        }
+        fileName += ".xlsx";
+
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "danh_sach_cat_com_h5.xlsx");
+        link.setAttribute("download", fileName);
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
+
+        setShowExportModal(false);
+        setExportSelectedUnits([]);
+        handleNotify("success", "Thành công!", "Xuất file Excel thành công");
       } catch (error) {
         handleNotify("danger", "Lỗi!", error);
       }
@@ -437,6 +582,103 @@ const CutRice = () => {
                     </div>
                   </form>
                 </div>
+
+                {/* Thống kê cắt cơm */}
+                {cutRice && cutRice.length > 0 && (
+                  <div className="mb-4">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4 border border-blue-200 dark:border-gray-600">
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        Thống kê cắt cơm theo tuần
+                      </h3>
+                      <div className="grid grid-cols-7 gap-2">
+                        {(() => {
+                          const stats = calculateStatistics();
+                          const currentDay = getCurrentDay();
+                          return [
+                            { day: "Thứ 2", data: stats.monday, dayIndex: 1 },
+                            { day: "Thứ 3", data: stats.tuesday, dayIndex: 2 },
+                            {
+                              day: "Thứ 4",
+                              data: stats.wednesday,
+                              dayIndex: 3,
+                            },
+                            { day: "Thứ 5", data: stats.thursday, dayIndex: 4 },
+                            { day: "Thứ 6", data: stats.friday, dayIndex: 5 },
+                            { day: "Thứ 7", data: stats.saturday, dayIndex: 6 },
+                            {
+                              day: "Chủ nhật",
+                              data: stats.sunday,
+                              dayIndex: 0,
+                            },
+                          ].map(({ day, data, dayIndex }) => {
+                            const isToday = dayIndex === currentDay;
+                            return (
+                              <div
+                                key={day}
+                                className={`rounded-lg p-3 border transition-all duration-200 ${
+                                  isToday
+                                    ? "bg-yellow-100 dark:bg-yellow-900 border-yellow-300 dark:border-yellow-600 shadow-lg transform scale-105"
+                                    : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:shadow-md"
+                                }`}
+                              >
+                                <div className="text-center mb-2">
+                                  <div
+                                    className={`text-xs font-medium ${
+                                      isToday
+                                        ? "text-yellow-800 dark:text-yellow-200"
+                                        : "text-gray-500 dark:text-gray-400"
+                                    }`}
+                                  >
+                                    {day}
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                      Sáng:
+                                    </span>
+                                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                      {data.breakfast}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                      Trưa:
+                                    </span>
+                                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                      {data.lunch}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                      Tối:
+                                    </span>
+                                    <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                      {data.dinner}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="w-full pl-5 pb-5 pr-5">
                 <div className="overflow-x-auto">
@@ -869,6 +1111,94 @@ const CutRice = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal xuất Excel */}
+      {showExportModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Xuất Excel
+              </h2>
+              <button
+                onClick={() => {
+                  setShowExportModal(false);
+                  setExportSelectedUnits([]);
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chọn đơn vị
+                </label>
+                <ConfigProvider
+                  theme={{
+                    algorithm: isDark
+                      ? theme.darkAlgorithm
+                      : theme.defaultAlgorithm,
+                  }}
+                >
+                  <Select
+                    mode="multiple"
+                    style={{ width: "100%" }}
+                    placeholder="Chọn đơn vị để xuất Excel"
+                    allowClear
+                    value={exportSelectedUnits}
+                    onChange={setExportSelectedUnits}
+                    options={[
+                      { value: "L1 - H5", label: "L1 - H5" },
+                      { value: "L2 - H5", label: "L2 - H5" },
+                      { value: "L3 - H5", label: "L3 - H5" },
+                      { value: "L4 - H5", label: "L4 - H5" },
+                      { value: "L5 - H5", label: "L5 - H5" },
+                      { value: "L6 - H5", label: "L6 - H5" },
+                    ]}
+                  />
+                </ConfigProvider>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Chọn nhiều đơn vị hoặc để trống để xuất tất cả đơn vị.
+                </p>
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900"
+                  onClick={() => {
+                    setShowExportModal(false);
+                    setExportSelectedUnits([]);
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  onClick={handleConfirmExport}
+                >
+                  Xuất Excel
+                </button>
+              </div>
             </div>
           </div>
         </div>
