@@ -66,7 +66,7 @@ const YearlyStatistics = () => {
 
       console.log("Yearly results data:", res.data);
 
-      // Xử lý dữ liệu từ API
+      // Xử lý dữ liệu từ API - dữ liệu đã được xử lý từ backend
       const processedData = res.data || [];
 
       // Lấy danh sách năm học từ dữ liệu
@@ -82,7 +82,7 @@ const YearlyStatistics = () => {
       );
       setSchoolYears(uniqueSchoolYears);
 
-      // Dữ liệu đã được xử lý từ backend, chỉ cần set
+      // Set dữ liệu trực tiếp từ API
       setYearlyResults(processedData);
 
       // Lấy danh sách các đơn vị có sẵn từ dữ liệu
@@ -135,6 +135,7 @@ const YearlyStatistics = () => {
       );
 
       console.log(`Yearly results data for ${year}:`, res.data);
+      // Dữ liệu đã được xử lý từ backend, chỉ cần set
       setYearlyResults(res.data || []);
     } catch (error) {
       console.log("Error fetching yearly results for year:", error);
@@ -159,79 +160,8 @@ const YearlyStatistics = () => {
 
       console.log("Yearly results data:", res.data);
 
-      // Xử lý dữ liệu để hiển thị đúng format
-      let processedData = res.data || [];
-
-      if (selectedSchoolYear === "all") {
-        // Nếu chọn "Tất cả các năm", cần xử lý để hiển thị từng năm học riêng biệt
-        const allYearlyData = [];
-
-        processedData.forEach((student) => {
-          if (student.yearlyResults && student.yearlyResults.length > 0) {
-            student.yearlyResults.forEach((yearlyResult) => {
-              allYearlyData.push({
-                ...student,
-                schoolYear: yearlyResult.schoolYear,
-                averageGrade4: yearlyResult.averageGrade4,
-                averageGrade10: yearlyResult.averageGrade10,
-                cumulativeGrade4: yearlyResult.cumulativeGrade4,
-                cumulativeGrade10: yearlyResult.cumulativeGrade10,
-                cumulativeCredits: yearlyResult.cumulativeCredits,
-                totalCredits: yearlyResult.totalCredits,
-                totalDebt: yearlyResult.totalDebt || 0,
-                semesterCount: yearlyResult.semesters?.length || 0,
-                semesters: yearlyResult.semesters,
-                subjects: yearlyResult.subjects || [],
-                partyRating: yearlyResult.partyRating,
-                trainingRating: yearlyResult.trainingRating,
-                academicStatus: yearlyResult.academicStatus,
-                totalSubjects: yearlyResult.totalSubjects,
-                passedSubjects: yearlyResult.passedSubjects,
-                failedSubjects: yearlyResult.failedSubjects,
-              });
-            });
-          }
-        });
-
-        // Sắp xếp theo năm học (mới nhất trước)
-        allYearlyData.sort((a, b) => b.schoolYear.localeCompare(a.schoolYear));
-        processedData = allYearlyData;
-      } else {
-        // Nếu chọn năm học cụ thể, lọc dữ liệu cho năm đó
-        const filteredData = [];
-
-        processedData.forEach((student) => {
-          const yearlyResult = student.yearlyResults?.find(
-            (result) => result.schoolYear === selectedSchoolYear
-          );
-
-          if (yearlyResult) {
-            filteredData.push({
-              ...student,
-              schoolYear: yearlyResult.schoolYear,
-              averageGrade4: yearlyResult.averageGrade4,
-              averageGrade10: yearlyResult.averageGrade10,
-              cumulativeGrade4: yearlyResult.cumulativeGrade4,
-              cumulativeGrade10: yearlyResult.cumulativeGrade10,
-              cumulativeCredits: yearlyResult.cumulativeCredits,
-              totalCredits: yearlyResult.totalCredits,
-              totalDebt: yearlyResult.totalDebt || 0,
-              semesterCount: yearlyResult.semesters?.length || 0,
-              semesters: yearlyResult.semesters,
-              subjects: yearlyResult.subjects || [],
-              partyRating: yearlyResult.partyRating,
-              trainingRating: yearlyResult.trainingRating,
-              academicStatus: yearlyResult.academicStatus,
-              totalSubjects: yearlyResult.totalSubjects,
-              passedSubjects: yearlyResult.passedSubjects,
-              failedSubjects: yearlyResult.failedSubjects,
-            });
-          }
-        });
-
-        processedData = filteredData;
-      }
-
+      // Dữ liệu đã được xử lý từ backend, chỉ cần set
+      const processedData = res.data || [];
       setYearlyResults(processedData);
 
       // Lấy danh sách các đơn vị có sẵn từ dữ liệu
@@ -266,11 +196,11 @@ const YearlyStatistics = () => {
         setStudentDetail({
           ...studentData,
           totalCredits: studentData.totalCredits || 0,
-          averageGrade4: parseFloat(studentData.averageGrade4) || 0,
-          averageGrade10: parseFloat(studentData.averageGrade10) || 0,
-          cumulativeGrade4: parseFloat(studentData.cumulativeGrade4) || 0,
+          yearlyGPA: parseFloat(studentData.yearlyGPA) || 0,
+          yearlyGrade10: parseFloat(studentData.yearlyGrade10) || 0,
+          cumulativeGPA: parseFloat(studentData.cumulativeGPA) || 0,
           cumulativeGrade10: parseFloat(studentData.cumulativeGrade10) || 0,
-          cumulativeCredits: parseFloat(studentData.cumulativeCredits) || 0,
+          cumulativeCredit: parseFloat(studentData.cumulativeCredit) || 0,
           subjects: studentData.subjects || [],
           partyRating: studentData.partyRating,
           trainingRating: studentData.trainingRating,
@@ -290,14 +220,14 @@ const YearlyStatistics = () => {
             totalCredits:
               data.totalCredits ||
               data.subjects.reduce((sum, sub) => sum + (sub.credits || 0), 0),
-            averageGrade4:
-              data.averageGrade4 ||
+            yearlyGPA:
+              data.yearlyGPA ||
               data.subjects.reduce(
                 (sum, sub) => sum + (sub.gradePoint4 || 0),
                 0
               ) / data.subjects.length,
-            averageGrade10:
-              data.averageGrade10 ||
+            yearlyGrade10:
+              data.yearlyGrade10 ||
               data.subjects.reduce(
                 (sum, sub) => sum + (sub.gradePoint10 || 0),
                 0
@@ -334,8 +264,8 @@ const YearlyStatistics = () => {
     if (!token || !selectedStudent) return;
 
     try {
-      // Sử dụng _id trực tiếp từ dữ liệu API
-      const yearlyResultId = selectedStudent._id;
+      // Sử dụng yearlyResultId từ dữ liệu API
+      const yearlyResultId = selectedStudent.yearlyResultId;
 
       if (!yearlyResultId) {
         handleNotify("danger", "Lỗi!", "Không tìm thấy kết quả năm học");
@@ -441,7 +371,7 @@ const YearlyStatistics = () => {
     if (results.length === 0) return 0;
 
     const totalGPA = results.reduce((sum, item) => {
-      return sum + (parseFloat(item.averageGrade4) || 0);
+      return sum + (parseFloat(item.yearlyGPA) || 0);
     }, 0);
 
     return (totalGPA / results.length).toFixed(2);
@@ -679,7 +609,7 @@ const YearlyStatistics = () => {
                           if (results.length === 0) return "0.00";
 
                           const totalGPA = results.reduce((sum, item) => {
-                            return sum + (parseFloat(item.averageGrade4) || 0);
+                            return sum + (parseFloat(item.yearlyGPA) || 0);
                           }, 0);
 
                           return (totalGPA / results.length).toFixed(2);
@@ -699,7 +629,7 @@ const YearlyStatistics = () => {
                               0
                             )
                           : getFilteredResults().filter(
-                              (item) => parseFloat(item.averageGrade4) >= 3.0
+                              (item) => parseFloat(item.yearlyGPA) >= 3.0
                             ).length}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -711,9 +641,10 @@ const YearlyStatistics = () => {
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {selectedSchoolYear === "all"
-                          ? getFilteredResults()[
-                              getFilteredResults().length - 1
-                            ]?.totalDebt || 0
+                          ? getFilteredResults().reduce(
+                              (sum, item) => sum + (item.totalDebt || 0),
+                              0
+                            )
                           : getStudentsWithFGrade()}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -738,32 +669,32 @@ const YearlyStatistics = () => {
                     {selectedSchoolYear !== "all" && (
                       <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
                         {(() => {
-                          const partyRating =
-                            getFilteredResults()[0]?.partyRating;
-                          const positionParty =
-                            getFilteredResults()[0]?.positionParty;
-                          const displayText =
-                            positionParty === "Không"
-                              ? "Chưa là Đảng viên"
-                              : partyRating?.rating || "Chưa cập nhật";
-                          const isSmallText =
-                            displayText === "Chưa cập nhật" ||
-                            displayText === "Chưa là Đảng viên";
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          // Đếm số đảng viên và không phải đảng viên
+                          const partyMembers = results.filter(
+                            (item) => item.positionParty !== "Không"
+                          );
+                          const nonPartyMembers = results.filter(
+                            (item) => item.positionParty === "Không"
+                          );
+
+                          const displayText = `${partyMembers.length} Đảng viên, ${nonPartyMembers.length} chưa là Đảng viên`;
 
                           return (
-                            <div
-                              className={`${
-                                isSmallText
-                                  ? "text-sm font-bold mb-2"
-                                  : "text-2xl font-bold"
-                              } text-orange-600 dark:text-orange-400 flex items-center justify-center h-8`}
-                            >
+                            <div className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center h-8">
                               {displayText}
                             </div>
                           );
                         })()}
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Xếp loại Đảng viên
+                          Thống kê Đảng viên
                         </div>
                       </div>
                     )}
@@ -846,7 +777,8 @@ const YearlyStatistics = () => {
                         getFilteredResults().map((item) => (
                           <tr
                             key={`${item._id}-${item.schoolYear}`}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                            onClick={() => handleViewDetail(item)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {item.unit || "Chưa có đơn vị"}
@@ -919,14 +851,19 @@ const YearlyStatistics = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-orange-600 dark:text-orange-400">
-                                {item.partyRating
-                                  ? item.partyRating.rating
-                                  : "Chưa cập nhật"}
+                                {(() => {
+                                  if (item.positionParty === "Không") {
+                                    return "Chưa là Đảng viên";
+                                  }
+                                  return (
+                                    item.partyRating?.rating || "Chưa cập nhật"
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-purple-600 dark:text-purple-400">
-                                {item.trainingRating || "Chưa cập nhật"}
+                                {item.cumulativeCredit}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
@@ -934,7 +871,10 @@ const YearlyStatistics = () => {
                                 <button
                                   className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                                   title="Xem chi tiết"
-                                  onClick={() => handleViewDetail(item)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewDetail(item);
+                                  }}
                                 >
                                   <svg
                                     className="w-4 h-4"
@@ -959,7 +899,10 @@ const YearlyStatistics = () => {
                                 <button
                                   className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                                   title="Cập nhật xếp loại"
-                                  onClick={() => handleUpdateRating(item)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateRating(item);
+                                  }}
                                 >
                                   <svg
                                     className="w-4 h-4"
@@ -1057,7 +1000,7 @@ const YearlyStatistics = () => {
               {studentDetail ? (
                 <>
                   {/* Thông tin tổng quan */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {studentDetail.totalCredits || 0}
@@ -1068,18 +1011,18 @@ const YearlyStatistics = () => {
                     </div>
                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {studentDetail.averageGrade4?.toFixed(2) || "0.00"}
+                        {studentDetail.yearlyGPA?.toFixed(2) || "0.00"}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        GPA (Hệ 4)
+                        GPA năm học (Hệ 4)
                       </div>
                     </div>
                     <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {studentDetail.averageGrade10?.toFixed(2) || "0.00"}
+                        {studentDetail.yearlyGrade10?.toFixed(2) || "0.00"}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        GPA (Hệ 10)
+                        GPA năm học (Hệ 10)
                       </div>
                     </div>
                     <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
@@ -1090,13 +1033,65 @@ const YearlyStatistics = () => {
                         Số môn học
                       </div>
                     </div>
+                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+                      {(() => {
+                        const positionParty = studentDetail.positionParty;
+                        const partyRating = studentDetail.partyRating;
+                        const displayText =
+                          positionParty === "Không"
+                            ? "Chưa là Đảng viên"
+                            : partyRating?.rating || "Chưa cập nhật";
+                        const isSmallText =
+                          displayText === "Chưa cập nhật" ||
+                          displayText === "Chưa là Đảng viên";
+
+                        return (
+                          <div
+                            className={`${
+                              isSmallText
+                                ? "text-sm font-bold mb-1"
+                                : "text-2xl font-bold"
+                            } text-red-600 dark:text-red-400 flex items-center justify-center h-8`}
+                          >
+                            {displayText}
+                          </div>
+                        );
+                      })()}
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Xếp loại Đảng viên
+                      </div>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                      {(() => {
+                        const trainingRating = studentDetail.trainingRating;
+                        const displayText = trainingRating || "Chưa cập nhật";
+                        const isSmallText = displayText === "Chưa cập nhật";
+
+                        return (
+                          <div
+                            className={`${
+                              isSmallText
+                                ? "text-sm font-bold mb-1"
+                                : "text-2xl font-bold"
+                            } text-indigo-600 dark:text-indigo-400 flex items-center justify-center h-8`}
+                          >
+                            {displayText}
+                          </div>
+                        );
+                      })()}
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Xếp loại Rèn luyện
+                      </div>
+                    </div>
                   </div>
 
                   {/* Bảng chi tiết môn học */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Chi tiết các môn học năm học {studentDetail.schoolYear}
+                        Chi tiết các môn học năm học {studentDetail.schoolYear}{" "}
+                        - {selectedStudent?.fullName} (
+                        {selectedStudent?.studentCode})
                       </h3>
                     </div>
                     <div className="overflow-x-auto">

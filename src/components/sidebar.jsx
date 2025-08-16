@@ -250,6 +250,12 @@ const SideBarContent = () => {
                 >
                   Quản lý các kì học
                 </Menu.Item>
+                <Menu.Item
+                  key="/admin/yearly-statistics"
+                  icon={<BarChartOutlined />}
+                >
+                  Thống kê theo năm
+                </Menu.Item>
                 <Menu.Item key="/admin/tuition-fees" icon={<DollarOutlined />}>
                   Học phí
                 </Menu.Item>
