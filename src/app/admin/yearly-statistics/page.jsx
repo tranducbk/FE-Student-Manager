@@ -9,10 +9,10 @@ import { BASE_URL } from "@/configs";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
 
-const LearningResults = () => {
-  const [learningResults, setLearningResults] = useState([]);
-  const [semesters, setSemesters] = useState([]);
-  const [selectedSemesters, setSelectedSemesters] = useState([]);
+const YearlyStatistics = () => {
+  const [yearlyResults, setYearlyResults] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("all");
@@ -50,95 +50,202 @@ const LearningResults = () => {
   }, []);
 
   useEffect(() => {
-    fetchSemesters();
+    fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (selectedSemesters.length > 0) {
-      fetchLearningResults();
-    }
-  }, [selectedSemesters]);
-
-  const fetchSemesters = async () => {
+  const fetchInitialData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/semester`, {
+      // Gọi API để lấy dữ liệu thống kê năm học (không có tham số schoolYear)
+      const res = await axios.get(`${BASE_URL}/commander/yearlyStatistics`, {
         headers: { token: `Bearer ${token}` },
       });
-      const list = res.data || [];
-      console.log("Semesters data:", list);
-      setSemesters(list);
-      if (list.length > 0) {
-        // Chọn tất cả các kỳ ban đầu
-        setSelectedSemesters(list.map((semester) => semester._id));
-      }
+
+      console.log("Yearly results data:", res.data);
+
+      // Xử lý dữ liệu từ API
+      const processedData = res.data || [];
+
+      // Lấy danh sách năm học từ dữ liệu
+      const allSchoolYears = new Set();
+      processedData.forEach((item) => {
+        if (item.schoolYear && item.schoolYear !== "Tất cả") {
+          allSchoolYears.add(item.schoolYear);
+        }
+      });
+
+      const uniqueSchoolYears = Array.from(allSchoolYears).sort((a, b) =>
+        b.localeCompare(a)
+      );
+      setSchoolYears(uniqueSchoolYears);
+
+      // Dữ liệu đã được xử lý từ backend, chỉ cần set
+      setYearlyResults(processedData);
+
+      // Lấy danh sách các đơn vị có sẵn từ dữ liệu
+      const units = [
+        ...new Set(
+          processedData
+            .map((item) => item.unit)
+            .filter((unit) => unit && unit.trim())
+        ),
+      ];
+      setAvailableUnits(units);
+
+      // Mặc định chọn "Tất cả các năm"
+      setSelectedSchoolYear("all");
     } catch (error) {
-      console.log("Error fetching semesters:", error);
-      setSemesters([]);
-      setSelectedSemesters([]);
+      console.log("Error fetching initial data:", error);
+      setYearlyResults([]);
+      setSchoolYears([]);
+      setSelectedSchoolYear("");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchLearningResults = async () => {
+  // Xử lý khi người dùng thay đổi năm học
+  const handleSchoolYearChange = (newSchoolYear) => {
+    setSelectedSchoolYear(newSchoolYear);
+
+    if (newSchoolYear === "all") {
+      // Nếu chọn "Tất cả các năm", gọi lại API để lấy tất cả dữ liệu
+      fetchInitialData();
+      return;
+    }
+
+    // Nếu chọn năm học cụ thể, gọi API để lấy dữ liệu cho năm đó
+    fetchYearlyResultsForYear(newSchoolYear);
+  };
+
+  const fetchYearlyResultsForYear = async (year) => {
     const token = localStorage.getItem("token");
-    if (!token || selectedSemesters.length === 0) return;
+    if (!token) return;
 
     setLoading(true);
     try {
-      // Xử lý khi chọn "Tất cả học kỳ"
-      let semesterData = [];
-      if (selectedSemesters.includes("all")) {
-        // Nếu chọn "Tất cả học kỳ", lấy tất cả semesters
-        semesterData = semesters.map((semester) => ({
-          semester: semester.code,
-          schoolYear: semester.schoolYear || "2024-2025",
-        }));
-      } else {
-        // Nếu chọn từng học kỳ cụ thể
-        semesterData = selectedSemesters.map((semesterId) => {
-          const semester = semesters.find((s) => s._id === semesterId);
-          return {
-            semester: semester?.code || semesterId,
-            schoolYear: semester?.schoolYear || "2024-2025",
-          };
-        });
-      }
-
-      // Tách riêng semester và schoolYear để gửi lên API
-      const semesterParam = semesterData.map((item) => item.semester).join(",");
-      const schoolYearParam = semesterData
-        .map((item) => item.schoolYear)
-        .join(",");
-
-      console.log("Fetching with semester and schoolYear:", {
-        semesterParam,
-        schoolYearParam,
-      });
-
       const res = await axios.get(
-        `${BASE_URL}/commander/allStudentsGrades?semester=${semesterParam}&schoolYear=${schoolYearParam}`,
+        `${BASE_URL}/commander/yearlyStatistics?schoolYear=${year}`,
         {
           headers: { token: `Bearer ${token}` },
         }
       );
 
-      console.log("Learning results data:", res.data);
-      setLearningResults(res.data || []);
+      console.log(`Yearly results data for ${year}:`, res.data);
+      setYearlyResults(res.data || []);
+    } catch (error) {
+      console.log("Error fetching yearly results for year:", error);
+      setYearlyResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchYearlyResults = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !selectedSchoolYear) return;
+
+    setLoading(true);
+    try {
+      let res;
+
+      // Lấy tất cả dữ liệu thống kê năm học
+      res = await axios.get(`${BASE_URL}/commander/yearlyStatistics`, {
+        headers: { token: `Bearer ${token}` },
+      });
+
+      console.log("Yearly results data:", res.data);
+
+      // Xử lý dữ liệu để hiển thị đúng format
+      let processedData = res.data || [];
+
+      if (selectedSchoolYear === "all") {
+        // Nếu chọn "Tất cả các năm", cần xử lý để hiển thị từng năm học riêng biệt
+        const allYearlyData = [];
+
+        processedData.forEach((student) => {
+          if (student.yearlyResults && student.yearlyResults.length > 0) {
+            student.yearlyResults.forEach((yearlyResult) => {
+              allYearlyData.push({
+                ...student,
+                schoolYear: yearlyResult.schoolYear,
+                averageGrade4: yearlyResult.averageGrade4,
+                averageGrade10: yearlyResult.averageGrade10,
+                cumulativeGrade4: yearlyResult.cumulativeGrade4,
+                cumulativeGrade10: yearlyResult.cumulativeGrade10,
+                cumulativeCredits: yearlyResult.cumulativeCredits,
+                totalCredits: yearlyResult.totalCredits,
+                totalDebt: yearlyResult.totalDebt || 0,
+                semesterCount: yearlyResult.semesters?.length || 0,
+                semesters: yearlyResult.semesters,
+                subjects: yearlyResult.subjects || [],
+                partyRating: yearlyResult.partyRating,
+                trainingRating: yearlyResult.trainingRating,
+                academicStatus: yearlyResult.academicStatus,
+                totalSubjects: yearlyResult.totalSubjects,
+                passedSubjects: yearlyResult.passedSubjects,
+                failedSubjects: yearlyResult.failedSubjects,
+              });
+            });
+          }
+        });
+
+        // Sắp xếp theo năm học (mới nhất trước)
+        allYearlyData.sort((a, b) => b.schoolYear.localeCompare(a.schoolYear));
+        processedData = allYearlyData;
+      } else {
+        // Nếu chọn năm học cụ thể, lọc dữ liệu cho năm đó
+        const filteredData = [];
+
+        processedData.forEach((student) => {
+          const yearlyResult = student.yearlyResults?.find(
+            (result) => result.schoolYear === selectedSchoolYear
+          );
+
+          if (yearlyResult) {
+            filteredData.push({
+              ...student,
+              schoolYear: yearlyResult.schoolYear,
+              averageGrade4: yearlyResult.averageGrade4,
+              averageGrade10: yearlyResult.averageGrade10,
+              cumulativeGrade4: yearlyResult.cumulativeGrade4,
+              cumulativeGrade10: yearlyResult.cumulativeGrade10,
+              cumulativeCredits: yearlyResult.cumulativeCredits,
+              totalCredits: yearlyResult.totalCredits,
+              totalDebt: yearlyResult.totalDebt || 0,
+              semesterCount: yearlyResult.semesters?.length || 0,
+              semesters: yearlyResult.semesters,
+              subjects: yearlyResult.subjects || [],
+              partyRating: yearlyResult.partyRating,
+              trainingRating: yearlyResult.trainingRating,
+              academicStatus: yearlyResult.academicStatus,
+              totalSubjects: yearlyResult.totalSubjects,
+              passedSubjects: yearlyResult.passedSubjects,
+              failedSubjects: yearlyResult.failedSubjects,
+            });
+          }
+        });
+
+        processedData = filteredData;
+      }
+
+      setYearlyResults(processedData);
 
       // Lấy danh sách các đơn vị có sẵn từ dữ liệu
       const units = [
         ...new Set(
-          res.data
+          processedData
             .map((item) => item.unit)
             .filter((unit) => unit && unit.trim())
         ),
       ];
       setAvailableUnits(units);
     } catch (error) {
-      console.log("Error fetching learning results:", error);
-      setLearningResults([]);
+      console.log("Error fetching yearly results:", error);
+      setYearlyResults([]);
     } finally {
       setLoading(false);
     }
@@ -150,36 +257,55 @@ const LearningResults = () => {
     if (!token) return;
 
     try {
-      // Gọi API từ bên học viên để lấy chi tiết điểm
-      const res = await axios.get(
-        `${BASE_URL}/grade/student/${studentId}/${semester}/${schoolYear}`,
-        { headers: { token: `Bearer ${token}` } }
+      // Sử dụng dữ liệu đã có từ yearlyResults
+      const studentData = yearlyResults.find(
+        (item) => item.studentId === studentId && item.schoolYear === schoolYear
       );
 
-      // Kiểm tra và format dữ liệu trả về
-      const data = res.data;
-      if (data && data.subjects) {
-        // Đảm bảo dữ liệu có đầy đủ thông tin cần thiết
+      if (studentData) {
         setStudentDetail({
-          ...data,
-          totalCredits:
-            data.totalCredits ||
-            data.subjects.reduce((sum, sub) => sum + (sub.credits || 0), 0),
-          averageGrade4:
-            data.averageGrade4 ||
-            data.subjects.reduce(
-              (sum, sub) => sum + (sub.gradePoint4 || 0),
-              0
-            ) / data.subjects.length,
-          averageGrade10:
-            data.averageGrade10 ||
-            data.subjects.reduce(
-              (sum, sub) => sum + (sub.gradePoint10 || 0),
-              0
-            ) / data.subjects.length,
+          ...studentData,
+          totalCredits: studentData.totalCredits || 0,
+          averageGrade4: parseFloat(studentData.averageGrade4) || 0,
+          averageGrade10: parseFloat(studentData.averageGrade10) || 0,
+          cumulativeGrade4: parseFloat(studentData.cumulativeGrade4) || 0,
+          cumulativeGrade10: parseFloat(studentData.cumulativeGrade10) || 0,
+          cumulativeCredits: parseFloat(studentData.cumulativeCredits) || 0,
+          subjects: studentData.subjects || [],
+          partyRating: studentData.partyRating,
+          trainingRating: studentData.trainingRating,
+          academicStatus: studentData.academicStatus,
         });
       } else {
-        setStudentDetail(data);
+        // Fallback: gọi API nếu không tìm thấy dữ liệu
+        const res = await axios.get(
+          `${BASE_URL}/grade/student/${studentId}/${semester}/${schoolYear}`,
+          { headers: { token: `Bearer ${token}` } }
+        );
+
+        const data = res.data;
+        if (data && data.subjects) {
+          setStudentDetail({
+            ...data,
+            totalCredits:
+              data.totalCredits ||
+              data.subjects.reduce((sum, sub) => sum + (sub.credits || 0), 0),
+            averageGrade4:
+              data.averageGrade4 ||
+              data.subjects.reduce(
+                (sum, sub) => sum + (sub.gradePoint4 || 0),
+                0
+              ) / data.subjects.length,
+            averageGrade10:
+              data.averageGrade10 ||
+              data.subjects.reduce(
+                (sum, sub) => sum + (sub.gradePoint10 || 0),
+                0
+              ) / data.subjects.length,
+          });
+        } else {
+          setStudentDetail(data);
+        }
       }
     } catch (error) {
       console.log("Error fetching student detail:", error);
@@ -190,15 +316,15 @@ const LearningResults = () => {
   const handleViewDetail = async (row) => {
     setSelectedStudent(row);
     setShowDetailModal(true);
-    await fetchStudentDetail(row.studentId, row.semester, row.schoolYear);
+    await fetchStudentDetail(row.studentId, row.semesterCount, row.schoolYear);
   };
 
   const handleUpdateRating = (row) => {
     setSelectedStudent(row);
     setUpdateFormData({
-      partyRating: row.yearlyResults?.[0]?.partyRating?.rating || "",
-      trainingRating: row.yearlyResults?.[0]?.trainingRating || "",
-      decisionNumber: row.yearlyResults?.[0]?.partyRating?.decisionNumber || "",
+      partyRating: row.partyRating?.rating || "",
+      trainingRating: row.trainingRating || "",
+      decisionNumber: row.partyRating?.decisionNumber || "",
     });
     setShowUpdateModal(true);
   };
@@ -208,7 +334,8 @@ const LearningResults = () => {
     if (!token || !selectedStudent) return;
 
     try {
-      const yearlyResultId = selectedStudent.yearlyResults?.[0]?._id;
+      // Sử dụng _id trực tiếp từ dữ liệu API
+      const yearlyResultId = selectedStudent._id;
 
       if (!yearlyResultId) {
         handleNotify("danger", "Lỗi!", "Không tìm thấy kết quả năm học");
@@ -221,6 +348,7 @@ const LearningResults = () => {
           partyRating: updateFormData.partyRating,
           trainingRating: updateFormData.trainingRating,
           decisionNumber: updateFormData.decisionNumber,
+          studentId: selectedStudent.studentId,
         },
         {
           headers: { token: `Bearer ${token}` },
@@ -231,7 +359,11 @@ const LearningResults = () => {
         handleNotify("success", "Thành công", "Cập nhật xếp loại thành công");
         setShowUpdateModal(false);
         // Refresh data
-        fetchLearningResults();
+        if (selectedSchoolYear === "all") {
+          fetchInitialData();
+        } else {
+          fetchYearlyResultsForYear(selectedSchoolYear);
+        }
       }
     } catch (error) {
       console.log("Error updating rating:", error);
@@ -239,77 +371,19 @@ const LearningResults = () => {
     }
   };
 
-  const handleExportPDF = async () => {
-    const token = localStorage.getItem("token");
-    if (!token || selectedSemesters.length === 0) return;
-
-    try {
-      // Chuyển đổi từ _id sang code cho API export
-      let semesterParam;
-      if (selectedSemesters.includes("all")) {
-        // Nếu chọn "Tất cả học kỳ", lấy tất cả codes
-        semesterParam = semesters.map((semester) => semester.code).join(",");
-      } else {
-        // Nếu chọn từng học kỳ cụ thể
-        semesterParam = selectedSemesters
-          .map((semesterId) => {
-            const semester = semesters.find((s) => s._id === semesterId);
-            return semester?.code || semesterId;
-          })
-          .join(",");
-      }
-      const res = await axios.get(
-        `${BASE_URL}/commander/learningResult/pdf?semester=${semesterParam}`,
-        {
-          headers: { token: `Bearer ${token}` },
-          responseType: "blob",
-        }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `Thong_ke_ket_qua_hoc_tap_${semesterParam}.pdf`
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      handleNotify("success", "Thành công", "Đã xuất file PDF");
-    } catch (error) {
-      console.log("Error exporting PDF:", error);
-      handleNotify("error", "Lỗi", "Không thể xuất file PDF");
-    }
-  };
-
-  const getSemesterLabel = (s) => {
-    if (!s) return "";
-    // Hiển thị format: HK1 - 2024-2025
-    if (s.schoolYear) return `${s.code} - ${s.schoolYear}`;
-    return s.code;
-  };
-
-  // Tạo tree data cho TreeSelect với option "Tất cả học kỳ"
-  const treeData = [
-    {
-      title: "Tất cả học kỳ",
-      value: "all",
-      key: "all",
-    },
-    ...semesters.map((semester) => ({
-      title: getSemesterLabel(semester),
-      value: semester._id,
-      key: semester._id,
+  // Tạo options cho Select năm học
+  const schoolYearOptions = [
+    { label: "Tất cả các năm", value: "all" },
+    ...schoolYears.map((year) => ({
+      label: `Năm học ${year}`,
+      value: year,
     })),
   ];
 
   const getFilteredResults = () => {
-    if (!learningResults) return [];
+    if (!yearlyResults) return [];
 
-    let filtered = learningResults.filter((item) => {
+    let filtered = yearlyResults.filter((item) => {
       const matchesSearch =
         searchTerm === "" ||
         item.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -323,9 +397,14 @@ const LearningResults = () => {
       return matchesSearch && matchesUnit;
     });
 
-    // Sắp xếp theo thứ tự: đơn vị → tên → năm học → học kỳ
+    // Sắp xếp theo thứ tự: năm học → đơn vị → tên
     return filtered.sort((a, b) => {
-      // 1. Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
+      // 1. Sắp xếp theo năm học (mới nhất trước)
+      if (a.schoolYear !== b.schoolYear) {
+        return b.schoolYear.localeCompare(a.schoolYear);
+      }
+
+      // 2. Trong cùng năm học, sắp xếp theo đơn vị từ L1-H5 đến L6-H5
       const unitOrder = {
         "L1 - H5": 1,
         "L2 - H5": 2,
@@ -338,27 +417,8 @@ const LearningResults = () => {
       const unitB = unitOrder[b.unit] || 999;
       if (unitA !== unitB) return unitA - unitB;
 
-      // 2. Trong cùng đơn vị, sắp xếp theo tên học viên A-Z
-      if (a.fullName !== b.fullName) {
-        return a.fullName.localeCompare(b.fullName, "vi");
-      }
-
-      // 3. Trong cùng học viên, sắp xếp theo năm học (mới đến cũ)
-      const yearA = a.schoolYear || "";
-      const yearB = b.schoolYear || "";
-      if (yearA !== yearB) {
-        return yearB.localeCompare(yearA); // Năm mới trước
-      }
-
-      // 4. Trong cùng năm học, sắp xếp theo học kỳ (HK3, HK2, HK1)
-      const semesterOrder = {
-        HK3: 3,
-        HK2: 2,
-        HK1: 1,
-      };
-      const semesterA = semesterOrder[a.semester] || 0;
-      const semesterB = semesterOrder[b.semester] || 0;
-      return semesterB - semesterA; // Kỳ mới trước
+      // 3. Trong cùng đơn vị, sắp xếp theo tên học viên A-Z
+      return a.fullName.localeCompare(b.fullName, "vi");
     });
   };
 
@@ -373,6 +433,18 @@ const LearningResults = () => {
         )
       );
     }).length;
+  };
+
+  // Tính tổng GPA trung bình của năm học
+  const getAverageYearlyGPA = () => {
+    const results = getFilteredResults();
+    if (results.length === 0) return 0;
+
+    const totalGPA = results.reduce((sum, item) => {
+      return sum + (parseFloat(item.averageGrade4) || 0);
+    }, 0);
+
+    return (totalGPA / results.length).toFixed(2);
   };
 
   return (
@@ -418,7 +490,7 @@ const LearningResults = () => {
                       />
                     </svg>
                     <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Kết quả học tập
+                      Thống kê theo năm
                     </div>
                   </div>
                 </li>
@@ -430,7 +502,7 @@ const LearningResults = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white text-lg">
-                  KẾT QUẢ HỌC TẬP HỌC VIÊN
+                  THỐNG KÊ KẾT QUẢ HỌC TẬP THEO NĂM
                 </div>
                 {/* <div className="flex gap-2">
                   <button
@@ -461,10 +533,10 @@ const LearningResults = () => {
                   <form className="flex items-end gap-4 flex-wrap">
                     <div>
                       <label
-                        htmlFor="semester"
+                        htmlFor="schoolYear"
                         className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        Chọn học kỳ
+                        Chọn năm học
                       </label>
                       <ConfigProvider
                         theme={{
@@ -478,45 +550,12 @@ const LearningResults = () => {
                           },
                         }}
                       >
-                        <TreeSelect
-                          treeData={treeData}
-                          treeCheckable
-                          showCheckedStrategy={TreeSelect.SHOW_PARENT}
-                          placeholder="Chọn học kỳ"
-                          allowClear
-                          showSearch={false}
-                          style={{ width: 360 }}
-                          dropdownStyle={{
-                            backgroundColor: isDark ? "#1f2937" : "#ffffff",
-                            color: isDark ? "#e5e7eb" : "#111827",
-                            border: `1px solid ${
-                              isDark ? "#374151" : "#e5e7eb"
-                            }`,
-                            borderRadius: 8,
-                          }}
-                          popupClassName="custom-tree-select-dropdown"
-                          tagRender={(props) => {
-                            const { label, onClose } = props;
-                            return (
-                              <span
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 mr-1 mb-1"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <span className="text-xs">{label}</span>
-                                <button
-                                  onClick={onClose}
-                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
-                                  aria-label="remove"
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            );
-                          }}
-                          onChange={(values) => setSelectedSemesters(values)}
+                        <Select
+                          value={selectedSchoolYear}
+                          onChange={handleSchoolYearChange}
+                          placeholder="Chọn năm học"
+                          style={{ width: 200 }}
+                          options={schoolYearOptions}
                         />
                       </ConfigProvider>
                     </div>
@@ -615,84 +654,121 @@ const LearningResults = () => {
                 </div>
 
                 {/* Thống kê tổng quan */}
-                {!loading && learningResults.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                {!loading && yearlyResults.length > 0 && (
+                  <div
+                    className={`grid grid-cols-1 gap-4 mb-6 ${
+                      selectedSchoolYear === "all"
+                        ? "md:grid-cols-4"
+                        : "md:grid-cols-6"
+                    }`}
+                  >
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {getFilteredResults().length}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Tổng số sinh viên
+                        {selectedSchoolYear === "all"
+                          ? "Tổng số bản ghi"
+                          : "Tổng số sinh viên"}
                       </div>
                     </div>
                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {
-                          getFilteredResults().filter(
-                            (item) => item.warningLevel === 0
-                          ).length
-                        }
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0) return "0.00";
+
+                          const totalGPA = results.reduce((sum, item) => {
+                            return sum + (parseFloat(item.averageGrade4) || 0);
+                          }, 0);
+
+                          return (totalGPA / results.length).toFixed(2);
+                        })()}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Sinh viên tốt
+                        {selectedSchoolYear === "all"
+                          ? "GPA trung bình tất cả năm"
+                          : "GPA trung bình năm"}
                       </div>
                     </div>
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {
-                          getFilteredResults().filter(
-                            (item) => item.warningLevel > 0
-                          ).length
-                        }
+                        {selectedSchoolYear === "all"
+                          ? getFilteredResults().reduce(
+                              (sum, item) => sum + (item.totalCredits || 0),
+                              0
+                            )
+                          : getFilteredResults().filter(
+                              (item) => parseFloat(item.averageGrade4) >= 3.0
+                            ).length}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Cần cảnh báo
+                        {selectedSchoolYear === "all"
+                          ? "Tổng tín chỉ tất cả năm"
+                          : "Sinh viên xuất sắc (GPA ≥ 3.0)"}
                       </div>
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {getStudentsWithFGrade()}
+                        {selectedSchoolYear === "all"
+                          ? getFilteredResults()[
+                              getFilteredResults().length - 1
+                            ]?.totalDebt || 0
+                          : getStudentsWithFGrade()}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Sinh viên nợ môn
+                        {selectedSchoolYear === "all"
+                          ? "Tổng tín chỉ nợ hiện tại"
+                          : "Sinh viên nợ môn"}
                       </div>
                     </div>
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {getFilteredResults().reduce(
-                          (sum, item) => sum + (item.totalDebt || 0),
-                          0
-                        )}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          {getFilteredResults().reduce(
+                            (sum, item) => sum + (item.totalDebt || 0),
+                            0
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Tổng tín chỉ nợ
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Tổng tín chỉ nợ
+                    )}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const partyRating =
+                            getFilteredResults()[0]?.partyRating;
+                          const positionParty =
+                            getFilteredResults()[0]?.positionParty;
+                          const displayText =
+                            positionParty === "Không"
+                              ? "Chưa là Đảng viên"
+                              : partyRating?.rating || "Chưa cập nhật";
+                          const isSmallText =
+                            displayText === "Chưa cập nhật" ||
+                            displayText === "Chưa là Đảng viên";
+
+                          return (
+                            <div
+                              className={`${
+                                isSmallText
+                                  ? "text-sm font-bold mb-2"
+                                  : "text-2xl font-bold"
+                              } text-orange-600 dark:text-orange-400 flex items-center justify-center h-8`}
+                            >
+                              {displayText}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Xếp loại Đảng viên
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
-
-                {/* Nút thống kê theo năm */}
-                <div className="flex justify-end mb-4">
-                  <Link
-                    href="/admin/yearly-statistics"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                    Thống kê theo năm
-                  </Link>
-                </div>
 
                 <div className="overflow-x-auto">
                   <table className="table-auto w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -708,13 +784,14 @@ const LearningResults = () => {
                           LỚP
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          HỌC KỲ
+                          NĂM HỌC
+                        </th>
+
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          GPA NĂM
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          GPA
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          CPA
+                          CPA TÍCH LŨY
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           TC TÍCH LŨY
@@ -722,7 +799,12 @@ const LearningResults = () => {
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           TC NỢ
                         </th>
-
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          XẾP LOẠI ĐẢNG VIÊN
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          XẾP LOẠI RÈN LUYỆN
+                        </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
                         </th>
@@ -761,11 +843,10 @@ const LearningResults = () => {
                           </td>
                         </tr>
                       ) : getFilteredResults().length > 0 ? (
-                        getFilteredResults().map((item, index) => (
+                        getFilteredResults().map((item) => (
                           <tr
-                            key={item._id}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                            onClick={() => handleViewDetail(item)}
+                            key={`${item._id}-${item.schoolYear}`}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {item.unit || "Chưa có đơn vị"}
@@ -784,52 +865,76 @@ const LearningResults = () => {
                               {item.className || "Chưa có lớp"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.semester} NH {item.schoolYear}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="flex flex-col">
-                                <div className="font-medium text-blue-600 dark:text-blue-400">
-                                  {item.GPA || "Chưa có điểm"}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  {item.averageGrade10 || "Chưa có điểm"}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="flex flex-col">
-                                <div className="font-medium text-green-600 dark:text-green-400">
-                                  {item.CPA || "Chưa có điểm"}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  {item.cumulativeGrade10FromCpa4 ||
-                                    "Chưa có điểm"}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="flex flex-col">
+                              <div>
                                 <div className="font-medium">
-                                  {item.cumulativeCredit || "Chưa có"} tín chỉ
+                                  {item.schoolYear}
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Năm {item.studentLevel}
+                                <div className="text-xs text-gray-500">
+                                  {item.semesterIds?.length ||
+                                    item.semesters?.length ||
+                                    item.semesterCount ||
+                                    0}{" "}
+                                  học kỳ
                                 </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.totalDebt || "0"} tín chỉ
                             </td>
 
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium text-blue-600 dark:text-blue-400">
+                                {item.yearlyGPA &&
+                                !isNaN(parseFloat(item.yearlyGPA))
+                                  ? parseFloat(item.yearlyGPA).toFixed(2)
+                                  : "0.00"}
+                              </div>
+                              <div className="font-medium text-purple-600 dark:text-purple-400">
+                                {item.yearlyGrade10 &&
+                                !isNaN(parseFloat(item.yearlyGrade10))
+                                  ? parseFloat(item.yearlyGrade10).toFixed(2)
+                                  : "0.00"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium text-green-600 dark:text-green-400">
+                                {item.cumulativeGPA &&
+                                !isNaN(parseFloat(item.cumulativeGPA))
+                                  ? parseFloat(item.cumulativeGPA).toFixed(2)
+                                  : "0.00"}
+                              </div>
+                              <div className="font-medium text-green-600 dark:text-green-400">
+                                {item.cumulativeGrade10 &&
+                                !isNaN(parseFloat(item.cumulativeGrade10))
+                                  ? parseFloat(item.cumulativeGrade10).toFixed(
+                                      2
+                                    )
+                                  : "0.00"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium">
+                                {item.cumulativeCredit || 0}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              {item.totalDebt || 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium text-orange-600 dark:text-orange-400">
+                                {item.partyRating
+                                  ? item.partyRating.rating
+                                  : "Chưa cập nhật"}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium text-purple-600 dark:text-purple-400">
+                                {item.trainingRating || "Chưa cập nhật"}
+                              </div>
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
                               <div className="flex justify-center space-x-2">
                                 <button
                                   className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                                   title="Xem chi tiết"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleViewDetail(item);
-                                  }}
+                                  onClick={() => handleViewDetail(item)}
                                 >
                                   <svg
                                     className="w-4 h-4"
@@ -854,10 +959,7 @@ const LearningResults = () => {
                                 <button
                                   className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                                   title="Cập nhật xếp loại"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUpdateRating(item);
-                                  }}
+                                  onClick={() => handleUpdateRating(item)}
                                 >
                                   <svg
                                     className="w-4 h-4"
@@ -880,7 +982,7 @@ const LearningResults = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="9"
+                            colSpan="10"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -925,8 +1027,8 @@ const LearningResults = () => {
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Chi tiết điểm - {selectedStudent.fullName} (
-                {selectedStudent.studentCode})
+                Chi tiết điểm năm học {selectedStudent.schoolYear} -{" "}
+                {selectedStudent.fullName} ({selectedStudent.studentCode})
               </h2>
               <button
                 onClick={() => {
@@ -994,8 +1096,7 @@ const LearningResults = () => {
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Chi tiết các môn học - {studentDetail.semester} -{" "}
-                        {studentDetail.schoolYear}
+                        Chi tiết các môn học năm học {studentDetail.schoolYear}
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
@@ -1144,6 +1245,7 @@ const LearningResults = () => {
                       placeholder="Chọn xếp loại rèn luyện"
                       style={{ width: "100%" }}
                       options={[
+                        { value: "", label: "Hãy chọn xếp loại rèn luyện" },
                         { value: "Tốt", label: "Tốt" },
                         { value: "Khá", label: "Khá" },
                         { value: "Trung bình", label: "Trung bình" },
@@ -1197,6 +1299,7 @@ const LearningResults = () => {
                         selectedStudent.positionParty === "Không"
                       }
                       options={[
+                        { value: "", label: "Hãy chọn xếp loại đảng viên" },
                         {
                           value: "HTXSNV",
                           label: "Hoàn thành xuất sắc nhiệm vụ",
@@ -1271,4 +1374,4 @@ const LearningResults = () => {
   );
 };
 
-export default LearningResults;
+export default YearlyStatistics;

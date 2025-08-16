@@ -429,6 +429,13 @@ const SideBarContent = () => {
               <Menu.Item key="/users/achievement" icon={<CrownOutlined />}>
                 Khen thưởng
               </Menu.Item>
+
+              <Menu.Item
+                key="/users/yearly-statistics"
+                icon={<BarChartOutlined />}
+              >
+                Thống kê theo năm
+              </Menu.Item>
             </Menu>
           </ConfigProvider>
         </div>

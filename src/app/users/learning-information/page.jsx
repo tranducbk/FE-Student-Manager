@@ -75,23 +75,27 @@ const LearningInformation = () => {
   };
 
   // Helpers cho nhập KQHT
-  const parseTermFromCode = (code) => {
-    console.log("parseTermFromCode input:", code);
-    if (!code) return null;
-    if (code.startsWith("HK")) {
-      console.log("parseTermFromCode return original:", code);
-      return code; // Trả về nguyên string "HK1", "HK2", "HK3"
+  const parseTermFromId = (id) => {
+    console.log("parseTermFromId input:", id);
+    if (!id) return null;
+    const semester = semesters.find((s) => s._id === id);
+    if (!semester) return null;
+
+    if (semester.code.startsWith("HK")) {
+      console.log("parseTermFromId return original:", semester.code);
+      return semester.code; // Trả về nguyên string "HK1", "HK2", "HK3"
     }
-    if (code.includes(".")) {
-      const result = "HK" + code.split(".")[1]; // Chuyển đổi thành "HK1", "HK2", "HK3"
-      console.log("parseTermFromCode return converted:", result);
+    if (semester.code.includes(".")) {
+      const result = "HK" + semester.code.split(".")[1]; // Chuyển đổi thành "HK1", "HK2", "HK3"
+      console.log("parseTermFromId return converted:", result);
       return result;
     }
-    console.log("parseTermFromCode return null");
+    console.log("parseTermFromId return null");
     return null;
   };
-  const findSchoolYearByCode = (code) => {
-    const s = semesters.find((x) => x.code === code);
+  const findSchoolYearById = (id) => {
+    // Tìm semester theo _id
+    const s = semesters.find((x) => x._id === id);
     return s?.schoolYear || "";
   };
 
@@ -218,10 +222,25 @@ const LearningInformation = () => {
         grade10: "",
       },
     ]);
-    // chọn mặc định kỳ đầu danh sách nếu chưa có
+    // chọn mặc định kỳ đầu danh sách (đã sắp xếp) nếu chưa có
     if (!gradeSemesterCode) {
-      if (semesters && semesters.length > 0)
-        setGradeSemesterCode(semesters[0].code);
+      if (semesters && semesters.length > 0) {
+        const sortedSemesters = semesters.sort((a, b) => {
+          // Sắp xếp theo năm học (mới nhất trước)
+          const yearComparison = b.schoolYear.localeCompare(a.schoolYear);
+          if (yearComparison !== 0) return yearComparison;
+
+          // Nếu cùng năm, sắp xếp theo học kỳ (lớn nhất trước)
+          const semesterA = a.code.includes(".")
+            ? parseInt(a.code.split(".")[1])
+            : 0;
+          const semesterB = b.code.includes(".")
+            ? parseInt(b.code.split(".")[1])
+            : 0;
+          return semesterB - semesterA;
+        });
+        setGradeSemesterCode(sortedSemesters[0]._id);
+      }
     }
     setShowGradeModal(true);
   };
@@ -230,8 +249,16 @@ const LearningInformation = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     const userId = jwtDecode(token).id;
-    const term = parseTermFromCode(gradeSemesterCode);
-    const schoolYear = findSchoolYearByCode(gradeSemesterCode);
+    const term = parseTermFromId(gradeSemesterCode);
+    const schoolYear = findSchoolYearById(gradeSemesterCode);
+
+    console.log("Submit debug:", {
+      gradeSemesterCode,
+      term,
+      schoolYear,
+      editingSemester: !!editingSemester,
+    });
+
     if (!term || !schoolYear) {
       handleNotify("warning", "Thiếu thông tin", "Vui lòng chọn học kỳ hợp lệ");
       return;
@@ -280,6 +307,12 @@ const LearningInformation = () => {
       // Kiểm tra xem có đang chỉnh sửa hay thêm mới
       if (editingSemester) {
         // Cập nhật học kỳ hiện có
+        console.log("Updating semester with payload:", payload);
+        console.log(
+          "API URL:",
+          `${BASE_URL}/grade/${userId}/${term}/${schoolYear}`
+        );
+
         await axios.put(
           `${BASE_URL}/grade/${userId}/${term}/${schoolYear}`,
           payload,
@@ -290,7 +323,7 @@ const LearningInformation = () => {
         handleNotify(
           "success",
           "Thành công",
-          `Đã cập nhật KQ học tập HK${term} - ${schoolYear}`
+          `Đã cập nhật KQ học tập ${term} - ${schoolYear}`
         );
       } else {
         // Thêm mới học kỳ
@@ -387,9 +420,23 @@ const LearningInformation = () => {
     // Tìm học kỳ cần chỉnh sửa
     const semester = semesterResults.find((item) => item._id === id);
     if (semester) {
+      console.log("Editing semester:", semester);
       setEditingSemester(semester);
+
+      // Tìm semester _id tương ứng từ danh sách semesters
+      const semesterObj = semesters.find(
+        (s) =>
+          s.schoolYear === semester.schoolYear &&
+          (s.code === semester.semester ||
+            (s.code.includes(".") &&
+              `HK${s.code.split(".")[1]}` === semester.semester))
+      );
+
+      console.log("Found semester object:", semesterObj);
+      console.log("Available semesters:", semesters);
+
       // Điền dữ liệu vào form
-      setGradeSemesterCode(semester.semester);
+      setGradeSemesterCode(semesterObj?._id || semester.semester);
       setGradeSubjects(
         semester.subjects.map((subject) => ({
           subjectCode: subject.subjectCode || "",
@@ -1303,6 +1350,27 @@ const LearningInformation = () => {
                       </svg>
                       Thêm kết quả học tập
                     </button>
+                    <Link
+                      href="/users/yearly-statistics"
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="w-5 h-5 mr-2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                      Thống kê theo năm
+                    </Link>
                   </div>
                 </div>
                 <div className="w-full pl-6 pb-6 pr-6 mt-4">
@@ -1524,20 +1592,46 @@ const LearningInformation = () => {
                             onChange={(e) =>
                               setGradeSemesterCode(e.target.value)
                             }
-                            className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            disabled={editingSemester}
+                            className={`bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ${
+                              editingSemester
+                                ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-600"
+                                : ""
+                            }`}
                           >
-                            {semesters.map((s) => (
-                              <option key={s._id} value={s.code}>
-                                {s.code.startsWith("HK") && s.schoolYear
-                                  ? `${s.code} - ${s.schoolYear}`
-                                  : s.schoolYear && s.code.includes(".")
-                                  ? `HK${s.code.split(".")[1]} - ${
-                                      s.schoolYear
-                                    }`
-                                  : s.code}
-                              </option>
-                            ))}
+                            {semesters
+                              .sort((a, b) => {
+                                // Sắp xếp theo năm học (mới nhất trước)
+                                const yearComparison =
+                                  b.schoolYear.localeCompare(a.schoolYear);
+                                if (yearComparison !== 0) return yearComparison;
+
+                                // Nếu cùng năm, sắp xếp theo học kỳ (lớn nhất trước)
+                                const semesterA = a.code.includes(".")
+                                  ? parseInt(a.code.split(".")[1])
+                                  : 0;
+                                const semesterB = b.code.includes(".")
+                                  ? parseInt(b.code.split(".")[1])
+                                  : 0;
+                                return semesterB - semesterA;
+                              })
+                              .map((s) => (
+                                <option key={s._id} value={s._id}>
+                                  {s.code.startsWith("HK") && s.schoolYear
+                                    ? `${s.code} - ${s.schoolYear}`
+                                    : s.schoolYear && s.code.includes(".")
+                                    ? `HK${s.code.split(".")[1]} - ${
+                                        s.schoolYear
+                                      }`
+                                    : s.code}
+                                </option>
+                              ))}
                           </select>
+                          {editingSemester && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Không thể thay đổi học kỳ khi đang chỉnh sửa
+                            </p>
+                          )}
                         </div>
                         <button
                           type="button"
