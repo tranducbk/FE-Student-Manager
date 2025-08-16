@@ -137,12 +137,19 @@ const SideBarContent = () => {
       return;
     }
 
+    // User: open learning submenu for yearly statistics
+    if (currentPath === "/users/yearly-statistics") {
+      setOpenKeys(["learning-user"]);
+      return;
+    }
+
     // Admin: Auto open submenu if current path is in submenu
     if (
       currentPath.startsWith("/admin/time-table") ||
       currentPath.startsWith("/admin/learning-results") ||
       currentPath.startsWith("/admin/semester-management") ||
-      currentPath.startsWith("/admin/tuition-fees")
+      currentPath.startsWith("/admin/tuition-fees") ||
+      currentPath.startsWith("/admin/yearly-statistics")
     ) {
       setOpenKeys(["learning"]);
     } else if (
@@ -376,6 +383,12 @@ const SideBarContent = () => {
                   Kết quả học tập
                 </Menu.Item>
                 <Menu.Item
+                  key="/users/yearly-statistics"
+                  icon={<BarChartOutlined />}
+                >
+                  Thống kê theo năm
+                </Menu.Item>
+                <Menu.Item
                   key="/users/learning-information?tab=tuition"
                   icon={<DollarOutlined />}
                 >
@@ -434,13 +447,6 @@ const SideBarContent = () => {
 
               <Menu.Item key="/users/achievement" icon={<CrownOutlined />}>
                 Khen thưởng
-              </Menu.Item>
-
-              <Menu.Item
-                key="/users/yearly-statistics"
-                icon={<BarChartOutlined />}
-              >
-                Thống kê theo năm
               </Menu.Item>
             </Menu>
           </ConfigProvider>

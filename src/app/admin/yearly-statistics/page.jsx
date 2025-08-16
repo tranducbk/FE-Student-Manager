@@ -598,7 +598,7 @@ const YearlyStatistics = () => {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
-                          ? "Tổng số bản ghi"
+                          ? "Tổng số bản ghi (năm học × sinh viên)"
                           : "Tổng số sinh viên"}
                       </div>
                     </div>
@@ -621,23 +621,190 @@ const YearlyStatistics = () => {
                           : "GPA trung bình năm"}
                       </div>
                     </div>
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {selectedSchoolYear === "all"
-                          ? getFilteredResults().reduce(
-                              (sum, item) => sum + (item.totalCredits || 0),
-                              0
-                            )
-                          : getFilteredResults().filter(
-                              (item) => parseFloat(item.yearlyGPA) >= 3.0
-                            ).length}
+
+                    {/* CPA >= 3.2 */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-teal-600 dark:text-teal-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const uniqueStudents = new Set();
+                          const cpaGoodStudents = new Set(); // CPA >= 3.2
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              const cpa = parseFloat(item.cumulativeGPA) || 0;
+                              if (cpa >= 3.2) {
+                                cpaGoodStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique = uniqueStudents.size;
+                          const cpaGoodCount = cpaGoodStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                              {cpaGoodCount}/{totalUnique}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          CPA ≥3.2
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedSchoolYear === "all"
-                          ? "Tổng tín chỉ tất cả năm"
-                          : "Sinh viên xuất sắc (GPA ≥ 3.0)"}
+                    )}
+                    {/* Xuất sắc - GPA >= 3.6 */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-yellow-600 dark:text-yellow-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const uniqueStudents = new Set();
+                          const excellentStudents = new Set(); // GPA >= 3.6
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              const gpa = parseFloat(item.yearlyGPA) || 0;
+                              if (gpa >= 3.6) {
+                                excellentStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique = uniqueStudents.size;
+                          const excellentCount = excellentStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                              {excellentCount}/{totalUnique}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Xuất sắc (≥3.6)
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Giỏi - GPA >= 3.2 */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-yellow-600 dark:text-yellow-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const uniqueStudents = new Set();
+                          const goodStudents = new Set(); // GPA >= 3.2
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              const gpa = parseFloat(item.yearlyGPA) || 0;
+                              if (gpa >= 3.2) {
+                                goodStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique = uniqueStudents.size;
+                          const goodCount = goodStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                              {goodCount}/{totalUnique}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Giỏi (≥3.2)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Khá - GPA >= 2.5 */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-yellow-600 dark:text-yellow-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const uniqueStudents = new Set();
+                          const averageStudents = new Set(); // GPA >= 2.5
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              const gpa = parseFloat(item.yearlyGPA) || 0;
+                              if (gpa >= 2.5) {
+                                averageStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique = uniqueStudents.size;
+                          const averageCount = averageStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                              {averageCount}/{totalUnique}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Khá (≥2.5)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tổng tín chỉ tất cả năm (khi chọn "all") */}
+                    {selectedSchoolYear === "all" && (
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          const totalCredits = results.reduce(
+                            (sum, item) => sum + (item.totalCredits || 0),
+                            0
+                          );
+                          return (
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                              {totalCredits}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Tổng tín chỉ tất cả năm
+                        </div>
+                      </div>
+                    )}
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {selectedSchoolYear === "all"
@@ -649,20 +816,46 @@ const YearlyStatistics = () => {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
-                          ? "Tổng tín chỉ nợ hiện tại"
+                          ? "Tổng tín chỉ nợ tất cả năm"
                           : "Sinh viên nợ môn"}
                       </div>
                     </div>
                     {selectedSchoolYear !== "all" && (
                       <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {getFilteredResults().reduce(
-                            (sum, item) => sum + (item.totalDebt || 0),
-                            0
-                          )}
-                        </div>
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-purple-600 dark:text-purple-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          // Đếm số sinh viên có rèn luyện tốt
+                          const uniqueStudents = new Set();
+                          const goodTrainingStudents = new Set();
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              if (item.trainingRating === "Tốt") {
+                                goodTrainingStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique = uniqueStudents.size;
+                          const displayText = `${goodTrainingStudents.size}/${totalUnique}`;
+
+                          return (
+                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                              {displayText}
+                            </div>
+                          );
+                        })()}
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Tổng tín chỉ nợ
+                          Rèn luyện tốt
                         </div>
                       </div>
                     )}
@@ -677,24 +870,155 @@ const YearlyStatistics = () => {
                               </div>
                             );
 
-                          // Đếm số đảng viên và không phải đảng viên
-                          const partyMembers = results.filter(
-                            (item) => item.positionParty !== "Không"
-                          );
-                          const nonPartyMembers = results.filter(
-                            (item) => item.positionParty === "Không"
-                          );
+                          // Đếm số Đảng viên và không phải Đảng viên (unique students)
+                          const uniqueStudents = new Set();
+                          const partyMembers = new Set();
+                          const nonPartyMembers = new Set();
 
-                          const displayText = `${partyMembers.length} Đảng viên, ${nonPartyMembers.length} chưa là Đảng viên`;
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (!uniqueStudents.has(studentKey)) {
+                              uniqueStudents.add(studentKey);
+                              if (item.positionParty !== "Không") {
+                                partyMembers.add(item.studentId);
+                              } else {
+                                nonPartyMembers.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalUnique =
+                            partyMembers.size + nonPartyMembers.size;
+                          const displayText = `${partyMembers.size}/${totalUnique}`;
 
                           return (
-                            <div className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center h-8">
+                            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                               {displayText}
                             </div>
                           );
                         })()}
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Thống kê Đảng viên
+                          Đảng viên
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HTXSNV - Học bổng xuất sắc nghiệp vụ */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const partyMembers = new Set();
+                          const htxsnvStudents = new Set();
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (item.positionParty !== "Không") {
+                              partyMembers.add(studentKey);
+                              if (item.partyRating?.rating === "HTXSNV") {
+                                htxsnvStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalPartyMembers = partyMembers.size;
+                          const htxsnvCount = htxsnvStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              {htxsnvCount}/{totalPartyMembers}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          HTXSNV
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HTTNV - Học bổng tài năng nghiệp vụ */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const partyMembers = new Set();
+                          const httnvStudents = new Set();
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (item.positionParty !== "Không") {
+                              partyMembers.add(studentKey);
+                              if (item.partyRating?.rating === "HTTNV") {
+                                httnvStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalPartyMembers = partyMembers.size;
+                          const httnvCount = httnvStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                              {httnvCount}/{totalPartyMembers}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          HTTNV
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HTNV - Học bổng nghiệp vụ */}
+                    {selectedSchoolYear !== "all" && (
+                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0)
+                            return (
+                              <div className="text-sm font-bold text-indigo-600 dark:text-indigo-400 flex items-center justify-center h-8">
+                                Không có dữ liệu
+                              </div>
+                            );
+
+                          const partyMembers = new Set();
+                          const htnvStudents = new Set();
+
+                          results.forEach((item) => {
+                            const studentKey = `${item.studentId}-${item.schoolYear}`;
+                            if (item.positionParty !== "Không") {
+                              partyMembers.add(studentKey);
+                              if (item.partyRating?.rating === "HTNV") {
+                                htnvStudents.add(item.studentId);
+                              }
+                            }
+                          });
+
+                          const totalPartyMembers = partyMembers.size;
+                          const htnvCount = htnvStudents.size;
+
+                          return (
+                            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                              {htnvCount}/{totalPartyMembers}
+                            </div>
+                          );
+                        })()}
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          HTNV
                         </div>
                       </div>
                     )}
@@ -802,11 +1126,7 @@ const YearlyStatistics = () => {
                                   {item.schoolYear}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {item.semesterIds?.length ||
-                                    item.semesters?.length ||
-                                    item.semesterCount ||
-                                    0}{" "}
-                                  học kỳ
+                                  {item.semesterCount || 0} học kỳ
                                 </div>
                               </div>
                             </td>
@@ -860,10 +1180,16 @@ const YearlyStatistics = () => {
                                   );
                                 })()}
                               </div>
+                              {item.positionParty !== "Không" &&
+                                item.partyRating?.decisionNumber && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    QĐ: {item.partyRating.decisionNumber}
+                                  </div>
+                                )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-purple-600 dark:text-purple-400">
-                                {item.cumulativeCredit}
+                                {item.trainingRating || "Chưa cập nhật"}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
@@ -1049,9 +1375,9 @@ const YearlyStatistics = () => {
                           <div
                             className={`${
                               isSmallText
-                                ? "text-sm font-bold mb-1"
+                                ? "text-sm font-bold"
                                 : "text-2xl font-bold"
-                            } text-red-600 dark:text-red-400 flex items-center justify-center h-8`}
+                            } text-red-600  mb-1 dark:text-red-400 flex items-center justify-center h-8`}
                           >
                             {displayText}
                           </div>
@@ -1071,9 +1397,9 @@ const YearlyStatistics = () => {
                           <div
                             className={`${
                               isSmallText
-                                ? "text-sm font-bold mb-1"
+                                ? "text-sm font-bold"
                                 : "text-2xl font-bold"
-                            } text-indigo-600 dark:text-indigo-400 flex items-center justify-center h-8`}
+                            } text-indigo-600  mb-1 dark:text-indigo-400 flex items-center justify-center h-8`}
                           >
                             {displayText}
                           </div>
@@ -1251,7 +1577,7 @@ const YearlyStatistics = () => {
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Xếp loại đảng viên
+                    Xếp loại Đảng viên
                     {selectedStudent &&
                       selectedStudent.positionParty &&
                       selectedStudent.positionParty !== "Không" && (
@@ -1284,8 +1610,8 @@ const YearlyStatistics = () => {
                         selectedStudent &&
                         selectedStudent.positionParty &&
                         selectedStudent.positionParty !== "Không"
-                          ? "Chọn xếp loại đảng viên"
-                          : "Chỉ cập nhật được khi là đảng viên"
+                          ? "Chọn xếp loại Đảng viên"
+                          : "Chỉ cập nhật được khi là Đảng viên"
                       }
                       style={{ width: "100%" }}
                       disabled={
@@ -1294,7 +1620,7 @@ const YearlyStatistics = () => {
                         selectedStudent.positionParty === "Không"
                       }
                       options={[
-                        { value: "", label: "Hãy chọn xếp loại đảng viên" },
+                        { value: "", label: "Hãy chọn xếp loại Đảng viên" },
                         {
                           value: "HTXSNV",
                           label: "Hoàn thành xuất sắc nhiệm vụ",
@@ -1325,7 +1651,7 @@ const YearlyStatistics = () => {
                       selectedStudent.positionParty &&
                       selectedStudent.positionParty !== "Không"
                         ? "Nhập số quyết định"
-                        : "Chỉ cập nhật được khi là đảng viên"
+                        : "Chỉ cập nhật được khi là Đảng viên"
                     }
                     disabled={
                       !selectedStudent ||

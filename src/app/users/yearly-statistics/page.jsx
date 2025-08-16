@@ -629,55 +629,38 @@ const YearlyStatistics = () => {
                       <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                         {selectedSchoolYear === "all"
                           ? yearlyResults.reduce(
-                              (sum, item) => sum + (item.totalCredits || 0),
+                              (sum, item) => sum + (item.totalSubjects || 0),
                               0
                             )
-                          : yearlyResults[0]?.totalCredits || 0}
+                          : yearlyResults[0]?.totalSubjects || 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
-                          ? "Tổng tín chỉ tất cả năm"
-                          : "Tổng tín chỉ năm học"}
+                          ? "Tổng số môn tất cả năm"
+                          : "Tổng số môn năm học"}
                       </div>
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {selectedSchoolYear === "all"
-                          ? yearlyResults[yearlyResults.length - 1]
-                              ?.totalDebt || 0
-                          : yearlyResults[0]?.totalDebt || 0}
+                          ? yearlyResults.reduce(
+                              (sum, item) => sum + (item.failedSubjects || 0),
+                              0
+                            )
+                          : yearlyResults[0]?.failedSubjects || 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
-                          ? "Tổng tín chỉ nợ hiện tại"
-                          : "Tín chỉ nợ năm học"}
+                          ? "Tổng số môn nợ tất cả năm"
+                          : "Số môn nợ năm học"}
                       </div>
                     </div>
                     {selectedSchoolYear !== "all" && (
                       <>
                         <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                          {(() => {
-                            const partyRating = yearlyResults[0]?.partyRating;
-                            const displayText =
-                              partyRating?.positionParty === "Không"
-                                ? "Chưa là Đảng viên"
-                                : partyRating?.rating || "Chưa cập nhật";
-                            const isSmallText =
-                              displayText === "Chưa cập nhật" ||
-                              displayText === "Chưa là Đảng viên";
-
-                            return (
-                              <div
-                                className={`${
-                                  isSmallText
-                                    ? "text-sm font-bold mb-2"
-                                    : "text-2xl font-bold"
-                                } text-orange-600 dark:text-orange-400 flex items-center justify-center h-8`}
-                              >
-                                {displayText}
-                              </div>
-                            );
-                          })()}
+                          <div className="text-sm font-bold mb-2 text-orange-600 dark:text-orange-400 flex items-center justify-center h-8">
+                            Chưa là Đảng viên
+                          </div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">
                             Xếp loại Đảng viên
                           </div>
@@ -694,9 +677,9 @@ const YearlyStatistics = () => {
                               <div
                                 className={`${
                                   isSmallText
-                                    ? "text-sm font-bold mb-2"
+                                    ? "text-sm font-bold flex items-center justify-center h-8"
                                     : "text-2xl font-bold"
-                                } text-purple-600 dark:text-purple-400 flex items-center justify-center h-8`}
+                                } text-purple-600 mb-2 dark:text-purple-400`}
                               >
                                 {displayText}
                               </div>
@@ -821,9 +804,7 @@ const YearlyStatistics = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-orange-600 dark:text-orange-400">
-                                {item.partyRating?.positionParty === "Không"
-                                  ? "Chưa là Đảng viên"
-                                  : item.partyRating?.rating || "Chưa cập nhật"}
+                                Chưa là Đảng viên
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
@@ -976,28 +957,9 @@ const YearlyStatistics = () => {
                       </div>
                     </div>
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                      {(() => {
-                        const partyRating = studentDetail.partyRating;
-                        const displayText =
-                          partyRating?.positionParty === "Không"
-                            ? "Chưa là Đảng viên"
-                            : partyRating?.rating || "Chưa cập nhật";
-                        const isSmallText =
-                          displayText === "Chưa cập nhật" ||
-                          displayText === "Chưa là Đảng viên";
-
-                        return (
-                          <div
-                            className={`${
-                              isSmallText
-                                ? "text-sm font-bold mb-1"
-                                : "text-2xl font-bold"
-                            } text-red-600 dark:text-red-400 flex items-center justify-center h-8`}
-                          >
-                            {displayText}
-                          </div>
-                        );
-                      })()}
+                      <div className="text-sm font-bold mb-1 text-red-600 dark:text-red-400">
+                        Chưa là Đảng viên
+                      </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         Xếp loại Đảng viên
                       </div>
@@ -1012,9 +974,9 @@ const YearlyStatistics = () => {
                           <div
                             className={`${
                               isSmallText
-                                ? "text-sm font-bold mb-1"
+                                ? "text-sm font-bold"
                                 : "text-2xl font-bold"
-                            } text-indigo-600 dark:text-indigo-400 flex items-center justify-center h-8`}
+                            } text-indigo-600  mb-1 dark:text-indigo-400 flex items-center justify-center h-8`}
                           >
                             {displayText}
                           </div>
