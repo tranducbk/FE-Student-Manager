@@ -692,12 +692,6 @@ const TuitionFees = () => {
                         scope="col"
                         className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
                       >
-                        NĂM HỌC
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap"
-                      >
                         LOẠI TIỀN
                       </th>
                       <th
@@ -737,10 +731,12 @@ const TuitionFees = () => {
                             {item.university}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.semester || "Chưa có học kỳ"}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                            {item.schoolYear || "Chưa có năm học"}
+                            <div className="font-medium">
+                              {item.semester || "Chưa có học kỳ"}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {item.schoolYear || "Chưa có năm học"}
+                            </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                             {item.content}
@@ -792,7 +788,7 @@ const TuitionFees = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="9"
+                          colSpan="8"
                           className="text-center py-8 text-gray-500 dark:text-gray-400"
                         >
                           <div className="flex flex-col items-center">
