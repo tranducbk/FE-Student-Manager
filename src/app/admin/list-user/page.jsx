@@ -2453,6 +2453,12 @@ const ListUser = () => {
                           scope="col"
                           className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
+                          STT
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        >
                           Họ và tên
                         </th>
                         <th
@@ -2460,6 +2466,12 @@ const ListUser = () => {
                           className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
                         >
                           Cấp bậc
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600"
+                        >
+                          Đơn vị
                         </th>
                         <th
                           scope="col"
@@ -2484,11 +2496,19 @@ const ListUser = () => {
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {profile?.students && profile.students.length > 0 ? (
-                        profile.students.map((item) => (
+                        profile.students.map((item, index) => (
                           <tr
                             className="hover:cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                             key={item._id}
                           >
+                            <td
+                              onClick={() => handleRowClick(item._id)}
+                              className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
+                            >
+                              <div className="text-sm font-medium">
+                                {(currentPage - 1) * 10 + index + 1}
+                              </div>
+                            </td>
                             <td
                               onClick={() => handleRowClick(item._id)}
                               className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600"
@@ -2525,15 +2545,15 @@ const ListUser = () => {
                               onClick={() => handleRowClick(item._id)}
                               className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
                             >
-                              <div className="text-sm">
-                                {item.positionGovernment}
-                              </div>
+                              <div className="text-sm">{item.unit}</div>
                             </td>
                             <td
                               onClick={() => handleRowClick(item._id)}
                               className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
                             >
-                              <div className="text-sm">{item.unit}</div>
+                              <div className="text-sm">
+                                {item.positionGovernment}
+                              </div>
                             </td>
                             <td
                               onClick={() => handleRowClick(item._id)}
@@ -2591,7 +2611,7 @@ const ListUser = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="6"
+                            colSpan="7"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">

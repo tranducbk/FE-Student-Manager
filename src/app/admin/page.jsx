@@ -256,7 +256,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                prefix={<TeamOutlined className="text-white text-3xl" />}
                 suffix={
                   <span className="text-white text-sm font-semibold">
                     đồng chí
@@ -280,7 +279,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                prefix={<UserOutlined className="text-white text-3xl" />}
                 suffix={
                   <span className="text-white text-sm font-semibold">
                     đồng chí
@@ -304,7 +302,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                prefix={<StarOutlined className="text-white text-3xl" />}
                 suffix={
                   <span className="text-white text-sm font-semibold">
                     đồng chí
@@ -334,7 +331,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                prefix={<FireOutlined className="text-white text-3xl" />}
                 suffix={
                   <span className="text-white text-sm font-semibold">
                     hoạt động

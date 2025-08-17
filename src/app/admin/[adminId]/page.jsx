@@ -14,7 +14,7 @@ const UserProfile = ({ params }) => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     avatar:
-      "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+      "https://i.pinimg.com/736x/d4/a1/ff/d4a1ff9d0f243e50062e2b21f2f2496d.jpg",
   });
 
   const openForm = () => {
@@ -24,7 +24,7 @@ const UserProfile = ({ params }) => {
         fullName: profile.fullName || "",
         phoneNumber: profile.phoneNumber || "",
         gender: profile.gender || "Nam",
-        unit: profile.unit || "H5 - HV XXXX",
+        unit: profile.unit || "Hệ học viên 5",
         birthday: profile.birthday ? new Date(profile.birthday) : null,
         rank: profile.rank || "Đại úy",
         startWork: profile.startWork || "",
@@ -35,16 +35,17 @@ const UserProfile = ({ params }) => {
         probationaryPartyMember: profile.probationaryPartyMember
           ? new Date(profile.probationaryPartyMember)
           : null,
-        organization: profile.organization || "HV XXXX",
+        organization: profile.organization || "HVKHQS",
         fullPartyMember: profile.officialPartyMember
           ? new Date(profile.officialPartyMember)
           : null,
         positionParty: profile.positionParty || "Ủy viên",
         email: profile.email || "",
         hometown: profile.hometown || "",
+        currentAddress: profile.currentAddress || "",
         avatar:
           profile.avatar ||
-          "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+          "https://i.pinimg.com/736x/d4/a1/ff/d4a1ff9d0f243e50062e2b21f2f2496d.jpg",
       });
     }
     setShowForm(true);
@@ -267,6 +268,14 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Nơi ở hiện nay:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.currentAddress}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Năm vào Hệ:
                             </span>
                             <span className="text-gray-900 dark:text-white">
@@ -287,14 +296,6 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.email}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Phòng/Ban quản lý:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.organization}
                             </span>
                           </div>
                         </div>
@@ -370,6 +371,14 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.positionParty}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Phòng/Ban quản lý:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.organization}
                             </span>
                           </div>
                         </div>
@@ -520,7 +529,7 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                           >
-                            <option value="H5 - HV XXXX">H5 - HV XXXX</option>
+                            <option value="Hệ học viên 5">Hệ học viên 5</option>
                           </select>
                         </div>
 
@@ -557,6 +566,7 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                           >
+                            <option value="Thượng úy">Thượng úy</option>
                             <option value="Đại úy">Đại úy</option>
                             <option value="Thiếu tá">Thiếu tá</option>
                             <option value="Trung tá">Trung tá</option>
@@ -658,7 +668,7 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                           >
-                            <option value="HV XXXX">HV XXXX</option>
+                            <option value="HVKHQS">HVKHQS</option>
                           </select>
                         </div>
 
@@ -731,6 +741,23 @@ const UserProfile = ({ params }) => {
                             type="text"
                             id="hometown"
                             value={formData.hometown}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hà Nội"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="currentAddress"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Nơi ở hiện nay
+                          </label>
+                          <input
+                            type="text"
+                            id="currentAddress"
+                            value={formData.currentAddress}
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: Hà Nội"

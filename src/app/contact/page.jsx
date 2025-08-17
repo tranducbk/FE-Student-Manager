@@ -17,24 +17,24 @@ const Contact = () => {
   const contactData = [
     {
       key: "1",
-      name: "Trần Văn X",
-      position: "Hệ trưởng",
+      name: "Bùi Đình Thế",
+      position: "Hệ Trưởng",
       phone: "0123456789",
-      email: "tranvanx@gmail.com",
+      email: "buidinhthe@gmail.com",
     },
     {
       key: "2",
       name: "Nguyễn Văn Y",
-      position: "Chính trị viên",
+      position: "Chính Trị Viên",
       phone: "0112233445",
       email: "nguyenvany@gmail.com",
     },
     {
       key: "3",
-      name: "Cao Văn Z",
-      position: "Hệ phó",
+      name: "Phạm Hữu Khôi",
+      position: "Phó Hệ Trưởng",
       phone: "0111122222",
-      email: "caovanc@gmail.com",
+      email: "phamhuukhoi@gmail.com",
     },
   ];
 

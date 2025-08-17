@@ -174,7 +174,7 @@ const Login = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-20 dark:opacity-30"></div>
                 <img
                   className="relative mx-auto h-24 w-auto drop-shadow-lg"
-                  src="/logo.png"
+                  src="/image.png"
                   alt="Hệ học viên 5"
                 />
               </div>
@@ -185,7 +185,7 @@ const Login = () => {
               Đăng nhập
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-              Chào mừng bạn đến với hệ thống quản lý
+              Chào mừng bạn đến với hệ thống quản lý Hệ học viên 5 - HVKHQS
             </p>
           </div>
 

@@ -214,7 +214,7 @@ const Header = () => {
   const userMenuItems = [
     {
       key: "profile",
-      icon: <UserOutlined />,
+      icon: <UserOutlined className="text-gray-700 dark:text-gray-300" />,
       label: (
         <Link
           href={
@@ -222,32 +222,55 @@ const Header = () => {
               ? `/admin/${user?._id}`
               : `/users/${user?._id}`
           }
+          className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 block w-full"
         >
           <Space direction="vertical" size={0}>
-            <Text strong>{userDetail?.fullName || "Thông tin cá nhân"}</Text>
-            <Text type="secondary" style={{ fontSize: "12px" }}>
+            <Text strong className="text-gray-900 dark:text-white">
+              {userDetail?.fullName || "Thông tin cá nhân"}
+            </Text>
+            <Text
+              type="secondary"
+              style={{ fontSize: "12px" }}
+              className="text-gray-600 dark:text-gray-400"
+            >
               {userDetail?.email}
             </Text>
           </Space>
         </Link>
       ),
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
     {
       type: "divider",
+      className: "border-gray-200 dark:border-gray-600",
     },
     {
       key: "settings",
-      icon: <SettingOutlined />,
-      label: <Link href="/change-password">Đổi mật khẩu</Link>,
+      icon: <SettingOutlined className="text-gray-700 dark:text-gray-300" />,
+      label: (
+        <Link
+          href="/change-password"
+          className="!text-gray-900 dark:!text-white hover:!text-blue-600 dark:hover:!text-blue-400 block w-full"
+        >
+          Đổi mật khẩu
+        </Link>
+      ),
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
     {
       type: "divider",
+      className: "border-gray-200 dark:border-gray-600",
     },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
-      label: "Đăng xuất",
+      icon: <LogoutOutlined className="text-gray-700 dark:text-gray-300" />,
+      label: (
+        <span className="text-gray-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 block w-full cursor-pointer">
+          Đăng xuất
+        </span>
+      ),
       onClick: handleLogout,
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
   ];
 
@@ -286,7 +309,7 @@ const Header = () => {
   const mobileMenuItems = [
     {
       key: "profile",
-      icon: <UserOutlined />,
+      icon: <UserOutlined className="text-gray-700 dark:text-gray-300" />,
       label: (
         <Link
           href={
@@ -295,39 +318,59 @@ const Header = () => {
               : `/users/${user?._id}`
           }
           onClick={() => setMobileMenuOpen(false)}
+          className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 block w-full"
         >
           <Space direction="vertical" size={0}>
-            <Text strong>{userDetail?.fullName || "Thông tin cá nhân"}</Text>
-            <Text type="secondary" style={{ fontSize: "12px" }}>
+            <Text strong className="text-gray-900 dark:text-white">
+              {userDetail?.fullName || "Thông tin cá nhân"}
+            </Text>
+            <Text
+              type="secondary"
+              style={{ fontSize: "12px" }}
+              className="text-gray-600 dark:text-gray-400"
+            >
               {userDetail?.email}
             </Text>
           </Space>
         </Link>
       ),
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
     {
       type: "divider",
+      className: "border-gray-200 dark:border-gray-600",
     },
     {
       key: "settings",
-      icon: <SettingOutlined />,
+      icon: <SettingOutlined className="text-gray-700 dark:text-gray-300" />,
       label: (
-        <Link href="/change-password" onClick={() => setMobileMenuOpen(false)}>
+        <Link
+          href="/change-password"
+          onClick={() => setMobileMenuOpen(false)}
+          className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 block w-full"
+        >
           Đổi mật khẩu
         </Link>
       ),
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
     {
       type: "divider",
+      className: "border-gray-200 dark:border-gray-600",
     },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
-      label: "Đăng xuất",
+      icon: <LogoutOutlined className="text-gray-700 dark:text-gray-300" />,
+      label: (
+        <span className="text-gray-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 block w-full cursor-pointer">
+          Đăng xuất
+        </span>
+      ),
       onClick: () => {
         handleLogout();
         setMobileMenuOpen(false);
       },
+      className: "hover:bg-gray-50 dark:hover:bg-gray-700",
     },
   ];
 
@@ -386,7 +429,7 @@ const Header = () => {
             href={`/${user?.isAdmin ? "admin" : "users"}`}
             className="flex items-center"
           >
-            <img src="/logo.png" className="h-8 md:h-10 mr-3" alt="H5 Logo" />
+            <img src="/image.png" className="h-8 md:h-10 mr-3" alt="H5 Logo" />
             <Title level={4} className="theme-title mt-3 ">
               HỆ HỌC VIÊN 5
             </Title>
@@ -422,7 +465,11 @@ const Header = () => {
 
           {/* User Menu */}
           <Dropdown
-            menu={{ items: userMenuItems }}
+            menu={{
+              items: userMenuItems,
+              className:
+                "min-w-[200px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg",
+            }}
             open={isOpen}
             onOpenChange={setIsOpen}
             placement="bottomRight"

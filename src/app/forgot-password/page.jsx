@@ -12,7 +12,6 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { ThemeToggle } from "../../components/ThemeToggle";
-import Loader from "../../components/loader";
 import { BASE_URL } from "@/configs";
 
 const ForgotPassword = () => {
@@ -81,13 +80,20 @@ const ForgotPassword = () => {
 
       {/* Main container */}
       <div className="flex min-h-screen flex-col justify-center px-6 py-16 lg:px-8">
-        {loading && <Loader />}
-
-        <div
-          className={`sm:mx-auto sm:w-full sm:max-w-md ${
-            loading ? "hidden" : ""
-          }`}
-        >
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Loading overlay */}
+          {loading && (
+            <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    Đang gửi email...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/login">
@@ -96,8 +102,8 @@ const ForgotPassword = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-20 dark:opacity-30"></div>
                   <img
                     className="relative mx-auto h-20 w-auto drop-shadow-lg"
-                    src="/logo.png"
-                    alt="Hệ học viên 5"
+                    src="/image.png"
+                    alt="Hệ Học Viên 5"
                   />
                 </div>
               </div>

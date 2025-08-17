@@ -217,6 +217,10 @@ const SideBarContent = () => {
                 Tổng quan
               </Menu.Item>
 
+              <Menu.Item key={`/admin/${token?.id}`} icon={<UserOutlined />}>
+                Thông tin cá nhân
+              </Menu.Item>
+
               <Menu.Item
                 key="/admin/commander-duty-schedule"
                 icon={<CalendarOutlined />}
@@ -226,10 +230,10 @@ const SideBarContent = () => {
 
               <SubMenu
                 key="student-management"
-                icon={<UserOutlined />}
+                icon={<TeamOutlined />}
                 title="Quản lý học viên"
               >
-                <Menu.Item key="/admin/list-user" icon={<UserOutlined />}>
+                <Menu.Item key="/admin/list-user" icon={<TeamOutlined />}>
                   Danh sách học viên
                 </Menu.Item>
                 <Menu.Item key="/admin/universities" icon={<BankOutlined />}>
@@ -252,17 +256,18 @@ const SideBarContent = () => {
                   Kết quả học tập
                 </Menu.Item>
                 <Menu.Item
-                  key="/admin/semester-management"
-                  icon={<CalendarOutlined />}
-                >
-                  Quản lý các kì học
-                </Menu.Item>
-                <Menu.Item
                   key="/admin/yearly-statistics"
                   icon={<BarChartOutlined />}
                 >
                   Thống kê theo năm
                 </Menu.Item>
+                <Menu.Item
+                  key="/admin/semester-management"
+                  icon={<CalendarOutlined />}
+                >
+                  Quản lý các kì học
+                </Menu.Item>
+
                 <Menu.Item key="/admin/tuition-fees" icon={<DollarOutlined />}>
                   Học phí
                 </Menu.Item>
