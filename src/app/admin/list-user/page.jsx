@@ -1057,15 +1057,16 @@ const ListUser = () => {
                               profileDetail?.class ||
                               "Chưa có dữ liệu"}
                           </div>
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Số điện thoại:</span>{" "}
+                            {profileDetail?.phoneNumber || "Chưa có dữ liệu"}
+                          </div>
                         </div>
                         <div className="w-full md:w-1/2 pl-4">
                           <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
                             THÔNG TIN HỌC VIÊN
                           </div>
-                          <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Số điện thoại:</span>{" "}
-                            {profileDetail?.phoneNumber || "Chưa có dữ liệu"}
-                          </div>
+
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Đơn vị:</span>{" "}
                             {profileDetail?.unit || "Chưa có dữ liệu"}
@@ -1121,114 +1122,156 @@ const ListUser = () => {
                       </div>
 
                       {/* Thông tin gia đình */}
-                      {profileDetail?.familyMembers &&
-                        profileDetail.familyMembers.length > 0 && (
-                          <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
-                            <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
-                              THÔNG TIN NGƯỜI THÂN
-                            </div>
-                            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                              {profileDetail.familyMembers.map(
-                                (member, index) => (
-                                  <div
-                                    key={index}
-                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
-                                  >
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Quan hệ:
-                                      </span>{" "}
-                                      {member.relationship || "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Họ và tên:
-                                      </span>{" "}
-                                      {member.fullName || "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Ngày sinh:
-                                      </span>{" "}
-                                      {member.birthday
-                                        ? dayjs(member.birthday).format(
-                                            "DD/MM/YYYY"
-                                          )
-                                        : "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Nghề nghiệp:
-                                      </span>{" "}
-                                      {member.occupation || "Chưa có dữ liệu"}
-                                    </div>
+                      <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
+                        <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
+                          THÔNG TIN NGƯỜI THÂN
+                        </div>
+                        {profileDetail?.familyMembers &&
+                        profileDetail.familyMembers.length > 0 ? (
+                          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {profileDetail.familyMembers.map(
+                              (member, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
+                                >
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">Quan hệ:</span>{" "}
+                                    {member.relationship || "Chưa có dữ liệu"}
                                   </div>
-                                )
-                              )}
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Họ và tên:
+                                    </span>{" "}
+                                    {member.fullName || "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Ngày sinh:
+                                    </span>{" "}
+                                    {member.birthday
+                                      ? dayjs(member.birthday).format(
+                                          "DD/MM/YYYY"
+                                        )
+                                      : "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Nghề nghiệp:
+                                    </span>{" "}
+                                    {member.occupation || "Chưa có dữ liệu"}
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                                Chưa có dữ liệu
+                              </p>
+                              <p className="text-sm text-gray-400 dark:text-gray-500">
+                                Học viên chưa có thông tin người thân
+                              </p>
                             </div>
                           </div>
                         )}
+                      </div>
 
                       {/* Yếu tố nước ngoài */}
-                      {profileDetail?.foreignRelations &&
-                        profileDetail.foreignRelations.length > 0 && (
-                          <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
-                            <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
-                              MỐI QUAN HỆ CÓ YẾU TỐ NƯỚC NGOÀI
-                            </div>
-                            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                              {profileDetail.foreignRelations.map(
-                                (relation, index) => (
-                                  <div
-                                    key={index}
-                                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
-                                  >
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Quan hệ:
-                                      </span>{" "}
-                                      {relation.relationship ||
-                                        "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Họ và tên:
-                                      </span>{" "}
-                                      {relation.fullName || "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Ngày sinh:
-                                      </span>{" "}
-                                      {relation.birthday
-                                        ? dayjs(relation.birthday).format(
-                                            "DD/MM/YYYY"
-                                          )
-                                        : "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Quốc gia:
-                                      </span>{" "}
-                                      {relation.country || "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">Lý do:</span>{" "}
-                                      {relation.reason || "Chưa có dữ liệu"}
-                                    </div>
-                                    <div className="mb-2 text-gray-900 dark:text-white">
-                                      <span className="font-bold">
-                                        Quốc tịch:
-                                      </span>{" "}
-                                      {relation.nationality ||
-                                        "Chưa có dữ liệu"}
-                                    </div>
+                      <div className="mt-8 w-full border-t border-gray-200 dark:border-gray-600 pt-8 px-6">
+                        <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-6">
+                          MỐI QUAN HỆ CÓ YẾU TỐ NƯỚC NGOÀI
+                        </div>
+                        {profileDetail?.foreignRelations &&
+                        profileDetail.foreignRelations.length > 0 ? (
+                          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {profileDetail.foreignRelations.map(
+                              (relation, index) => (
+                                <div
+                                  key={index}
+                                  className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200"
+                                >
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">Quan hệ:</span>{" "}
+                                    {relation.relationship || "Chưa có dữ liệu"}
                                   </div>
-                                )
-                              )}
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Họ và tên:
+                                    </span>{" "}
+                                    {relation.fullName || "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Ngày sinh:
+                                    </span>{" "}
+                                    {relation.birthday
+                                      ? dayjs(relation.birthday).format(
+                                          "DD/MM/YYYY"
+                                        )
+                                      : "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">Quốc gia:</span>{" "}
+                                    {relation.country || "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">Lý do:</span>{" "}
+                                    {relation.reason || "Chưa có dữ liệu"}
+                                  </div>
+                                  <div className="mb-2 text-gray-900 dark:text-white">
+                                    <span className="font-bold">
+                                      Quốc tịch:
+                                    </span>{" "}
+                                    {relation.nationality || "Chưa có dữ liệu"}
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                                Chưa có dữ liệu
+                              </p>
+                              <p className="text-sm text-gray-400 dark:text-gray-500">
+                                Học viên chưa có mối quan hệ nước ngoài
+                              </p>
                             </div>
                           </div>
                         )}
+                      </div>
                     </div>
                   </div>
                 </div>
