@@ -644,11 +644,14 @@ const Achievement = () => {
                         const rows = Array.isArray(
                           achievement.yearlyAchievements
                         )
-                          ? achievement.yearlyAchievements.filter((ya) =>
-                              filterYear
-                                ? String(ya.year) === String(filterYear)
-                                : true
-                            )
+                          ? achievement.yearlyAchievements
+                              .filter((ya) =>
+                                filterYear
+                                  ? String(ya.year) === String(filterYear)
+                                  : true
+                              )
+                              .slice()
+                              .sort((a, b) => (a.year || 0) - (b.year || 0))
                           : [];
 
                         return (
