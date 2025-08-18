@@ -128,7 +128,7 @@ export default function HomePage() {
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
                 Tính năng vượt trội
               </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-600 max-w-4xl mx-auto">
                 Khám phá hệ sinh thái tính năng toàn diện, được thiết kế để tối
                 ưu hóa hiệu quả quản lý giáo dục
               </p>
