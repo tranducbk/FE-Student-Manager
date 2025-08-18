@@ -242,10 +242,10 @@ const StudentAchievement = () => {
     return hasApprovedScientific;
   };
 
-  // Điều kiện chọn bằng khen toàn quân
+  // Điều kiện chọn CSTĐ Toàn Quân
   const canSelectNationalReward = () => {
     if (!achievement) return false;
-    // Không cho chọn nếu đã có bằng khen toàn quân
+    // Không cho chọn nếu đã có CSTĐ Toàn Quân
     const hasNationalReward = achievement.yearlyAchievements?.some(
       (ya) => ya.hasNationalReward
     );
@@ -789,7 +789,7 @@ const StudentAchievement = () => {
                             addFormData.hasMinistryReward
                               ? "bằng khen bộ quốc phòng"
                               : addFormData.hasNationalReward
-                              ? "bằng khen toàn quân"
+                              ? "CSTĐ Toàn Quân"
                               : ""
                           }
                           onChange={(e) => {
@@ -798,8 +798,7 @@ const StudentAchievement = () => {
                               ...addFormData,
                               hasMinistryReward:
                                 value === "bằng khen bộ quốc phòng",
-                              hasNationalReward:
-                                value === "bằng khen toàn quân",
+                              hasNationalReward: value === "CSTĐ Toàn Quân",
                             });
                           }}
                           className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -814,10 +813,10 @@ const StudentAchievement = () => {
                               " (Chưa đủ điều kiện)"}
                           </option>
                           <option
-                            value="bằng khen toàn quân"
+                            value="CSTĐ Toàn Quân"
                             disabled={!canSelectNationalReward()}
                           >
-                            🥇 Bằng khen toàn quân
+                            🥇 CSTĐ Toàn Quân
                             {!canSelectNationalReward() &&
                               " (Chưa đủ điều kiện)"}
                           </option>
@@ -1231,7 +1230,7 @@ const StudentAchievement = () => {
                             editFormData.hasMinistryReward
                               ? "bằng khen bộ quốc phòng"
                               : editFormData.hasNationalReward
-                              ? "bằng khen toàn quân"
+                              ? "CSTĐ Toàn Quân"
                               : ""
                           }
                           onChange={(e) => {
@@ -1240,8 +1239,7 @@ const StudentAchievement = () => {
                               ...editFormData,
                               hasMinistryReward:
                                 value === "bằng khen bộ quốc phòng",
-                              hasNationalReward:
-                                value === "bằng khen toàn quân",
+                              hasNationalReward: value === "CSTĐ Toàn Quân",
                             });
                           }}
                           className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -1256,10 +1254,10 @@ const StudentAchievement = () => {
                               " (Chưa đủ điều kiện)"}
                           </option>
                           <option
-                            value="bằng khen toàn quân"
+                            value="CSTĐ Toàn Quân"
                             disabled={!canSelectNationalReward()}
                           >
-                            🥇 Bằng khen toàn quân
+                            🥇 CSTĐ Toàn Quân
                             {!canSelectNationalReward() &&
                               " (Chưa đủ điều kiện)"}
                           </option>

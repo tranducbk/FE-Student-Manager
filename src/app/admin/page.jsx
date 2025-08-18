@@ -256,11 +256,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                suffix={
-                  <span className="text-white text-sm font-semibold">
-                    đồng chí
-                  </span>
-                }
               />
             </Card>
           </Col>
@@ -279,11 +274,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                suffix={
-                  <span className="text-white text-sm font-semibold">
-                    đồng chí
-                  </span>
-                }
               />
             </Card>
           </Col>
@@ -302,11 +292,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                suffix={
-                  <span className="text-white text-sm font-semibold">
-                    đồng chí
-                  </span>
-                }
               />
             </Card>
           </Col>
@@ -331,11 +316,6 @@ export default function Home() {
                   fontWeight: "900",
                   letterSpacing: "0.1em",
                 }}
-                suffix={
-                  <span className="text-white text-sm font-semibold">
-                    hoạt động
-                  </span>
-                }
               />
             </Card>
           </Col>

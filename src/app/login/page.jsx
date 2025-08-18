@@ -156,6 +156,39 @@ const Login = () => {
         .dark .ant-input-password .anticon:hover {
           color: rgb(156 163 175) !important;
         }
+
+        /* Ant Notification theming */
+        .light-notification.ant-notification-notice,
+        .light-notification {
+          background-color: rgba(255, 255, 255, 0.95) !important;
+          border: 1px solid rgba(229, 231, 235, 0.9) !important; /* gray-200 */
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        }
+        .light-notification .ant-notification-notice-message,
+        .light-notification .ant-notification-notice-description {
+          color: rgb(17, 24, 39) !important; /* gray-900 */
+        }
+        .light-notification .anticon,
+        .light-notification .ant-notification-notice-close {
+          color: rgb(75, 85, 99) !important; /* gray-600 */
+        }
+
+        .dark-notification.ant-notification-notice,
+        .dark-notification {
+          background-color: rgba(31, 41, 55, 0.95) !important; /* gray-800 */
+          border: 1px solid rgba(55, 65, 81, 0.9) !important; /* gray-700 */
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5),
+            0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+        }
+        .dark-notification .ant-notification-notice-message,
+        .dark-notification .ant-notification-notice-description {
+          color: rgb(255, 255, 255) !important;
+        }
+        .dark-notification .anticon,
+        .dark-notification .ant-notification-notice-close {
+          color: rgb(156, 163, 175) !important; /* gray-400 */
+        }
       `}</style>
 
       {/* Background gradient */}
