@@ -298,7 +298,10 @@ export default function HomePage() {
               <div className="space-y-2 text-white/80">
                 <p>Email: support@studentmanager.com</p>
                 <p>Hotline: (84) 123-456-789</p>
-                <p>Địa chỉ: 322E, Phường Phương Liệt, Thành phố Hà Nội</p>
+                <p>
+                  Địa chỉ: 322E Lê Trọng Tấn, Phường Phương Liệt, Thành phố Hà
+                  Nội
+                </p>
               </div>
             </div>
           </div>
