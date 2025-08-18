@@ -4,14 +4,30 @@ import axios from "axios";
 import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import Link from "next/link";
+import { Select } from "antd";
 import SideBar from "@/components/sidebar";
 import { BASE_URL } from "@/configs";
 const Statictical = () => {
   const chartRef1 = useRef(null);
   const chartRef2 = useRef(null);
+  const chartRef3 = useRef(null);
   const [learningClassification, setLearningClassification] = useState([]);
   const [learningResultBySemester, setLearningResultBySemester] = useState([]);
-  const [listSuggestedReward, setListSuggestedReward] = useState([]);
+  const [learningResultByYear, setLearningResultByYear] = useState({
+    schoolYear: null,
+    data: [],
+  });
+  const [classStatsByYear, setClassStatsByYear] = useState({
+    schoolYear: null,
+    data: [],
+  });
+  const [topStudentsLatestYear, setTopStudentsLatestYear] = useState({
+    schoolYear: null,
+    topStudents: [],
+  });
+  const [availableSchoolYears, setAvailableSchoolYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState("");
+  const [filterUnits, setFilterUnits] = useState([]);
 
   const fetchLearningClassification = async () => {
     const token = localStorage.getItem("token");
@@ -36,18 +52,12 @@ const Statictical = () => {
 
   const fetchLearningResultBySemester = async () => {
     const token = localStorage.getItem("token");
-
     if (token) {
       try {
         const res = await axios.get(
           `${BASE_URL}/commander/learningResultBySemester`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
+          { headers: { token: `Bearer ${token}` } }
         );
-
         setLearningResultBySemester(res.data);
       } catch (error) {
         console.log(error);
@@ -55,21 +65,92 @@ const Statictical = () => {
     }
   };
 
-  const fetchListSuggestedReward = async () => {
+  // Lấy thống kê theo NĂM HỌC mới nhất và gom nhóm theo mức GPA
+  const fetchLearningResultByYear = async () => {
     const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      // Lấy danh sách năm học, chọn năm mới nhất
+      const yearsRes = await axios.get(
+        `${BASE_URL}/commander/yearlyResults/years`,
+        { headers: { token: `Bearer ${token}` } }
+      );
+      const years = yearsRes.data?.years || [];
+      setAvailableSchoolYears(years);
+      const latestYear = years[0] || null;
+      if (!selectedYear && latestYear) setSelectedYear(latestYear);
+      if (!latestYear) {
+        setLearningResultByYear({ schoolYear: null, data: [] });
+        return;
+      }
 
+      // Lấy dữ liệu theo năm học mới nhất
+      const resultsRes = await axios.get(
+        `${BASE_URL}/commander/yearlyResults?schoolYear=${encodeURIComponent(
+          latestYear
+        )}`,
+        { headers: { token: `Bearer ${token}` } }
+      );
+      const results = resultsRes.data?.results || [];
+
+      // Gom nhóm theo thang điểm hệ 4 (giống biểu đồ theo học kỳ)
+      const buckets = [
+        { classification: "yếu", count: 0 },
+        { classification: "Trung bình", count: 0 },
+        { classification: "Khá", count: 0 },
+        { classification: "Giỏi", count: 0 },
+        { classification: "Xuất sắc", count: 0 },
+      ];
+
+      results.forEach((r) => {
+        const g = Number(r.averageGrade4 || 0);
+        if (g <= 1.995) buckets[0].count++;
+        else if (g <= 2.495) buckets[1].count++;
+        else if (g <= 3.195) buckets[2].count++;
+        else if (g <= 3.595) buckets[3].count++;
+        else buckets[4].count++;
+      });
+
+      setLearningResultByYear({ schoolYear: latestYear, data: buckets });
+
+      // Gom số lượng theo ĐƠN VỊ để vẽ biểu đồ theo đơn vị
+      const classCountsMap = new Map();
+      results.forEach((r) => {
+        const unitName = r.unit || r.unitName || "Chưa có đơn vị";
+        classCountsMap.set(unitName, (classCountsMap.get(unitName) || 0) + 1);
+      });
+      // Bảo đảm luôn đủ 6 đơn vị theo thứ tự cố định
+      const expectedUnits = [
+        "L1 - H5",
+        "L2 - H5",
+        "L3 - H5",
+        "L4 - H5",
+        "L5 - H5",
+        "L6 - H5",
+      ];
+      const classData = expectedUnits.map((unit) => ({
+        className: unit,
+        count: classCountsMap.get(unit) || 0,
+      }));
+      setClassStatsByYear({ schoolYear: latestYear, data: classData });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchTopStudentsLatestYear = async (year) => {
+    const token = localStorage.getItem("token");
     if (token) {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/listSuggestedReward`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
+        const url = `${BASE_URL}/commander/topStudents/latestYear${
+          year ? `?schoolYear=${encodeURIComponent(year)}` : ""
+        }`;
+        const res = await axios.get(url, {
+          headers: { token: `Bearer ${token}` },
+        });
+        setTopStudentsLatestYear(
+          res.data || { schoolYear: null, topStudents: [] }
         );
-
-        setListSuggestedReward(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -79,57 +160,35 @@ const Statictical = () => {
   useEffect(() => {
     fetchLearningClassification();
     fetchLearningResultBySemester();
-    fetchListSuggestedReward();
+    fetchLearningResultByYear();
+    // sẽ gọi sau khi selectedYear có giá trị
   }, []);
 
   useEffect(() => {
-    const ctx1 = document.getElementById("acquisitions1").getContext("2d");
-    const ctx2 = document.getElementById("acquisitions2").getContext("2d");
-
-    if (chartRef1.current !== null) {
-      chartRef1.current.destroy();
+    if (selectedYear) {
+      fetchTopStudentsLatestYear(selectedYear);
     }
+  }, [selectedYear]);
+
+  useEffect(() => {
+    const ctx2 = document.getElementById("acquisitions2").getContext("2d");
 
     if (chartRef2.current !== null) {
       chartRef2.current.destroy();
     }
-
-    chartRef1.current = new Chart(ctx1, {
-      type: "bar",
-      data: {
-        labels: learningClassification?.map((row) => row.classification) || [],
-        datasets: [
-          {
-            label: "Số học viên",
-            data: learningClassification?.map((row) => row.count) || [],
-            backgroundColor: "rgba(54, 162, 235, 0.2)",
-            borderColor: "rgba(54, 162, 235, 1)",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
-          },
-        },
-      },
-    });
+    if (chartRef3.current !== null) {
+      chartRef3.current.destroy();
+    }
 
     chartRef2.current = new Chart(ctx2, {
       type: "bar",
       data: {
-        labels: learningResultBySemester?.data?.map(
-          (row) => row.classification
-        ),
+        labels:
+          learningResultByYear?.data?.map((row) => row.classification) || [],
         datasets: [
           {
             label: "Số học viên",
-            data: learningResultBySemester?.data?.map((row) => row.count),
+            data: learningResultByYear?.data?.map((row) => row.count) || [],
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             borderColor: "rgba(255, 99, 132, 1)",
             borderWidth: 1,
@@ -148,15 +207,41 @@ const Statictical = () => {
       },
     });
 
+    // Biểu đồ theo đơn vị
+    const ctx3 = document.getElementById("acquisitions3").getContext("2d");
+    chartRef3.current = new Chart(ctx3, {
+      type: "bar",
+      data: {
+        labels: classStatsByYear?.data?.map((row) => row.className) || [],
+        datasets: [
+          {
+            label: "Số học viên theo đơn vị",
+            data: classStatsByYear?.data?.map((row) => row.count) || [],
+            backgroundColor: "rgba(99, 102, 241, 0.2)",
+            borderColor: "rgba(99, 102, 241, 1)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 },
+          },
+        },
+      },
+    });
+
     return () => {
-      if (chartRef1.current !== null) {
-        chartRef1.current.destroy();
-      }
       if (chartRef2.current !== null) {
         chartRef2.current.destroy();
       }
+      if (chartRef3.current !== null) {
+        chartRef3.current.destroy();
+      }
     };
-  }, [learningClassification, learningResultBySemester]);
+  }, [learningResultByYear, classStatsByYear]);
 
   const handleExportFileWord = async (e, maxSemester) => {
     e.preventDefault();
@@ -247,126 +332,253 @@ const Statictical = () => {
             </div>
             <div className="flex px-6 py-6 justify-around">
               <div className="text-center">
-                <canvas id="acquisitions1" width="450" height="395"></canvas>
-                <div className="text-sm font-bold text-blue-600 dark:text-blue-400 pt-2 pb-1">
-                  Biểu đồ thống kê kết quả học tập toàn khóa
+                <canvas id="acquisitions2" width="450" height="395"></canvas>
+                <div className="text-sm font-bold text-red-600 dark:text-red-400 pt-2 pb-1">
+                  Biểu đồ thống kê kết quả học tập theo năm học{" "}
+                  {learningResultByYear?.schoolYear || "-"}
                 </div>
               </div>
               <div className="text-center ml-8">
-                <canvas id="acquisitions2" width="450" height="395"></canvas>
-                <div className="text-sm font-bold text-red-600 dark:text-red-400 pt-2 pb-1">
-                  Biểu đồ thống kê kết quả học tập theo học kỳ{" "}
-                  {learningResultBySemester?.maxSemester}
+                <canvas id="acquisitions3" width="450" height="395"></canvas>
+                <div className="text-sm font-bold text-indigo-600 dark:text-indigo-400 pt-2 pb-1">
+                  Biểu đồ thống kê số lượng theo đơn vị năm{" "}
+                  {classStatsByYear?.schoolYear || "-"}
                 </div>
               </div>
             </div>
-            <div className="w-full pt-6 pb-5 pl-6 pr-6 mb-5">
-              <div className="flex justify-between items-center">
-                <div className="font-bold text-gray-900 dark:text-white">
-                  Gợi ý danh sách khen thưởng học viên học kỳ{" "}
-                  {listSuggestedReward?.maxSemester}
-                </div>
-                {/* <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center mr-5"
-                  onClick={(e) =>
-                    handleExportFileWord(e, listSuggestedReward?.maxSemester)
-                  }
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Xuất Word
-                </button> */}
+            {/* Top sinh viên theo lớp - theo năm học */}
+            <div className="my-2 mx-5">
+              <div className="font-bold text-gray-900 dark:text-white mb-3">
+                Danh sách đề xuất khen thưởng học viên - Năm học{" "}
+                {topStudentsLatestYear?.schoolYear || "-"}
               </div>
-              <div className="w-full pl-6 pb-6 pr-6 mt-4">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
-                    <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          STT
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Họ và tên
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Đơn vị
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Trường
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Điểm trung bình
-                        </th>
-                        <th
-                          scope="col"
-                          className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
-                        >
-                          Kết quả rèn luyện
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800">
-                      {listSuggestedReward?.suggestedRewards?.map(
-                        (item, index) => (
-                          <tr
-                            key={item._id}
-                            className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                          >
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {index + 1}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.fullName}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.unit}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.university}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.GPA}
-                            </td>
-                            <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.practise}
-                            </td>
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
+              <div className="flex items-center gap-3 mb-3">
+                <label className="text-sm text-gray-700 dark:text-gray-300">
+                  Chọn năm học:
+                </label>
+                <div className="min-w-[280px]">
+                  <Select
+                    value={selectedYear}
+                    onChange={(val) => setSelectedYear(val)}
+                    placeholder="Chọn năm học"
+                    style={{ width: 320 }}
+                    options={(availableSchoolYears || []).map((y) => ({
+                      value: y,
+                      label: y,
+                    }))}
+                  />
                 </div>
+                <label className="text-sm text-gray-700 dark:text-gray-300 ml-6">
+                  Lọc theo đơn vị (chọn nhiều):
+                </label>
+                <div className="min-w-[320px]">
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    value={filterUnits}
+                    onChange={(vals) => setFilterUnits(vals)}
+                    placeholder="Chọn đơn vị"
+                    style={{ width: 360 }}
+                    options={Array.from(
+                      new Set(
+                        (topStudentsLatestYear?.topStudents || []).map(
+                          (x) => x.unit
+                        )
+                      )
+                    )
+                      .filter(Boolean)
+                      .map((u) => ({ value: u, label: u }))}
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
+                  <thead className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600">
+                    <tr>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        STT
+                      </th>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Họ và tên
+                      </th>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Lớp
+                      </th>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Đơn vị
+                      </th>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Điểm TB hệ 4
+                      </th>
+                      <th className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Điểm TB hệ 10
+                      </th>
+                      <th className="py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                        Kết quả rèn luyện
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800">
+                    {(filterUnits.length
+                      ? (topStudentsLatestYear?.topStudents || []).filter((i) =>
+                          filterUnits.includes(i.unit)
+                        )
+                      : topStudentsLatestYear?.topStudents || []
+                    ).map((item, index) => (
+                      <tr
+                        key={`${item.classId}-${item.studentId}`}
+                        className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                      >
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {index + 1}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.fullName}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.className}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.unit}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.averageGrade4?.toFixed?.(2) ??
+                            item.averageGrade4}
+                        </td>
+                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                          {item.averageGrade10?.toFixed?.(2) ??
+                            item.averageGrade10}
+                        </td>
+                        <td className="whitespace-nowrap font-medium py-4 px-4">
+                          {item.trainingRating || "Chưa có dữ liệu"}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!topStudentsLatestYear?.topStudents ||
+                      topStudentsLatestYear.topStudents.length === 0) && (
+                      <tr>
+                        <td colSpan={5} className="py-4 px-4 text-gray-400">
+                          Không có dữ liệu
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <style jsx global>{`
+        .ant-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        /* Tokens chỉ áp dụng cho chế độ multiple */
+        .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(239 246 255) !important; /* blue-50 */
+          border-color: rgb(191 219 254) !important; /* blue-200 */
+          color: rgb(30 58 138) !important; /* blue-900 */
+        }
+        /* Single select: chữ rõ, không nền */
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(17 24 39) !important; /* gray-900 */
+          font-weight: 600;
+        }
+        .ant-select-arrow,
+        .ant-select-clear {
+          color: rgb(107 114 128);
+        }
+        .ant-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+        }
+        .ant-select-item {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+
+        .dark .ant-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        /* Tokens ở chế độ multiple trong dark */
+        .dark .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(75 85 99) !important; /* gray-600 */
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+        /* Single select dark: chữ rõ, không nền */
+        .dark
+          .ant-select-single
+          .ant-select-selector
+          .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(255 255 255) !important;
+          font-weight: 600;
+        }
+        .dark .ant-select-arrow,
+        .dark .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+        }
+        .dark .ant-select-item {
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-selected:not(
+            .ant-select-item-option-disabled
+          ) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
     </div>
   );
 };

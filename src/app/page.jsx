@@ -95,12 +95,12 @@ export default function HomePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/20 rounded-2xl p-6 text-center">
                     <Users className="h-12 w-12 text-white mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">1000+</div>
+                    <div className="text-2xl font-bold text-white">100+</div>
                     <div className="text-white/80 text-sm">Sinh viên</div>
                   </div>
                   <div className="bg-white/20 rounded-2xl p-6 text-center">
                     <BarChart3 className="h-12 w-12 text-white mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-white">50+</div>
+                    <div className="text-2xl font-bold text-white">10+</div>
                     <div className="text-white/80 text-sm">Lớp học</div>
                   </div>
                   <div className="bg-white/20 rounded-2xl p-6 text-center">
@@ -218,12 +218,12 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
-                  number: "1000+",
+                  number: "100+",
                   label: "Sinh viên được quản lý",
                   icon: Users,
                 },
                 {
-                  number: "50+",
+                  number: "10+",
                   label: "Khoa/Ngành đào tạo",
                   icon: GraduationCap,
                 },
@@ -292,9 +292,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Hỗ trợ khách hàng
-              </h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Hỗ trợ</h3>
               <div className="space-y-2 text-white/80">
                 <p>Email: support@studentmanager.com</p>
                 <p>Hotline: (84) 123-456-789</p>
