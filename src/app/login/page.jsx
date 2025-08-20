@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../components/notify";
 import { Input } from "antd";
 import { BASE_URL } from "@/configs";
@@ -14,6 +13,8 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,18 +29,20 @@ const Login = () => {
                 token: `Bearer ${token}`,
               },
             });
-            router.push("/admin");
+            setIsLoggedIn(true);
+            setUserType("admin");
           } else {
             await axios.get(`${BASE_URL}/student/${decodedToken.id}`, {
               headers: {
                 token: `Bearer ${token}`,
               },
             });
-            router.push("/users");
+            setIsLoggedIn(true);
+            setUserType("student");
           }
         } catch (error) {
-          router.push("/login");
-          console.log(error);
+          console.log("Token invalid:", error);
+          localStorage.removeItem("token");
         }
       }
     };
@@ -60,12 +63,18 @@ const Login = () => {
       localStorage.setItem("token", accessToken);
 
       const decodedToken = jwtDecode(accessToken);
-      if (decodedToken.admin === true) {
-        router.push("/admin");
-      } else {
-        router.push("/users");
-      }
+      setIsLoggedIn(true);
+      setUserType(decodedToken.admin === true ? "admin" : "student");
       handleNotify("success", "Thành công!", "Đăng nhập thành công");
+
+      // Redirect sau khi đã cập nhật state
+      setTimeout(() => {
+        if (decodedToken.admin === true) {
+          router.push("/admin");
+        } else {
+          router.push("/users");
+        }
+      }, 1000);
     } catch (error) {
       if (error.response) {
         handleNotify(
@@ -83,74 +92,6 @@ const Login = () => {
 
   return (
     <>
-      <ReactNotifications />
-
-      {/* Ant Design Styles */}
-      <style jsx global>{`
-        .ant-input {
-          background-color: rgb(249 250 251) !important;
-          border-color: rgb(209 213 219) !important;
-          color: rgb(17 24 39) !important;
-          border-radius: 8px !important;
-          border-width: 1px !important;
-        }
-
-        .ant-input::placeholder {
-          color: rgb(156 163 175) !important;
-        }
-
-        .ant-input:focus,
-        .ant-input-focused {
-          border-color: rgb(37 99 235) !important;
-          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
-        }
-
-        .ant-input-password {
-          background-color: rgb(249 250 251) !important;
-          border-color: rgb(209 213 219) !important;
-          color: rgb(17 24 39) !important;
-          border-radius: 8px !important;
-          border-width: 1px !important;
-        }
-
-        .ant-input-password .ant-input {
-          background-color: transparent !important;
-          border: none !important;
-          color: inherit !important;
-        }
-
-        .ant-input-password .anticon {
-          color: rgb(156 163 175) !important;
-        }
-
-        .ant-input-password .anticon:hover {
-          color: rgb(75 85 99) !important;
-        }
-
-        /* Ant Notification theming */
-        .ant-notification-notice {
-          background-color: rgba(255, 255, 255, 0.95) !important;
-          border: 1px solid rgba(229, 231, 235, 0.9) !important;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-            0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-        }
-        .ant-notification-notice-message,
-        .ant-notification-notice-description {
-          color: rgb(17, 24, 39) !important;
-        }
-        .anticon,
-        .ant-notification-notice-close {
-          color: rgb(75, 85, 99) !important;
-        }
-
-        /* Preserve success icon green */
-        .ant-notification-notice-icon-success,
-        .anticon-check-circle,
-        .anticon-check-circle-fill {
-          color: #52c41a !important;
-        }
-      `}</style>
-
       {/* Background with hvkhqs.jpg */}
       <div
         className="min-h-screen"
@@ -198,12 +139,21 @@ const Login = () => {
                 >
                   Liên hệ
                 </a>
-                <a
-                  href="/"
-                  className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
-                >
-                  Trang chủ
-                </a>
+                {isLoggedIn ? (
+                  <a
+                    href={userType === "admin" ? "/admin" : "/users"}
+                    className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+                  >
+                    Quản lý Học Viên
+                  </a>
+                ) : (
+                  <a
+                    href="/"
+                    className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+                  >
+                    Trang chủ
+                  </a>
+                )}
               </div>
             </div>
           </nav>

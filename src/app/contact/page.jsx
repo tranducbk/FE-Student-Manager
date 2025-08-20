@@ -104,8 +104,8 @@ const Contact = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-20 dark:opacity-30"></div>
                 <img
-                  className="relative mx-auto h-20 w-auto drop-shadow-lg"
-                  src="/logo.png"
+                  className="relative mx-auto h-28 w-auto drop-shadow-lg"
+                  src="/logo-msa.png"
                   alt="Hệ học viên 5"
                 />
               </div>
@@ -113,7 +113,7 @@ const Contact = () => {
           </Link>
           <Title
             level={1}
-            className="mt-6 text-gray-900 dark:text-gray-100 transition-colors duration-200"
+            className="mt-2 text-gray-900 dark:text-gray-100 transition-colors duration-200"
           >
             LIÊN HỆ
           </Title>

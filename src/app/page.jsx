@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import {
   GraduationCap,
   Users,
@@ -12,8 +16,45 @@ import {
   CheckCircle,
   Star,
 } from "lucide-react";
+import { BASE_URL } from "@/configs";
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          if (decodedToken.admin === true) {
+            await axios.get(`${BASE_URL}/commander/${decodedToken.id}`, {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            });
+            setIsLoggedIn(true);
+            setUserType("admin");
+          } else {
+            await axios.get(`${BASE_URL}/student/${decodedToken.id}`, {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            });
+            setIsLoggedIn(true);
+            setUserType("student");
+          }
+        } catch (error) {
+          console.log("Token invalid:", error);
+          localStorage.removeItem("token");
+        }
+      }
+    };
+
+    checkToken();
+  }, []);
   return (
     <div
       className="min-h-screen"
@@ -58,12 +99,21 @@ export default function HomePage() {
               >
                 Liên hệ
               </a>
-              <a
-                href="/login"
-                className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
-              >
-                Đăng nhập
-              </a>
+              {isLoggedIn ? (
+                <a
+                  href={userType === "admin" ? "/admin" : "/users"}
+                  className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+                >
+                  Quản lý Học Viên
+                </a>
+              ) : (
+                <a
+                  href="/login"
+                  className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+                >
+                  Đăng nhập
+                </a>
+              )}
             </div>
           </div>
         </nav>
@@ -89,10 +139,16 @@ export default function HomePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="/login"
+                  href={
+                    isLoggedIn
+                      ? userType === "admin"
+                        ? "/admin"
+                        : "/users"
+                      : "/login"
+                  }
                   className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold hover:bg-white/90 transition-all hover:scale-105 flex items-center justify-center group shadow-lg"
                 >
-                  Truy cập hệ thống
+                  {isLoggedIn ? "Quản lý Học Viên" : "Truy cập hệ thống"}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </a>
                 <a
@@ -288,7 +344,16 @@ export default function HomePage() {
               </h3>
               <div className="space-y-2">
                 {[
-                  { label: "Truy cập hệ thống", href: "/login" },
+                  {
+                    label: isLoggedIn
+                      ? "Quản lý Học Viên"
+                      : "Truy cập hệ thống",
+                    href: isLoggedIn
+                      ? userType === "admin"
+                        ? "/admin"
+                        : "/users"
+                      : "/login",
+                  },
                   { label: "Tính năng", href: "#features" },
                   { label: "Về chúng tôi", href: "#about" },
                   { label: "Liên hệ", href: "#contact" },

@@ -2043,11 +2043,28 @@ const LearningInformation = () => {
                         className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-3 py-1"
                       >
                         <option value="">Tất cả học kỳ</option>
-                        {semesters.map((s) => (
-                          <option key={s._id} value={s._id}>
-                            {s.code} - {s.schoolYear}
-                          </option>
-                        ))}
+                        {semesters
+                          .sort((a, b) => {
+                            // Sắp xếp theo năm học (mới nhất trước)
+                            const yearComparison = b.schoolYear.localeCompare(
+                              a.schoolYear
+                            );
+                            if (yearComparison !== 0) return yearComparison;
+
+                            // Nếu cùng năm, sắp xếp theo học kỳ (lớn nhất trước - HK3, HK2, HK1)
+                            const semesterA = a.code.includes(".")
+                              ? parseInt(a.code.split(".")[1])
+                              : 0;
+                            const semesterB = b.code.includes(".")
+                              ? parseInt(b.code.split(".")[1])
+                              : 0;
+                            return semesterB - semesterA;
+                          })
+                          .map((s) => (
+                            <option key={s._id} value={s._id}>
+                              {s.code} - {s.schoolYear}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
@@ -3150,11 +3167,28 @@ const LearningInformation = () => {
                     required
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   >
-                    {semesters.map((s) => (
-                      <option key={s._id} value={s._id}>
-                        {s.code} - {s.schoolYear}
-                      </option>
-                    ))}
+                    {semesters
+                      .sort((a, b) => {
+                        // Sắp xếp theo năm học (mới nhất trước)
+                        const yearComparison = b.schoolYear.localeCompare(
+                          a.schoolYear
+                        );
+                        if (yearComparison !== 0) return yearComparison;
+
+                        // Nếu cùng năm, sắp xếp theo học kỳ (lớn nhất trước - HK3, HK2, HK1)
+                        const semesterA = a.code.includes(".")
+                          ? parseInt(a.code.split(".")[1])
+                          : 0;
+                        const semesterB = b.code.includes(".")
+                          ? parseInt(b.code.split(".")[1])
+                          : 0;
+                        return semesterB - semesterA;
+                      })
+                      .map((s) => (
+                        <option key={s._id} value={s._id}>
+                          {s.code} - {s.schoolYear}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="mb-4">
@@ -3281,11 +3315,28 @@ const LearningInformation = () => {
                     }
                     className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-colors duration-200"
                   >
-                    {semesters.map((s) => (
-                      <option key={s._id} value={s._id}>
-                        {s.code} - {s.schoolYear}
-                      </option>
-                    ))}
+                    {semesters
+                      .sort((a, b) => {
+                        // Sắp xếp theo năm học (mới nhất trước)
+                        const yearComparison = b.schoolYear.localeCompare(
+                          a.schoolYear
+                        );
+                        if (yearComparison !== 0) return yearComparison;
+
+                        // Nếu cùng năm, sắp xếp theo học kỳ (lớn nhất trước - HK3, HK2, HK1)
+                        const semesterA = a.code.includes(".")
+                          ? parseInt(a.code.split(".")[1])
+                          : 0;
+                        const semesterB = b.code.includes(".")
+                          ? parseInt(b.code.split(".")[1])
+                          : 0;
+                        return semesterB - semesterA;
+                      })
+                      .map((s) => (
+                        <option key={s._id} value={s._id}>
+                          {s.code} - {s.schoolYear}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="mb-4">

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 import {
@@ -215,8 +214,6 @@ const ResetPassword = ({ params }) => {
         },
       }}
     >
-      <ReactNotifications />
-
       <div
         className="min-h-screen"
         style={{

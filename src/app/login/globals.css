@@ -2,103 +2,94 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS variables for theme colors */
-:root {
-  --color-bg: #ffffff;
-  --color-surface: #f8f9fa;
-  --color-border: #e5e7eb;
-  --color-text: #1f2937;
-  --color-text-secondary: #6b7280;
+/* Ant Design Input Styles */
+.ant-input {
+  background-color: rgb(249 250 251) !important;
+  border-color: rgb(209 213 219) !important;
+  color: rgb(17 24 39) !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
 }
 
-.dark {
-  --color-bg: #1a1a1a;
-  --color-surface: #2d2d2d;
-  --color-border: #404040;
-  --color-text: #e5e5e5;
-  --color-text-secondary: #a3a3a3;
+.ant-input::placeholder {
+  color: rgb(156 163 175) !important;
 }
 
-/* Smooth transitions for theme changes */
-* {
-  transition: background-color 0.2s ease, color 0.2s ease,
-    border-color 0.2s ease;
+.ant-input:focus,
+.ant-input-focused {
+  border-color: rgb(37 99 235) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
 }
 
-/* Custom scrollbar for dark mode */
-.dark ::-webkit-scrollbar {
-  width: 8px;
+.ant-input-password {
+  background-color: rgb(249 250 251) !important;
+  border-color: rgb(209 213 219) !important;
+  color: rgb(17 24 39) !important;
+  border-radius: 8px !important;
+  border-width: 1px !important;
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: #2d2d2d;
+.ant-input-password .ant-input {
+  background-color: transparent !important;
+  border: none !important;
+  color: inherit !important;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #404040;
-  border-radius: 4px;
+.ant-input-password .anticon {
+  color: rgb(156 163 175) !important;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+.ant-input-password .anticon:hover {
+  color: rgb(75 85 99) !important;
 }
 
-/* Light mode scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Ant Notification Styles */
+.ant-notification-notice {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(229, 231, 235, 0.9) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.ant-notification-notice-message,
+.ant-notification-notice-description {
+  color: rgb(17, 24, 39) !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+.anticon,
+.ant-notification-notice-close {
+  color: rgb(75, 85, 99) !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+/* Success notification - Green */
+.ant-notification-notice-icon-success,
+.anticon-check-circle,
+.anticon-check-circle-fill {
+  color: #10b981 !important;
 }
 
-/* Custom animations for login page */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.ant-notification-notice-success {
+  border-left: 4px solid #10b981 !important;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+/* Warning notification - Orange/Amber */
+.ant-notification-notice-icon-warning,
+.anticon-exclamation-circle,
+.anticon-exclamation-circle-fill {
+  color: #f59e0b !important;
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+.ant-notification-notice-warning {
+  border-left: 4px solid #f59e0b !important;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Error notification - Red */
+.ant-notification-notice-icon-error,
+.anticon-close-circle,
+.anticon-close-circle-fill {
+  color: #ef4444 !important;
 }
 
-/* Glass morphism effect */
-.glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.dark .glass {
-  background: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.ant-notification-notice-error {
+  border-left: 4px solid #ef4444 !important;
 }

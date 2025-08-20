@@ -765,12 +765,12 @@ const UserProfile = ({ params }) => {
                     <div className="flex-shrink-0">
                       <div className="relative">
                         <img
-                          className="rounded-full w-64 h-64 object-cover border-4 border-gray-200 dark:border-gray-600"
+                          className="rounded-full w-72 h-72 object-cover border-4 border-gray-200 dark:border-gray-600"
                           src={profile?.avatar}
                           alt="avatar"
                         />
                         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                          <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                          <div className="bg-blue-600 max-w-56 text-center text-white px-3 py-1 rounded-full text-sm font-medium">
                             Mã HV: {profile?.studentId}
                           </div>
                         </div>
