@@ -415,6 +415,118 @@ const TuitionFees = () => {
     }
   };
 
+  const handleExportFileWord = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Tạo tham số cho API
+        const semesterParam =
+          exportSelectedSemesters.length > 0
+            ? exportSelectedSemesters
+                .map((semesterId) => {
+                  const semester = semesters.find((s) => s._id === semesterId);
+                  return semester?.code;
+                })
+                .join(",")
+            : "all";
+
+        const schoolYearParam =
+          exportSelectedSemesters.length > 0
+            ? exportSelectedSemesters
+                .map((semesterId) => {
+                  const semester = semesters.find((s) => s._id === semesterId);
+                  return semester?.schoolYear;
+                })
+                .filter(Boolean)
+                .join(",")
+            : "all";
+
+        const unitParam =
+          exportSelectedUnits.length > 0
+            ? exportSelectedUnits.join(",")
+            : "all";
+
+        console.log("Frontend - Export Word parameters:", {
+          semesterParam,
+          schoolYearParam,
+          unitParam,
+          exportSelectedSemesters,
+          exportSelectedUnits,
+        });
+
+        const response = await axios.get(
+          `${BASE_URL}/commander/tuitionFee/word?semester=${semesterParam}&schoolYear=${schoolYearParam}&unit=${unitParam}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+            responseType: "blob",
+          }
+        );
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+
+        // Tạo tên file động dựa trên các tham số được chọn
+        let fileName = "Thong_ke_hoc_phi_he_hoc_vien_5";
+
+        // Thêm thông tin học kỳ
+        if (exportSelectedSemesters.length > 0) {
+          const semesterCodes = exportSelectedSemesters
+            .map((semesterId) => {
+              const semester = semesters.find((s) => s._id === semesterId);
+              return semester?.code;
+            })
+            .filter(Boolean);
+          fileName += `_${semesterCodes.join("_")}`;
+        } else {
+          fileName += "_tat_ca_hoc_ky";
+        }
+
+        // Thêm thông tin năm học
+        if (exportSelectedSemesters.length > 0) {
+          const schoolYears = exportSelectedSemesters
+            .map((semesterId) => {
+              const semester = semesters.find((s) => s._id === semesterId);
+              return semester?.schoolYear;
+            })
+            .filter(Boolean);
+          // Loại bỏ các năm học trùng lặp
+          const uniqueSchoolYears = [...new Set(schoolYears)];
+          fileName += `_${uniqueSchoolYears.join("_")}`;
+        } else {
+          fileName += "_tat_ca_nam_hoc";
+        }
+
+        // Thêm thông tin đơn vị
+        if (exportSelectedUnits.length > 0) {
+          fileName += `_${exportSelectedUnits.join("_")}`;
+        } else {
+          fileName += "_tat_ca_don_vi";
+        }
+
+        fileName += ".docx";
+
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+
+        // Đóng modal và reset
+        setShowExportModal(false);
+        setExportSelectedSemesters([]);
+        setExportSelectedUnits([]);
+
+        handleNotify("success", "Thành công", "Đã xuất file Word");
+      } catch (error) {
+        console.error("Lỗi tải xuống file Word", error);
+        handleNotify("error", "Lỗi", "Không thể xuất file Word");
+      }
+    }
+  };
+
   // semesters đã được sort mới → cũ
   const treeData = semesters.map((s) => ({
     title: getSemesterLabel(s),
@@ -494,7 +606,7 @@ const TuitionFees = () => {
                     d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
                   />
                 </svg>
-                Xuất PDF
+                Xuất File
               </button>
             </div>
             <div className="w-full p-5">
@@ -837,7 +949,7 @@ const TuitionFees = () => {
                 onClick={() => {
                   setShowExportModal(false);
                   setExportSelectedSemesters([]);
-                  setExportSelectedClasses([]);
+                  setExportSelectedUnits([]);
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
@@ -1000,6 +1112,26 @@ const TuitionFees = () => {
                   }}
                 >
                   Hủy
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 flex items-center"
+                  onClick={handleExportFileWord}
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Xuất Word
                 </button>
                 <button
                   type="button"

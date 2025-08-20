@@ -11,7 +11,6 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { ThemeToggle } from "../../components/ThemeToggle";
 import { BASE_URL } from "@/configs";
 
 const ForgotPassword = () => {
@@ -72,55 +71,89 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors duration-300">
-      {/* Theme toggle button */}
-      <div className="fixed top-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
+    <div
+      className="min-h-screen"
+      style={{
+        background: `linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 58, 138, 0.8) 30%, rgba(79, 70, 229, 0.7) 70%, rgba(147, 51, 234, 0.6) 100%), url('/hvkhqs.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      {/* Header */}
+      <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-indigo-900/95 backdrop-blur-md border-b border-white/20">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div
+              className="flex items-center space-x-2"
+              onClick={() => router.push("/")}
+            >
+              <img
+                src="/logo-msa.png"
+                alt="Logo"
+                className="h-12 my-1 transition-all duration-300"
+              />
+              <span className="text-xl font-bold text-white">
+                HỌC VIỆN KHOA HỌC QUÂN SỰ
+              </span>
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <a
+                href="/#features"
+                className="text-white/90 hover:text-white transition-colors font-medium"
+              >
+                Tính năng
+              </a>
+              <a
+                href="/#about"
+                className="text-white/90 hover:text-white transition-colors font-medium"
+              >
+                Giới thiệu
+              </a>
+              <a
+                href="/#contact"
+                className="text-white/90 hover:text-white transition-colors font-medium"
+              >
+                Liên hệ
+              </a>
+              <a
+                href="/"
+                className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+              >
+                Trang chủ
+              </a>
+            </div>
+          </div>
+        </nav>
+      </header>
 
       {/* Main container */}
-      <div className="flex min-h-screen flex-col justify-center px-6 py-16 lg:px-8">
+      <div className="flex min-h-screen flex-col justify-center px-6 py-16 lg:px-8 pt-28">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           {/* Loading overlay */}
           {loading && (
-            <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg p-6 shadow-xl">
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  <span className="text-gray-700 dark:text-gray-300">
-                    Đang gửi email...
-                  </span>
+                  <span className="text-gray-700">Đang gửi email...</span>
                 </div>
               </div>
             </div>
           )}
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <Link href="/login">
-              <div className="inline-block">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-20 dark:opacity-30"></div>
-                  <img
-                    className="relative mx-auto h-20 w-auto drop-shadow-lg"
-                    src="/image.png"
-                    alt="Hệ Học Viên 5"
-                  />
-                </div>
-              </div>
-            </Link>
-          </div>
 
           {/* Card */}
-          <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 p-8">
+          <div className="bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/30 p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
-                <MailOutlined className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                <MailOutlined className="h-4 w-4 text-blue-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Quên mật khẩu
               </h2>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600">
                 Nhập email của bạn để nhận link đặt lại mật khẩu
               </p>
             </div>
@@ -130,7 +163,7 @@ const ForgotPassword = () => {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
                   Địa chỉ email
                 </label>
@@ -145,7 +178,7 @@ const ForgotPassword = () => {
                     type="email"
                     autoComplete="email"
                     required
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="example@email.com"
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -154,7 +187,7 @@ const ForgotPassword = () => {
 
               {/* Error message */}
               {error && (
-                <div className="flex items-center p-4 text-sm text-red-800 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-center p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg">
                   <ExclamationCircleOutlined className="mr-2 text-red-500" />
                   {error}
                 </div>
@@ -162,7 +195,7 @@ const ForgotPassword = () => {
 
               {/* Success message */}
               {correct && (
-                <div className="flex items-center p-4 text-sm text-green-800 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center p-4 text-sm text-green-800 bg-green-50 border border-green-200 rounded-lg">
                   <CheckCircleOutlined className="mr-2 text-green-500" />
                   Vui lòng kiểm tra email của bạn và làm theo hướng dẫn!
                 </div>
@@ -174,7 +207,7 @@ const ForgotPassword = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-400 dark:hover:to-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
                     {loading ? (
                       <div className="flex items-center">
@@ -193,7 +226,7 @@ const ForgotPassword = () => {
             <div className="mt-6 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200"
               >
                 <ArrowLeftOutlined className="mr-1" />
                 Quay lại đăng nhập

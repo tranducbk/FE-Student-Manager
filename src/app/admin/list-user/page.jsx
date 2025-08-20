@@ -68,6 +68,8 @@ const ListUser = () => {
     gender: "",
     birthday: "",
     hometown: "",
+    ethnicity: "",
+    religion: "",
     currentAddress: "",
     email: "",
     phoneNumber: "",
@@ -83,6 +85,7 @@ const ListUser = () => {
     fullPartyMember: "",
     probationaryPartyMember: "",
     dateOfEnlistment: "",
+    graduationDate: "",
   });
   const [formData, setFormData] = useState({
     educationLevel: "Đại học đại trà",
@@ -91,6 +94,8 @@ const ListUser = () => {
     rank: "Binh nhì",
     positionGovernment: "Học viên",
     positionParty: "Không",
+    ethnicity: "",
+    religion: "",
     currentAddress: "",
     avatar:
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
@@ -188,6 +193,8 @@ const ListUser = () => {
       gender: "",
       birthday: "",
       hometown: "",
+      ethnicity: "",
+      religion: "",
       currentAddress: "",
       email: "",
       phoneNumber: "",
@@ -406,6 +413,8 @@ const ListUser = () => {
           positionParty: res.data.positionParty || "Không",
           email: res.data.email || "",
           hometown: res.data.hometown || "",
+          ethnicity: res.data.ethnicity || "",
+          religion: res.data.religion || "",
           currentAddress: res.data.currentAddress || "",
           avatar:
             res.data.avatar ||
@@ -1024,8 +1033,12 @@ const ListUser = () => {
                               : "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Năm vào trường:</span>{" "}
-                            {profileDetail?.enrollment || "Chưa có dữ liệu"}
+                            <span className="font-bold">Ngày ra trường:</span>{" "}
+                            {profileDetail?.graduationDate
+                              ? dayjs(profileDetail?.graduationDate).format(
+                                  "DD/MM/YYYY"
+                                )
+                              : "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Trường:</span>{" "}
@@ -1113,6 +1126,14 @@ const ListUser = () => {
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Quê quán:</span>{" "}
                             {profileDetail?.hometown || "Chưa có dữ liệu"}
+                          </div>
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Dân tộc:</span>{" "}
+                            {profileDetail?.ethnicity || "Chưa có dữ liệu"}
+                          </div>
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Tôn giáo:</span>{" "}
+                            {profileDetail?.religion || "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Nơi ở hiện nay:</span>{" "}
@@ -1873,36 +1894,71 @@ const ListUser = () => {
                               />
                             </div>
 
-                            {/* Trình độ */}
-
-                            {/* Lớp */}
                             <div>
                               <label
-                                htmlFor="class"
+                                htmlFor="ethnicity"
                                 className="block mb-2 text-sm font-medium dark:text-white"
                               >
-                                Lớp
+                                Dân tộc
                               </label>
-                              <select
-                                id="class"
-                                value={selectedClass || ""}
-                                onChange={(e) => {
-                                  const selectedClassObj = classes.find(
-                                    (cls) => cls._id === e.target.value
-                                  );
-                                  setSelectedClass(selectedClassObj._id);
-                                }}
-                                disabled={!selectedLevel}
-                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                required
+                              <input
+                                type="text"
+                                id="ethnicity"
+                                value={addFormData.ethnicity}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    ethnicity: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: Kinh"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="religion"
+                                className="block mb-2 text-sm font-medium dark:text-white"
                               >
-                                <option value="">Chọn lớp</option>
-                                {classes.map((cls) => (
-                                  <option key={cls._id} value={cls._id}>
-                                    {cls.className}
-                                  </option>
-                                ))}
-                              </select>
+                                Tôn giáo
+                              </label>
+                              <input
+                                type="text"
+                                id="religion"
+                                value={addFormData.religion}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    religion: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: Không"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="graduationDate"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Ngày ra trường
+                              </label>
+                              <DatePicker
+                                id="graduationDate"
+                                selected={addFormData.graduationDate}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    graduationDate: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
                             </div>
 
                             <div>
@@ -3282,6 +3338,26 @@ const ListUser = () => {
                                 </option>
                               ))}
                             </select>
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="graduationDate"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Ngày ra trường
+                            </label>
+                            <DatePicker
+                              id="graduationDate"
+                              selected={formData.graduationDate}
+                              onChange={(date) =>
+                                handleChangeDate("graduationDate", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
                           </div>
                         </div>
 

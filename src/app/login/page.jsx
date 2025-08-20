@@ -7,9 +7,9 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../components/notify";
-import { ThemeToggle } from "../../components/ThemeToggle";
 import { Input } from "antd";
 import { BASE_URL } from "@/configs";
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -85,7 +85,7 @@ const Login = () => {
     <>
       <ReactNotifications />
 
-      {/* Ant Design Dark Mode Styles */}
+      {/* Ant Design Styles */}
       <style jsx global>{`
         .ant-input {
           background-color: rgb(249 250 251) !important;
@@ -95,18 +95,8 @@ const Login = () => {
           border-width: 1px !important;
         }
 
-        .dark .ant-input {
-          background-color: rgb(55 65 81) !important;
-          border-color: rgb(75 85 99) !important;
-          color: rgb(255 255 255) !important;
-        }
-
         .ant-input::placeholder {
           color: rgb(156 163 175) !important;
-        }
-
-        .dark .ant-input::placeholder {
-          color: rgb(107 114 128) !important;
         }
 
         .ant-input:focus,
@@ -115,24 +105,12 @@ const Login = () => {
           box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
         }
 
-        .dark .ant-input:focus,
-        .dark .ant-input-focused {
-          border-color: rgb(59 130 246) !important;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-        }
-
         .ant-input-password {
           background-color: rgb(249 250 251) !important;
           border-color: rgb(209 213 219) !important;
           color: rgb(17 24 39) !important;
           border-radius: 8px !important;
           border-width: 1px !important;
-        }
-
-        .dark .ant-input-password {
-          background-color: rgb(55 65 81) !important;
-          border-color: rgb(75 85 99) !important;
-          color: rgb(255 255 255) !important;
         }
 
         .ant-input-password .ant-input {
@@ -145,91 +123,112 @@ const Login = () => {
           color: rgb(156 163 175) !important;
         }
 
-        .dark .ant-input-password .anticon {
-          color: rgb(107 114 128) !important;
-        }
-
         .ant-input-password .anticon:hover {
           color: rgb(75 85 99) !important;
         }
 
-        .dark .ant-input-password .anticon:hover {
-          color: rgb(156 163 175) !important;
-        }
-
         /* Ant Notification theming */
-        .light-notification.ant-notification-notice,
-        .light-notification {
+        .ant-notification-notice {
           background-color: rgba(255, 255, 255, 0.95) !important;
-          border: 1px solid rgba(229, 231, 235, 0.9) !important; /* gray-200 */
+          border: 1px solid rgba(229, 231, 235, 0.9) !important;
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
             0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
         }
-        .light-notification .ant-notification-notice-message,
-        .light-notification .ant-notification-notice-description {
-          color: rgb(17, 24, 39) !important; /* gray-900 */
+        .ant-notification-notice-message,
+        .ant-notification-notice-description {
+          color: rgb(17, 24, 39) !important;
         }
-        .light-notification .anticon,
-        .light-notification .ant-notification-notice-close {
-          color: rgb(75, 85, 99) !important; /* gray-600 */
+        .anticon,
+        .ant-notification-notice-close {
+          color: rgb(75, 85, 99) !important;
         }
 
-        .dark-notification.ant-notification-notice,
-        .dark-notification {
-          background-color: rgba(31, 41, 55, 0.95) !important; /* gray-800 */
-          border: 1px solid rgba(55, 65, 81, 0.9) !important; /* gray-700 */
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5),
-            0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
-        }
-        .dark-notification .ant-notification-notice-message,
-        .dark-notification .ant-notification-notice-description {
-          color: rgb(255, 255, 255) !important;
-        }
-        .dark-notification .anticon,
-        .dark-notification .ant-notification-notice-close {
-          color: rgb(156, 163, 175) !important; /* gray-400 */
+        /* Preserve success icon green */
+        .ant-notification-notice-icon-success,
+        .anticon-check-circle,
+        .anticon-check-circle-fill {
+          color: #52c41a !important;
         }
       `}</style>
 
-      {/* Background gradient */}
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
-        {/* Theme toggle button */}
-        <div className="fixed top-6 right-6 z-50">
-          <ThemeToggle />
-        </div>
-
-        {/* Main content */}
-        <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            {/* Logo */}
-            <div className="flex justify-center">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-20 dark:opacity-30"></div>
+      {/* Background with hvkhqs.jpg */}
+      <div
+        className="min-h-screen"
+        style={{
+          background: `linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 58, 138, 0.8) 30%, rgba(79, 70, 229, 0.7) 70%, rgba(147, 51, 234, 0.6) 100%), url('/hvkhqs.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        {/* Header */}
+        <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-indigo-900/95 backdrop-blur-md border-b border-white/20">
+          <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div
+                className="flex items-center space-x-2"
+                onClick={() => router.push("/")}
+              >
                 <img
-                  className="relative mx-auto h-24 w-auto drop-shadow-lg"
-                  src="/image.png"
-                  alt="Hệ học viên 5"
+                  src="/logo-msa.png"
+                  alt="Logo"
+                  className="h-12 my-1 transition-all duration-300"
                 />
+                <span className="text-xl font-bold text-white">
+                  HỌC VIỆN KHOA HỌC QUÂN SỰ
+                </span>
+              </div>
+              <div className="hidden md:flex items-center space-x-8">
+                <a
+                  href="/#features"
+                  className="text-white/90 hover:text-white transition-colors font-medium"
+                >
+                  Tính năng
+                </a>
+                <a
+                  href="/#about"
+                  className="text-white/90 hover:text-white transition-colors font-medium"
+                >
+                  Giới thiệu
+                </a>
+                <a
+                  href="/#contact"
+                  className="text-white/90 hover:text-white transition-colors font-medium"
+                >
+                  Liên hệ
+                </a>
+                <a
+                  href="/"
+                  className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold hover:bg-white/90 transition-colors"
+                >
+                  Trang chủ
+                </a>
               </div>
             </div>
+          </nav>
+        </header>
 
+        {/* Main content */}
+        <div className="flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8 pt-24">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
             {/* Title */}
-            <h2 className="mt-8 text-center text-3xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white transition-colors duration-200">
+            <h2 className="mt-8 text-center text-3xl font-bold leading-9 tracking-tight text-white transition-colors duration-200">
               Đăng nhập
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-              Chào mừng bạn đến với hệ thống quản lý Hệ học viên 5 - HVKHQS
+            <p className="mt-2 text-center text-sm text-white/90 transition-colors duration-200">
+              Chào mừng bạn đến với hệ thống quản lý học viên - HVKHQS
             </p>
           </div>
 
           <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
             {/* Login card */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm py-8 px-6 shadow-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 hover:shadow-2xl">
+            <div className="bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/95 backdrop-blur-sm py-8 px-6 shadow-xl rounded-2xl border border-white/30 transition-all duration-300 hover:shadow-2xl">
               <form className="space-y-6" onSubmit={handleLogin}>
                 <div>
                   <label
                     htmlFor="username"
-                    className="block text-sm font-medium leading-6 text-gray-900 dark:text-white transition-colors duration-200"
+                    className="block text-sm font-medium leading-6 text-gray-900 transition-colors duration-200"
                   >
                     Tên đăng nhập
                   </label>
@@ -253,14 +252,14 @@ const Login = () => {
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium leading-6 text-gray-900 dark:text-white transition-colors duration-200"
+                      className="block text-sm font-medium leading-6 text-gray-900 transition-colors duration-200"
                     >
                       Mật khẩu
                     </label>
                     <div className="text-sm">
                       <Link
                         href="/forgot-password"
-                        className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
+                        className="font-semibold text-blue-600 hover:text-blue-500 transition-colors duration-200"
                       >
                         Quên mật khẩu?
                       </Link>
@@ -321,20 +320,20 @@ const Login = () => {
               <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                    <div className="w-full border-t border-gray-300"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="bg-white/80 dark:bg-gray-800/80 px-2 text-gray-500 dark:text-gray-400 transition-colors duration-200">
+                    <span className="bg-gradient-to-br from-white/95 via-blue-50/90 to-indigo-50/95 px-2 text-gray-500 transition-colors duration-200">
                       Cần hỗ trợ?
                     </span>
                   </div>
                 </div>
 
-                <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                <p className="mt-6 text-center text-sm text-gray-600 transition-colors duration-200">
                   Bạn chưa có tài khoản?{" "}
                   <Link
                     href="/contact"
-                    className="font-semibold leading-6 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
+                    className="font-semibold leading-6 text-blue-600 hover:text-blue-500 transition-colors duration-200"
                   >
                     Liên hệ với quản trị viên
                   </Link>

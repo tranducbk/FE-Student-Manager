@@ -275,6 +275,73 @@ const Statictical = () => {
     }
   };
 
+  const handleExportTuitionFeeWord = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const params = new URLSearchParams();
+
+        if (selectedSemester && selectedSemester !== "all") {
+          params.append("semester", selectedSemester);
+        }
+
+        if (selectedSchoolYear && selectedSchoolYear !== "all") {
+          params.append("schoolYear", selectedSchoolYear);
+        }
+
+        if (selectedUnit && selectedUnit !== "all") {
+          params.append("unit", selectedUnit);
+        }
+
+        const response = await axios.get(
+          `${BASE_URL}/commander/tuitionFee/word?${params.toString()}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+            responseType: "blob",
+          }
+        );
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+
+        // Tạo tên file động
+        let fileName = "Thong_ke_hoc_phi_he_hoc_vien_5";
+
+        if (selectedSemester && selectedSemester !== "all") {
+          fileName += `_${selectedSemester}`;
+        } else {
+          fileName += "_tat_ca_hoc_ky";
+        }
+
+        if (selectedSchoolYear && selectedSchoolYear !== "all") {
+          fileName += `_${selectedSchoolYear}`;
+        } else {
+          fileName += "_tat_ca_nam_hoc";
+        }
+
+        if (selectedUnit && selectedUnit !== "all") {
+          fileName += `_${selectedUnit}`;
+        } else {
+          fileName += "_tat_ca_don_vi";
+        }
+
+        fileName += ".docx";
+
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+      } catch (error) {
+        console.error("Lỗi tải xuống file Word", error);
+      }
+    }
+  };
+
   return (
     <div className="flex">
       <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900">

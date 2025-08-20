@@ -1,4 +1,5 @@
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
   title: "Đặt lại mật khẩu",
@@ -7,8 +8,8 @@ export const metadata = {
 
 export default function ResetPasswordLayout({ children }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-dark-text">
-      {children}
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen transition-all duration-300">{children}</div>
+    </ThemeProvider>
   );
 }

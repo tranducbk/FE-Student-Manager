@@ -42,6 +42,8 @@ const UserProfile = ({ params }) => {
         positionParty: profile.positionParty || "Ủy viên",
         email: profile.email || "",
         hometown: profile.hometown || "",
+        ethnicity: profile.ethnicity || "Kinh",
+        religion: profile.religion || "Không",
         currentAddress: profile.currentAddress || "",
         avatar:
           profile.avatar ||
@@ -268,20 +270,29 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Dân tộc:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.ethnicity}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Tôn giáo:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.religion}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Nơi ở hiện nay:
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.currentAddress}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Năm vào Hệ:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.startWork}
-                            </span>
-                          </div>
+
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Số điện thoại:
@@ -311,6 +322,14 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.unit}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Năm vào Hệ:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.startWork}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -744,6 +763,40 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: Hà Nội"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="ethnicity"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Dân tộc
+                          </label>
+                          <input
+                            type="text"
+                            id="ethnicity"
+                            value={formData.ethnicity}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Kinh"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="religion"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Tôn giáo
+                          </label>
+                          <input
+                            type="text"
+                            id="religion"
+                            value={formData.religion}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Không"
                           />
                         </div>
 

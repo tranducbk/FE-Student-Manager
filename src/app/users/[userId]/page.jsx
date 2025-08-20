@@ -53,6 +53,8 @@ const UserProfile = ({ params }) => {
     university: "Đại học Bách Khoa Hà Nội",
     positionGovernment: "Học viên",
     positionParty: "Không",
+    ethnicity: "",
+    religion: "",
     currentAddress: "",
     avatar:
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
@@ -152,6 +154,9 @@ const UserProfile = ({ params }) => {
         birthday: profile.birthday ? new Date(profile.birthday) : null,
         rank: profile.rank || "Binh nhì",
         enrollment: profile.enrollment || "",
+        graduationDate: profile.graduationDate
+          ? new Date(profile.graduationDate)
+          : null,
         positionGovernment: profile.positionGovernment || "Học viên",
         dateOfEnlistment: profile.dateOfEnlistment
           ? new Date(profile.dateOfEnlistment)
@@ -168,6 +173,8 @@ const UserProfile = ({ params }) => {
         positionParty: profile.positionParty || "Không",
         email: profile.email || "",
         hometown: profile.hometown || "",
+        ethnicity: profile.ethnicity || "",
+        religion: profile.religion || "",
         currentAddress: profile.currentAddress || "",
         educationLevel:
           profile.educationLevel?._id || profile.educationLevel || "",
@@ -814,10 +821,14 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Năm vào trường:
+                              Ngày ra trường:
                             </span>
                             <span className="text-gray-900 dark:text-white">
-                              {profile?.enrollment || "Chưa có dữ liệu"}
+                              {profile?.graduationDate
+                                ? dayjs(profile?.graduationDate).format(
+                                    "DD/MM/YYYY"
+                                  )
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -968,6 +979,22 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.hometown || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Dân tộc:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.ethnicity || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Tôn giáo:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.religion || "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -1440,20 +1467,21 @@ const UserProfile = ({ params }) => {
 
                         <div>
                           <label
-                            htmlFor="enrollment"
+                            htmlFor="graduationDate"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
-                            Năm vào trường
+                            Ngày ra trường
                           </label>
-                          <input
-                            type="number"
-                            id="enrollment"
-                            value={formData.enrollment}
-                            onChange={handleChange}
-                            aria-describedby="helper-text-explanation"
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="2017"
-                            min="2017"
+                          <DatePicker
+                            id="graduationDate"
+                            selected={formData.graduationDate}
+                            onChange={(date) =>
+                              handleChangeDate("graduationDate", date)
+                            }
+                            dateFormat="dd/MM/yyyy"
+                            className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholderText="Ngày/Tháng/Năm"
+                            wrapperClassName="w-full"
                           />
                         </div>
 
@@ -1736,6 +1764,40 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: Hà Nội"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="ethnicity"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Dân tộc
+                          </label>
+                          <input
+                            type="text"
+                            id="ethnicity"
+                            value={formData.ethnicity}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Kinh"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="religion"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Tôn giáo
+                          </label>
+                          <input
+                            type="text"
+                            id="religion"
+                            value={formData.religion}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Không"
                           />
                         </div>
 
