@@ -7,7 +7,6 @@ import { MetadataContext, metadata } from "./metadataContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Sidebar from "@/components/sidebar";
 import "./globals.css";
-import { ReactNotifications } from "react-notifications-component";
 
 export default function RootLayout({ children }) {
   const router = useRouter();

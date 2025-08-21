@@ -5,7 +5,6 @@ import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
@@ -210,7 +209,6 @@ const CutRice = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div>
           <SideBar />

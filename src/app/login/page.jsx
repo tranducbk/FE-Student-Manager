@@ -67,7 +67,6 @@ const Login = () => {
       setUserType(decodedToken.admin === true ? "admin" : "student");
       handleNotify("success", "Thành công!", "Đăng nhập thành công");
 
-      // Redirect sau khi đã cập nhật state
       setTimeout(() => {
         if (decodedToken.admin === true) {
           router.push("/admin");
@@ -80,7 +79,7 @@ const Login = () => {
         handleNotify(
           "warning",
           "Cảnh báo!",
-          "Tài khoản hoặc mật khẩu không đúng"
+          "Tài khoản hoặc mật khẩu không đúng!"
         );
       } else {
         handleNotify("danger", "Lỗi!", error);
@@ -92,7 +91,6 @@ const Login = () => {
 
   return (
     <>
-      {/* Background with hvkhqs.jpg */}
       <div
         className="min-h-screen"
         style={{
@@ -103,7 +101,6 @@ const Login = () => {
           backgroundAttachment: "fixed",
         }}
       >
-        {/* Header */}
         <header className="fixed top-0 w-full z-50 bg-gradient-to-r from-slate-900/95 via-blue-900/90 to-indigo-900/95 backdrop-blur-md border-b border-white/20">
           <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">

@@ -8,9 +8,11 @@ import { notification } from "antd";
  */
 export function handleNotify(type, title, message) {
   let notificationType;
+  const t = (type || "").toLowerCase();
 
-  switch (type) {
+  switch (t) {
     case "danger":
+    case "error":
       notificationType = "error";
       break;
     case "warning":
@@ -19,11 +21,19 @@ export function handleNotify(type, title, message) {
     case "info":
       notificationType = "info";
       break;
+    case "success":
+      notificationType = "success";
+      break;
     default:
       notificationType = "success";
   }
 
-  const isDark = document.documentElement.classList.contains("dark");
+  let isDark = false;
+  try {
+    isDark =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("theme") === "dark";
+  } catch {}
 
   notification[notificationType]({
     message: title,

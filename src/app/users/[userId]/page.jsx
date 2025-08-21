@@ -7,7 +7,6 @@ import Link from "next/link";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import SideBar from "../../../components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
@@ -681,7 +680,6 @@ const UserProfile = ({ params }) => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div>
           <SideBar />

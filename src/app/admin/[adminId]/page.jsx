@@ -542,14 +542,14 @@ const UserProfile = ({ params }) => {
                           >
                             Đơn vị
                           </label>
-                          <select
+                          <input
+                            type="text"
                             id="unit"
                             value={formData.unit}
                             onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="Hệ học viên 5">Hệ học viên 5</option>
-                          </select>
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hệ học viên 5"
+                          />
                         </div>
 
                         <div>
@@ -681,14 +681,14 @@ const UserProfile = ({ params }) => {
                           >
                             Phòng/ban quản lý
                           </label>
-                          <select
+                          <input
+                            type="text"
                             id="organization"
                             value={formData.organization}
                             onChange={handleChange}
-                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                          >
-                            <option value="HVKHQS">HVKHQS</option>
-                          </select>
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: HVKHQS"
+                          />
                         </div>
 
                         <div>

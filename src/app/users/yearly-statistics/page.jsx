@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
-import { ReactNotifications } from "react-notifications-component";
-import { handleNotify } from "@/components/notify";
+import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 import { ConfigProvider, theme, Select } from "antd";
 import { useState as useThemeState } from "react";
@@ -520,7 +519,6 @@ const YearlyStatistics = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div>
           <SideBar />

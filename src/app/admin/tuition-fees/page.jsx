@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ConfigProvider, TreeSelect, Select, theme } from "antd";
-import { handleNotify } from "@/components/notify";
+import { handleNotify } from "../../../components/notify";
 
 import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
@@ -87,6 +87,16 @@ const TuitionFees = () => {
     if (isPending)
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
     return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+  };
+
+  const isPaidStatus = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes("đã thanh toán") || s.includes("đã đóng");
+  };
+
+  const isUnpaidStatus = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s.includes("chưa thanh toán") || s.includes("chưa đóng");
   };
 
   const fetchTuitionFees = async () => {
@@ -275,14 +285,20 @@ const TuitionFees = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      await axios.put(
+      const res = await axios.put(
         `${BASE_URL}/commander/${studentId}/tuitionFee/${feeId}/status`,
         { status: nextStatus },
         { headers: { token: `Bearer ${token}` } }
       );
       await fetchTuitionFees();
+      const message = res?.data?.message || "Cập nhật trạng thái thành công";
+      handleNotify("success", "Thành công!", `${message}: ${nextStatus}`);
     } catch (e) {
-      console.log(e);
+      const errorMessage =
+        e?.response?.data?.message ||
+        e?.response?.data ||
+        "Không thể cập nhật trạng thái học phí";
+      handleNotify("error", "Lỗi!", errorMessage);
     }
   };
 
@@ -869,27 +885,53 @@ const TuitionFees = () => {
                             <div className="flex flex-col gap-1">
                               <button
                                 type="button"
-                                onClick={() =>
+                                onClick={() => {
+                                  if (isPaidStatus(item.status)) {
+                                    handleNotify(
+                                      "warning",
+                                      "Không hợp lệ",
+                                      "Mục này đã ở trạng thái 'Đã thanh toán'"
+                                    );
+                                    return;
+                                  }
                                   updatePaymentStatus(
                                     item.studentId,
                                     item._id,
                                     "Đã thanh toán"
-                                  )
-                                }
-                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md border border-green-600 transition-colors duration-200"
+                                  );
+                                }}
+                                className={`px-3 py-1 text-xs font-medium rounded-md border transition-colors duration-200 ${
+                                  isPaidStatus(item.status)
+                                    ? "bg-green-600/50 text-white/70 border-green-600 cursor-not-allowed"
+                                    : "text-white bg-green-600 hover:bg-green-700 border-green-600"
+                                }`}
+                                disabled={isPaidStatus(item.status)}
                               >
                                 Đã thanh toán
                               </button>
                               <button
                                 type="button"
-                                onClick={() =>
+                                onClick={() => {
+                                  if (isUnpaidStatus(item.status)) {
+                                    handleNotify(
+                                      "warning",
+                                      "Không hợp lệ",
+                                      "Mục này đã ở trạng thái 'Chưa thanh toán'"
+                                    );
+                                    return;
+                                  }
                                   updatePaymentStatus(
                                     item.studentId,
                                     item._id,
                                     "Chưa thanh toán"
-                                  )
-                                }
-                                className="px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md border border-red-600 transition-colors duration-200"
+                                  );
+                                }}
+                                className={`px-3 py-1 text-xs font-medium rounded-md border transition-colors duration-200 ${
+                                  isUnpaidStatus(item.status)
+                                    ? "bg-red-600/50 text-white/70 border-red-600 cursor-not-allowed"
+                                    : "text-white bg-red-600 hover:bg-red-700 border-red-600"
+                                }`}
+                                disabled={isUnpaidStatus(item.status)}
                               >
                                 Chưa thanh toán
                               </button>

@@ -8,7 +8,6 @@ import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -184,7 +183,6 @@ const ListGuard = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="w-full pt-20 pl-5">

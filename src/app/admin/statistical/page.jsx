@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import Link from "next/link";
 import { Select } from "antd";
-import SideBar from "@/components/sidebar";
 import { BASE_URL } from "@/configs";
 const Statictical = () => {
   const chartRef1 = useRef(null);

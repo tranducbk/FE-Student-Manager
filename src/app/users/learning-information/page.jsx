@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
@@ -1102,7 +1101,6 @@ const LearningInformation = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div>
           <SideBar />

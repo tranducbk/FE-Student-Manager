@@ -45,6 +45,7 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const router = useRouter();
   const frameRef = useRef(null);
   const { token: themeToken } = theme.useToken();
@@ -56,6 +57,15 @@ const Header = () => {
     const interval = setInterval(fetchDocuments, 50000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+    updateMatch();
+    mediaQuery.addEventListener("change", updateMatch);
+    return () => mediaQuery.removeEventListener("change", updateMatch);
   }, []);
 
   const fetchDocuments = async () => {
@@ -199,8 +209,9 @@ const Header = () => {
             doc._id === notificationId ? { ...doc, isRead: true } : doc
           )
         );
-        setDropdownOpen(false);
-        router.push(`/users/notification/${notificationId}`);
+        // TODO: Điều hướng đến trang thông báo
+        // setDropdownOpen(false);
+        // router.push(`/users/notification/${notificationId}`);
       } catch (error) {
         console.log(error);
       }
@@ -274,37 +285,67 @@ const Header = () => {
     },
   ];
 
-  const notificationItems = documents?.map((doc) => ({
-    key: doc._id,
-    label: (
-      <Card
-        size="small"
-        style={{
-          margin: "4px 0",
-          backgroundColor: doc.isRead
-            ? "transparent"
-            : themeToken.colorPrimaryBg,
-          border: `1px solid ${themeToken.colorBorder}`,
-        }}
-        onClick={(e) => handleUpdateIsRead(e, doc._id)}
-      >
-        <Space direction="vertical" size={4} style={{ width: "100%" }}>
-          <Space>
-            <Text strong>[{doc.author}]</Text>
-            {!doc.isRead && (
-              <Tag color="blue" size="small">
-                Mới
-              </Tag>
-            )}
-          </Space>
-          <Text>{doc.title}</Text>
-          <Text type="secondary" style={{ fontSize: "12px" }}>
-            {dayjs(doc.dateIssued).format("DD/MM/YYYY")}
-          </Text>
-        </Space>
-      </Card>
-    ),
-  }));
+  const notificationItems =
+    Array.isArray(documents) && documents.length > 0
+      ? documents.map((doc) => ({
+          key: doc._id,
+          label: (
+            <Card
+              size="small"
+              style={{
+                margin: "4px 0",
+                backgroundColor: doc.isRead
+                  ? "transparent"
+                  : themeToken.colorPrimaryBg,
+                border: `1px solid ${themeToken.colorBorder}`,
+              }}
+              onClick={(e) => handleUpdateIsRead(e, doc._id)}
+            >
+              <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                <Space>
+                  <Text strong>{doc.title || "Thông báo"}</Text>
+                  {!doc.isRead && (
+                    <Tag color="blue" size="small">
+                      Mới
+                    </Tag>
+                  )}
+                </Space>
+                {doc?.author &&
+                  !(
+                    typeof doc.author === "string" &&
+                    /^(?=.*[a-fA-F])[a-fA-F0-9]{24}$/.test(doc.author)
+                  ) && (
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {doc.author}
+                    </Text>
+                  )}
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {dayjs(doc.dateIssued).format("DD/MM/YYYY")}
+                </Text>
+              </Space>
+            </Card>
+          ),
+        }))
+      : [
+          {
+            key: "empty",
+            label: (
+              <Card
+                size="small"
+                style={{
+                  margin: "4px 0",
+                  backgroundColor: themeToken.colorBgContainer,
+                  border: `1px solid ${themeToken.colorBorder}`,
+                  textAlign: "center",
+                }}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  Không có thông báo
+                </Text>
+              </Card>
+            ),
+          },
+        ];
 
   const mobileMenuItems = [
     {
@@ -380,6 +421,7 @@ const Header = () => {
       type="text"
       icon={<BellOutlined />}
       size="large"
+      onClick={() => setDropdownOpen((prev) => !prev)}
       className={`theme-button-primary ${className}`}
     />
   );
@@ -442,10 +484,12 @@ const Header = () => {
           <ThemeToggle />
 
           {/* Notifications - Only for non-admin users */}
-          {!user?.isAdmin && (
+          {isDesktop && !user?.isAdmin && (
             <Dropdown
               menu={{
                 items: notificationItems,
+                className:
+                  "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
                 style: {
                   maxHeight: "400px",
                   overflowY: "auto",
@@ -455,7 +499,8 @@ const Header = () => {
               open={dropdownOpen}
               onOpenChange={setDropdownOpen}
               placement="bottomRight"
-              trigger={["click"]}
+              trigger={[]}
+              overlayClassName="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             >
               <Badge count={unreadCount} size="small">
                 <NotificationButton />
@@ -485,10 +530,12 @@ const Header = () => {
           <ThemeToggle />
 
           {/* Notifications - Only for non-admin users */}
-          {!user?.isAdmin && (
+          {!isDesktop && !user?.isAdmin && (
             <Dropdown
               menu={{
                 items: notificationItems,
+                className:
+                  "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
                 style: {
                   maxHeight: "300px",
                   overflowY: "auto",
@@ -498,7 +545,8 @@ const Header = () => {
               open={dropdownOpen}
               onOpenChange={setDropdownOpen}
               placement="bottomRight"
-              trigger={["click"]}
+              trigger={[]}
+              overlayClassName="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             >
               <Badge count={unreadCount} size="small">
                 <NotificationButton />

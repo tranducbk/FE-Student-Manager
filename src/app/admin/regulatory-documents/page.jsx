@@ -8,7 +8,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 
 import { BASE_URL } from "@/configs";
@@ -173,7 +172,6 @@ const RegulatoryDocuments = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex">
         <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="w-full pt-20 pl-5">

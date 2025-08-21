@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
-import { ReactNotifications } from "react-notifications-component";
-import { handleNotify } from "@/components/notify";
+import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
@@ -377,7 +376,6 @@ const LearningResults = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex-1">
           <div className="w-full pt-20 pl-5">

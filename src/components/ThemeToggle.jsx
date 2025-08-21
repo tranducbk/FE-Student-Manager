@@ -19,23 +19,19 @@ export const ThemeToggle = ({ className = "" }) => {
       className={`relative inline-flex items-center justify-center w-12 h-7 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${className}`}
       aria-label={`Chuyển sang chế độ ${theme === "light" ? "tối" : "sáng"}`}
     >
-      {/* Background */}
       <div
         className={`w-full h-full rounded-full transition-colors duration-200 ${
           theme === "dark" ? "bg-blue-600" : "bg-gray-200"
         }`}
       />
 
-      {/* Toggle circle */}
       <div
         className={`absolute left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
           theme === "dark" ? "translate-x-5" : "translate-x-0"
         }`}
       />
 
-      {/* Icons */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {/* Sun icon - positioned on the left side */}
         <div
           className={`absolute left-1.5 transition-opacity duration-200 ${
             theme === "light" ? "opacity-100" : "opacity-0"
@@ -54,7 +50,6 @@ export const ThemeToggle = ({ className = "" }) => {
           </svg>
         </div>
 
-        {/* Moon icon - positioned on the right side */}
         <div
           className={`absolute right-1.5 transition-opacity duration-200 ${
             theme === "dark" ? "opacity-100" : "opacity-0"

@@ -120,7 +120,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <section id="about" className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white">
@@ -321,7 +321,10 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black/30 backdrop-blur-sm border-t border-white/20 py-16 px-4 sm:px-6 lg:px-8">
+      <footer
+        id="contact"
+        className="bg-black/30 backdrop-blur-sm border-t border-white/20 py-16 px-4 sm:px-6 lg:px-8"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
@@ -373,7 +376,7 @@ export default function HomePage() {
               <h3 className="text-lg font-semibold text-white mb-4">Hỗ trợ</h3>
               <div className="space-y-2 text-white/80">
                 <p>Email: support@hvkhqs.edu.vn</p>
-                <p>Điện thoại: (84) 24-3854-xxxx</p>
+                <p>Điện thoại: (+84) 12345678</p>
                 <p>
                   Địa chỉ: 322E Lê Trọng Tấn, Phường Phương Liệt, Quận Thanh
                   Xuân, Thành phố Hà Nội

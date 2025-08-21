@@ -9,7 +9,6 @@ import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
-import { ReactNotifications } from "react-notifications-component";
 import { handleNotify } from "../../../components/notify";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -175,7 +174,6 @@ const VacationSchedules = () => {
 
   return (
     <>
-      <ReactNotifications />
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex-1">
           <div className="w-full pt-20 pl-5">
