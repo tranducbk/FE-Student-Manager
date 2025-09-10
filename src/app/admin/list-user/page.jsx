@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 import { useModalScroll } from "@/hooks/useModalScroll";
+import { CarryOutOutlined, TeamOutlined } from "@ant-design/icons";
 const ListUser = () => {
   const router = useRouter();
   const [profile, setProfile] = useState([]);
@@ -23,6 +24,8 @@ const ListUser = () => {
   const [id, setId] = useState(null);
   const [fullName, setFullName] = useState("");
   const [unit, setUnit] = useState("");
+  const [enrollmentYear, setEnrollmentYear] = useState("");
+  const [schoolYear, setSchoolYear] = useState("");
   const [universities, setUniversities] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [organizations, setOrganizations] = useState([]);
@@ -32,6 +35,23 @@ const ListUser = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // State cho modal cập nhật đồng loạt ngày ra trường
+  const [showGraduationModal, setShowGraduationModal] = useState(false);
+  const [allStudents, setAllStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [graduationDate, setGraduationDate] = useState(null);
+  const [graduationFilterUnit, setGraduationFilterUnit] = useState("all");
+  const [graduationFilterSchoolYear, setGraduationFilterSchoolYear] =
+    useState("all");
+  const [graduationSearchTerm, setGraduationSearchTerm] = useState("");
+  const [enrollmentYears, setEnrollmentYears] = useState([]);
+  const [schoolYears, setSchoolYears] = useState([]);
+  const [graduationDateError, setGraduationDateError] = useState("");
+
+  const getValidationMessage = () => {
+    return graduationDateError;
+  };
 
   // State cho form thông tin học viên
   const [profileUniversity, setProfileUniversity] = useState(null);
@@ -102,7 +122,13 @@ const ListUser = () => {
   });
 
   // Disable scroll khi có modal mở
-  useModalScroll(showProfileDetail || showFormAdd || showForm || showConfirm);
+  useModalScroll(
+    showProfileDetail ||
+      showFormAdd ||
+      showForm ||
+      showConfirm ||
+      showGraduationModal
+  );
 
   const handleAddFormData = async (e) => {
     e.preventDefault();
@@ -245,24 +271,30 @@ const ListUser = () => {
   };
 
   useEffect(() => {
-    fetchProfile();
-    fetchUniversities();
+    const initializeData = async () => {
+      await fetchUniversities();
+      await fetchSchoolYears(); // fetchSchoolYears sẽ tự động load students
+    };
+
+    initializeData();
   }, [currentPage]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/student?page=${currentPage}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setProfile(res.data);
+        // Chỉ gọi API nếu chưa có schoolYear (để tránh gọi 2 lần)
+        if (!schoolYear) {
+          const res = await axios.get(
+            `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}&graduated=false`,
+            {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            }
+          );
+          setProfile(res.data);
+        }
       } catch (error) {
         console.log(error);
       }
@@ -282,6 +314,55 @@ const ListUser = () => {
         console.log(error);
       }
     }
+  };
+
+  // Đã bỏ sử dụng bộ lọc Năm vào trường
+
+  const fetchSchoolYears = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await axios.get(`${BASE_URL}/commander/schoolYears`, {
+          headers: { token: `Bearer ${token}` },
+        });
+        setSchoolYears(res.data);
+        // Set năm học mới nhất làm giá trị mặc định
+        if (res.data.length > 0 && !schoolYear) {
+          const latestSchoolYear = res.data[0];
+          setSchoolYear(latestSchoolYear);
+          // Tự động load dữ liệu với năm học mới nhất chỉ khi khởi tạo lần đầu
+          await loadStudentsWithSchoolYear(latestSchoolYear);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const loadStudentsWithSchoolYear = async (schoolYearValue) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/commander/student?page=${currentPage}&schoolYear=${schoolYearValue}&graduated=false`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+        setProfile(res.data);
+      } catch (error) {
+        console.log(error);
+        setProfile([]);
+      }
+    }
+  };
+
+  const handleSchoolYearChange = (newSchoolYear) => {
+    setSchoolYear(newSchoolYear);
+    // Chỉ cập nhật state, không gọi API tự động
+    // Người dùng phải bấm nút "Tìm kiếm" để áp dụng bộ lọc
   };
 
   const fetchOrganizations = async (universityId) => {
@@ -821,6 +902,202 @@ const ListUser = () => {
     setShowConfirm(false);
   };
 
+  // Hàm mở modal cập nhật đồng loạt ngày ra trường
+  const handleBulkGraduationUpdate = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      // Lấy danh sách sinh viên
+      const studentsResponse = await axios.get(
+        `${BASE_URL}/commander/allStudents`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+      setAllStudents(studentsResponse.data);
+
+      // Lấy danh sách năm học
+      const schoolYearsResponse = await axios.get(
+        `${BASE_URL}/commander/schoolYears`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+      setSchoolYears(schoolYearsResponse.data);
+
+      setShowGraduationModal(true);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      handleNotify("danger", "Lỗi!", "Không thể tải dữ liệu");
+    }
+  };
+
+  // Hàm lọc và sắp xếp sinh viên
+  const filteredAndSortedStudents = allStudents
+    .filter((student) => {
+      const matchesUnit =
+        graduationFilterUnit === "all" || student.unit === graduationFilterUnit;
+
+      // Lọc theo năm học
+      let matchesSchoolYear = true;
+      if (graduationFilterSchoolYear !== "all") {
+        const startYear = parseInt(graduationFilterSchoolYear.split("-")[0]);
+        // Sinh viên vào trường từ năm startYear trở về trước và chưa ra trường
+        // hoặc đã ra trường nhưng sau năm startYear
+        matchesSchoolYear =
+          student.enrollment <= startYear &&
+          (!student.graduationDate ||
+            new Date(student.graduationDate) > new Date(startYear, 11, 31));
+      }
+
+      const matchesSearch =
+        !graduationSearchTerm ||
+        student.fullName
+          .toLowerCase()
+          .includes(graduationSearchTerm.toLowerCase()) ||
+        student.studentId
+          .toLowerCase()
+          .includes(graduationSearchTerm.toLowerCase());
+      return matchesUnit && matchesSchoolYear && matchesSearch;
+    })
+    .sort((a, b) => {
+      // Đầu tiên sắp xếp theo trạng thái ra trường (chưa ra trường lên trên)
+      const aGraduated = !!a.graduationDate;
+      const bGraduated = !!b.graduationDate;
+      if (aGraduated !== bGraduated) {
+        return aGraduated ? 1 : -1; // Chưa ra trường lên trên
+      }
+
+      // Nếu cùng trạng thái ra trường, sắp xếp theo đơn vị
+      if (a.unit !== b.unit) {
+        return a.unit.localeCompare(b.unit);
+      }
+
+      // Nếu cùng đơn vị, sắp xếp theo ngày nhập ngũ
+      const dateA = a.dateOfEnlistment
+        ? new Date(a.dateOfEnlistment)
+        : new Date(0);
+      const dateB = b.dateOfEnlistment
+        ? new Date(b.dateOfEnlistment)
+        : new Date(0);
+
+      if (aGraduated) {
+        // Nếu đã ra trường, sắp xếp từ mới nhất đến cũ nhất
+        return dateA - dateB;
+      } else {
+        // Nếu chưa ra trường, sắp xếp từ cũ nhất đến mới nhất
+        return dateB - dateA;
+      }
+    });
+
+  // Hàm chọn tất cả sinh viên đã lọc
+  const handleSelectAllStudents = () => {
+    const currentFilteredIds = filteredAndSortedStudents.map(
+      (student) => student._id
+    );
+    const newSelectedStudents = [...selectedStudents];
+
+    // Thêm tất cả sinh viên đã lọc vào danh sách đã chọn (nếu chưa có)
+    currentFilteredIds.forEach((id) => {
+      if (!newSelectedStudents.includes(id)) {
+        newSelectedStudents.push(id);
+      }
+    });
+
+    setSelectedStudents(newSelectedStudents);
+  };
+
+  // Hàm bỏ chọn tất cả sinh viên đã lọc
+  const handleDeselectAllStudents = () => {
+    const currentFilteredIds = filteredAndSortedStudents.map(
+      (student) => student._id
+    );
+    setSelectedStudents(
+      selectedStudents.filter((id) => !currentFilteredIds.includes(id))
+    );
+  };
+
+  // Hàm chọn/bỏ chọn một sinh viên
+  const handleSelectStudent = (studentId) => {
+    if (selectedStudents.includes(studentId)) {
+      setSelectedStudents(selectedStudents.filter((id) => id !== studentId));
+    } else {
+      setSelectedStudents([...selectedStudents, studentId]);
+    }
+  };
+
+  // Hàm cập nhật đồng loạt ngày ra trường
+  const handleBulkGraduationSubmit = async () => {
+    // Reset error
+    setGraduationDateError("");
+
+    if (selectedStudents.length === 0) {
+      handleNotify(
+        "warning",
+        "Cảnh báo!",
+        "Vui lòng chọn ít nhất một sinh viên"
+      );
+      return;
+    }
+
+    // Kiểm tra trên toàn bộ danh sách, không phụ thuộc bộ lọc đang chọn
+    const selectedStudentData = allStudents.filter((student) =>
+      selectedStudents.includes(student._id)
+    );
+
+    const hasGraduatedStudents = selectedStudentData.some(
+      (student) => student.graduationDate
+    );
+    const hasNonGraduatedStudents = selectedStudentData.some(
+      (student) => !student.graduationDate
+    );
+
+    // Kiểm tra validation: Nếu chọn sinh viên chưa ra trường mà không nhập ngày ra trường
+    if (hasNonGraduatedStudents && !graduationDate) {
+      setGraduationDateError("Sinh viên chưa ra trường cần có ngày ra trường");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/commander/bulkUpdateGraduationDate`,
+        {
+          studentIds: selectedStudents,
+          graduationDate: graduationDate,
+        },
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
+
+      if (response.status === 200) {
+        const message = graduationDate
+          ? "Cập nhật ngày ra trường thành công"
+          : "Đánh dấu sinh viên chưa ra trường thành công";
+
+        handleNotify("success", "Thành công!", message);
+        setShowGraduationModal(false);
+        setSelectedStudents([]);
+        setGraduationDate(null);
+        setGraduationDateError("");
+        fetchProfile(); // Refresh danh sách
+      }
+    } catch (error) {
+      handleNotify(
+        "danger",
+        "Lỗi!",
+        error.response?.data?.message || "Có lỗi xảy ra khi cập nhật"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRowClick = async (studentId) => {
     const token = localStorage.getItem("token");
 
@@ -935,13 +1212,15 @@ const ListUser = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    router.push(`/admin/list-user?fullName=${fullName}&unit=${unit}`);
+    router.push(
+      `/admin/list-user?fullName=${fullName}&unit=${unit}&enrollment=${enrollmentYear}&schoolYear=${schoolYear}`
+    );
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
         const res = await axios.get(
-          `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}`,
+          `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}&enrollment=${enrollmentYear}&schoolYear=${schoolYear}&graduated=false`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -1003,19 +1282,21 @@ const ListUser = () => {
                     <div className="flex flex-wrap justify-start">
                       <div className="w-full md:w-1/3 flex flex-col items-center">
                         <img
-                          className="rounded-full w-48 h-48"
+                          className="rounded-full w-64 h-64 object-cover border-4 border-gray-200 dark:border-gray-600"
                           src={profileDetail?.avatar}
                           alt="avatar"
                         />
-                        <div className="font-bold text-lg mt-4 text-gray-900 dark:text-white">
-                          Mã HV: {profileDetail?.studentId}
+                        <div className="translate-y-[-50%]">
+                          <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            Mã HV: {profileDetail?.studentId}
+                          </div>
                         </div>
                       </div>
                       <div className="w-full md:w-2/3 flex flex-wrap">
                         <div className="w-full md:w-1/2">
-                          <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
+                          {/* <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
                             THÔNG TIN SINH VIÊN
-                          </div>
+                          </div> */}
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Họ và tên:</span>{" "}
                             {profileDetail?.fullName || "Chưa có dữ liệu"}
@@ -1028,6 +1309,14 @@ const ListUser = () => {
                             <span className="font-bold">Sinh ngày:</span>{" "}
                             {profileDetail?.birthday
                               ? dayjs(profileDetail?.birthday).format(
+                                  "DD/MM/YYYY"
+                                )
+                              : "Chưa có dữ liệu"}
+                          </div>
+                          <div className="mb-2 text-gray-900 dark:text-white">
+                            <span className="font-bold">Nhập ngũ:</span>{" "}
+                            {profileDetail?.dateOfEnlistment
+                              ? dayjs(profileDetail?.dateOfEnlistment).format(
                                   "DD/MM/YYYY"
                                 )
                               : "Chưa có dữ liệu"}
@@ -1076,9 +1365,9 @@ const ListUser = () => {
                           </div>
                         </div>
                         <div className="w-full md:w-1/2 pl-4">
-                          <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
-                            THÔNG TIN HỌC VIÊN
-                          </div>
+                          {/* <div className="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">
+                            THÔNG TIN CÁ NHÂN
+                          </div> */}
 
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Đơn vị:</span>{" "}
@@ -1092,14 +1381,6 @@ const ListUser = () => {
                             <span className="font-bold">Chức vụ:</span>{" "}
                             {profileDetail?.positionGovernment ||
                               "Chưa có dữ liệu"}
-                          </div>
-                          <div className="mb-2 text-gray-900 dark:text-white">
-                            <span className="font-bold">Nhập ngũ:</span>{" "}
-                            {profileDetail?.dateOfEnlistment
-                              ? dayjs(profileDetail?.dateOfEnlistment).format(
-                                  "DD/MM/YYYY"
-                                )
-                              : "Chưa có dữ liệu"}
                           </div>
                           <div className="mb-2 text-gray-900 dark:text-white">
                             <span className="font-bold">Đảng viên dự bị:</span>{" "}
@@ -2432,9 +2713,16 @@ const ListUser = () => {
               )}
               <div className="font-bold pt-5 pl-5 pb-5 flex justify-between border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white">
-                  DANH SÁCH HỌC VIÊN
+                  DANH SÁCH HỌC VIÊN {`- NĂM HỌC ${schoolYear}`}
                 </div>
                 <div className="mr-6 flex space-x-4">
+                  <div
+                    onClick={handleBulkGraduationUpdate}
+                    className="flex space-x-1 hover:text-blue-700 cursor-pointer items-center"
+                  >
+                    <CarryOutOutlined />
+                    <span className="text-sm">Cập nhật học viên ra trường</span>
+                  </div>
                   <div
                     onClick={() => router.push("/admin/universities")}
                     className="flex hover:text-blue-700 cursor-pointer items-center"
@@ -2532,6 +2820,27 @@ const ListUser = () => {
                         <option value="L4 - H5">L4 - H5</option>
                         <option value="L5 - H5">L5 - H5</option>
                         <option value="L6 - H5">L6 - H5</option>
+                      </select>
+                    </div>
+                    {/* Đã bỏ bộ lọc Năm vào trường */}
+                    <div className="ml-4">
+                      <label
+                        htmlFor="schoolYear"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        Năm học
+                      </label>
+                      <select
+                        id="schoolYear"
+                        value={schoolYear}
+                        onChange={(e) => handleSchoolYearChange(e.target.value)}
+                        className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
+                      >
+                        {schoolYears.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -2714,21 +3023,10 @@ const ListUser = () => {
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
-                              <svg
-                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                                />
-                              </svg>
-                              <p className="text-lg font-medium">
+                              <TeamOutlined
+                                style={{ fontSize: "32px", color: "#9CA3AF" }}
+                              />
+                              <p className="text-lg font-medium mt-4">
                                 Không có dữ liệu
                               </p>
                               <p className="text-sm">
@@ -3296,6 +3594,57 @@ const ListUser = () => {
 
                           <div>
                             <label
+                              htmlFor="hometown"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Quê quán
+                            </label>
+                            <input
+                              type="text"
+                              id="hometown"
+                              value={formData.hometown}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="ethnicity"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Dân tộc
+                            </label>
+                            <input
+                              type="text"
+                              id="ethnicity"
+                              value={formData.ethnicity}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Kinh"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="religion"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Tôn giáo
+                            </label>
+                            <input
+                              type="text"
+                              id="religion"
+                              value={formData.religion}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Không"
+                            />
+                          </div>
+
+                          <div>
+                            <label
                               htmlFor="currentAddress"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
@@ -3736,6 +4085,343 @@ const ListUser = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* Modal cập nhật đồng loạt ngày ra trường */}
+        {showGraduationModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4 mt-14">
+            <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl lg:max-w-6xl xl:max-w-7xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Cập nhật đồng loạt ngày ra trường
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Chọn ngày ra trường hoặc để trống để đánh dấu sinh viên chưa
+                    ra trường
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowGraduationModal(false);
+                    setSelectedStudents([]);
+                    setGraduationDate(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-6 flex flex-col">
+                {/* Bộ lọc và tìm kiếm */}
+                <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Lọc theo đơn vị
+                    </label>
+                    <select
+                      value={graduationFilterUnit}
+                      onChange={(e) => setGraduationFilterUnit(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">Tất cả các đơn vị</option>
+                      <option value="L1 - H5">L1 - H5</option>
+                      <option value="L2 - H5">L2 - H5</option>
+                      <option value="L3 - H5">L3 - H5</option>
+                      <option value="L4 - H5">L4 - H5</option>
+                      <option value="L5 - H5">L5 - H5</option>
+                      <option value="L6 - H5">L6 - H5</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Lọc theo năm học
+                    </label>
+                    <select
+                      value={graduationFilterSchoolYear}
+                      onChange={(e) =>
+                        setGraduationFilterSchoolYear(e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {schoolYears.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tìm kiếm theo tên/mã sinh viên
+                    </label>
+                    <input
+                      type="text"
+                      value={graduationSearchTerm}
+                      onChange={(e) => setGraduationSearchTerm(e.target.value)}
+                      placeholder="Nhập tên hoặc mã sinh viên..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Ngày ra trường
+                    </label>
+                    <DatePicker
+                      selected={graduationDate}
+                      onChange={(date) => {
+                        setGraduationDate(date);
+                        setGraduationDateError(""); // Clear error when user selects a date
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      placeholderText="Chọn ngày ra trường"
+                      isClearable={true}
+                      className={`w-full px-2 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        graduationDateError
+                          ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    />
+                    {graduationDateError ? (
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                        {graduationDateError}
+                      </p>
+                    ) : (
+                      <p className="text-xm text-gray-500 dark:text-gray-400 mt-1">
+                        Để trống nếu chưa ra trường
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Nút chọn tất cả và bỏ chọn tất cả */}
+                <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSelectAllStudents}
+                      disabled={
+                        filteredAndSortedStudents.length === 0 ||
+                        filteredAndSortedStudents.every((s) =>
+                          selectedStudents.includes(s._id)
+                        )
+                      }
+                      className={
+                        `px-4 py-2 rounded-lg transition-colors duration-200 text-sm text-white ` +
+                        (filteredAndSortedStudents.length === 0 ||
+                        filteredAndSortedStudents.every((s) =>
+                          selectedStudents.includes(s._id)
+                        )
+                          ? "bg-blue-400 cursor-not-allowed opacity-60"
+                          : "bg-blue-600 hover:bg-blue-700")
+                      }
+                    >
+                      Chọn tất cả
+                    </button>
+                    <button
+                      onClick={handleDeselectAllStudents}
+                      disabled={
+                        filteredAndSortedStudents.length === 0 ||
+                        filteredAndSortedStudents.every(
+                          (s) => !selectedStudents.includes(s._id)
+                        )
+                      }
+                      className={
+                        `px-4 py-2 rounded-lg transition-colors duration-200 text-sm text-white ` +
+                        (filteredAndSortedStudents.length === 0 ||
+                        filteredAndSortedStudents.every(
+                          (s) => !selectedStudents.includes(s._id)
+                        )
+                          ? "bg-gray-400 cursor-not-allowed opacity-60"
+                          : "bg-gray-600 hover:bg-gray-700")
+                      }
+                    >
+                      Bỏ chọn tất cả
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Đã chọn: {selectedStudents.length} /{" "}
+                    {filteredAndSortedStudents.length} sinh viên
+                  </div>
+                </div>
+
+                {/* Danh sách tất cả sinh viên */}
+                <div className="max-h-72 sm:max-h-80 lg:max-h-[28rem] overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg">
+                  {filteredAndSortedStudents.length > 0 ? (
+                    <div className="grid gap-2 p-4">
+                      {filteredAndSortedStudents.map((student) => (
+                        <div
+                          key={student._id}
+                          className={`flex items-center p-2 sm:p-3 rounded-lg border cursor-pointer transition-colors duration-200 ${
+                            selectedStudents.includes(student._id)
+                              ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
+                              : student.graduationDate
+                              ? "bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-500 opacity-75"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => handleSelectStudent(student._id)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStudents.includes(student._id)}
+                            onChange={() => handleSelectStudent(student._id)}
+                            className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center">
+                              <img
+                                src={
+                                  student.avatar ||
+                                  "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg"
+                                }
+                                alt="avatar"
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-3 flex-shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-gray-900 dark:text-white flex items-center flex-wrap gap-1">
+                                  <span className="truncate">
+                                    {student.fullName}
+                                  </span>
+                                  {student.graduationDate && (
+                                    <span className="px-2 py-1 text-xs bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full flex-shrink-0">
+                                      Đã ra trường
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                  Mã HV: {student.studentId} • Đơn vị:{" "}
+                                  {student.unit} • Năm: {student.enrollment}
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                  Nhập ngũ:{" "}
+                                  {student.dateOfEnlistment
+                                    ? dayjs(student.dateOfEnlistment).format(
+                                        "DD/MM/YYYY"
+                                      )
+                                    : "Chưa có"}
+                                  {student.graduationDate && (
+                                    <span className="ml-2 text-gray-500">
+                                      • Ra trường:{" "}
+                                      {dayjs(student.graduationDate).format(
+                                        "DD/MM/YYYY"
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="flex flex-col items-center">
+                        <svg
+                          className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                          />
+                        </svg>
+                        <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                          Không có sinh viên nào
+                        </p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500">
+                          Không tìm thấy sinh viên nào phù hợp với bộ lọc
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Nút cập nhật */}
+                <div className="mt-6 pt-6 flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowGraduationModal(false);
+                      setSelectedStudents([]);
+                      setGraduationDate(null);
+                    }}
+                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors duration-200"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleBulkGraduationSubmit}
+                    disabled={
+                      isLoading ||
+                      selectedStudents.length === 0 ||
+                      getValidationMessage()
+                    }
+                    className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base ${
+                      isLoading ||
+                      selectedStudents.length === 0 ||
+                      getValidationMessage()
+                        ? "bg-gray-400 cursor-not-allowed text-gray-600"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Đang cập nhật...
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <span>
+                          {graduationDate
+                            ? "Cập nhật ngày ra trường"
+                            : "Cập nhật chưa ra trường"}
+                        </span>
+                        <span className="text-xs opacity-90">
+                          ({selectedStudents.length} sinh viên)
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>

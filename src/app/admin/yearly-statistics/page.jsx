@@ -65,8 +65,22 @@ const YearlyStatistics = () => {
 
       console.log("Yearly results data:", res.data);
 
-      // Xử lý dữ liệu từ API - dữ liệu đã được xử lý từ backend
-      const processedData = res.data || [];
+      // Xử lý dữ liệu từ API - đảm bảo có failedSubjects/debtCredits
+      const processedData = (res.data || []).map((item) => {
+        const subjects = Array.isArray(item.subjects) ? item.subjects : [];
+        const failedSubjectsCalc = subjects.filter(
+          (s) => s.letterGrade === "F" || s.gradePoint4 === 0
+        ).length;
+        const debtCreditsCalc = subjects.reduce((sum, s) => {
+          const isDebt = s.letterGrade === "F" || s.gradePoint4 === 0;
+          return sum + (isDebt ? s.credits || 0 : 0);
+        }, 0);
+        return {
+          ...item,
+          failedSubjects: item.failedSubjects ?? failedSubjectsCalc,
+          debtCredits: item.debtCredits ?? debtCreditsCalc,
+        };
+      });
 
       // Lấy danh sách năm học từ dữ liệu
       const allSchoolYears = new Set();
@@ -134,8 +148,23 @@ const YearlyStatistics = () => {
       );
 
       console.log(`Yearly results data for ${year}:`, res.data);
-      // Dữ liệu đã được xử lý từ backend, chỉ cần set
-      setYearlyResults(res.data || []);
+      // Đảm bảo có failedSubjects/debtCredits
+      const normalized = (res.data || []).map((item) => {
+        const subjects = Array.isArray(item.subjects) ? item.subjects : [];
+        const failedSubjectsCalc = subjects.filter(
+          (s) => s.letterGrade === "F" || s.gradePoint4 === 0
+        ).length;
+        const debtCreditsCalc = subjects.reduce((sum, s) => {
+          const isDebt = s.letterGrade === "F" || s.gradePoint4 === 0;
+          return sum + (isDebt ? s.credits || 0 : 0);
+        }, 0);
+        return {
+          ...item,
+          failedSubjects: item.failedSubjects ?? failedSubjectsCalc,
+          debtCredits: item.debtCredits ?? debtCreditsCalc,
+        };
+      });
+      setYearlyResults(normalized);
     } catch (error) {
       console.log("Error fetching yearly results for year:", error);
       setYearlyResults([]);
@@ -160,7 +189,21 @@ const YearlyStatistics = () => {
       console.log("Yearly results data:", res.data);
 
       // Dữ liệu đã được xử lý từ backend, chỉ cần set
-      const processedData = res.data || [];
+      const processedData = (res.data || []).map((item) => {
+        const subjects = Array.isArray(item.subjects) ? item.subjects : [];
+        const failedSubjectsCalc = subjects.filter(
+          (s) => s.letterGrade === "F" || s.gradePoint4 === 0
+        ).length;
+        const debtCreditsCalc = subjects.reduce((sum, s) => {
+          const isDebt = s.letterGrade === "F" || s.gradePoint4 === 0;
+          return sum + (isDebt ? s.credits || 0 : 0);
+        }, 0);
+        return {
+          ...item,
+          failedSubjects: item.failedSubjects ?? failedSubjectsCalc,
+          debtCredits: item.debtCredits ?? debtCreditsCalc,
+        };
+      });
       setYearlyResults(processedData);
 
       // Lấy danh sách các đơn vị có sẵn từ dữ liệu
@@ -429,8 +472,13 @@ const YearlyStatistics = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  THỐNG KÊ KẾT QUẢ HỌC TẬP THEO NĂM
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">
+                    THỐNG KÊ KẾT QUẢ HỌC TẬP THEO NĂM
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem kết quả học tập của tất cả học viên
+                  </p>
                 </div>
                 {/* <div className="flex gap-2">
                   <button
@@ -807,15 +855,18 @@ const YearlyStatistics = () => {
                       <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {selectedSchoolYear === "all"
                           ? getFilteredResults().reduce(
-                              (sum, item) => sum + (item.totalDebt || 0),
+                              (sum, item) => sum + (item.debtCredits || 0),
                               0
                             )
-                          : getStudentsWithFGrade()}
+                          : getFilteredResults().reduce(
+                              (sum, item) => sum + (item.failedSubjects || 0),
+                              0
+                            )}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
                           ? "Tổng tín chỉ nợ tất cả năm"
-                          : "Sinh viên nợ môn"}
+                          : "Tổng số môn nợ năm"}
                       </div>
                     </div>
                     {selectedSchoolYear !== "all" && (
@@ -1048,13 +1099,7 @@ const YearlyStatistics = () => {
                           TC TÍCH LŨY
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TC NỢ
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XL ĐẢNG VIÊN
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XLRL
+                          MÔN NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
@@ -1164,29 +1209,11 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.totalDebt || 0}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-medium text-orange-600 dark:text-orange-400">
-                                {(() => {
-                                  if (item.positionParty === "Không") {
-                                    return "Chưa là Đảng viên";
-                                  }
-                                  return (
-                                    item.partyRating?.rating || "Chưa cập nhật"
-                                  );
-                                })()}
+                              <div className="font-semibold text-red-600 dark:text-red-400 text-base">
+                                {item.failedSubjects || 0}
                               </div>
-                              {item.positionParty !== "Không" &&
-                                item.partyRating?.decisionNumber && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    QĐ: {item.partyRating.decisionNumber}
-                                  </div>
-                                )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-medium text-purple-600 dark:text-purple-400">
-                                {item.trainingRating || "Chưa cập nhật"}
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                TC nợ: {item.debtCredits || 0}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">

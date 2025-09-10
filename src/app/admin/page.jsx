@@ -10,24 +10,19 @@ import { Card, Row, Col, Statistic, Progress, Divider, Typography } from "antd";
 import {
   UserOutlined,
   TrophyOutlined,
-  FireOutlined,
-  CalendarOutlined,
   ClockCircleOutlined,
   TeamOutlined,
   BookOutlined,
-  StarOutlined,
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
 export default function Home() {
   const [learningResult, setLearningResult] = useState(null);
-  const [phisicalResult, setPhisicalResult] = useState(null);
-  const [vacationSchedule, setVacationSchedule] = useState([]);
   const [student, setStudent] = useState(null);
-  const [helpCooking, setHelpCooking] = useState([]);
   const [cutRice, setCutRice] = useState(null);
   const [achievement, setAchievement] = useState(null);
+  const [trainingRatings, setTrainingRatings] = useState(null);
   const [dataIsLoaded, setDataIsLoaded] = useState(false);
 
   const currentDate = new Date();
@@ -60,45 +55,6 @@ export default function Home() {
     }
   };
 
-  const fetchPhisicalResult = async () => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      try {
-        const res = await axios.get(`${BASE_URL}/commander/physicalResults`, {
-          headers: {
-            token: `Bearer ${token}`,
-          },
-        });
-
-        setPhisicalResult(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  };
-
-  const fetchVacationSchedule = async () => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/vacationScheduleByDate`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log();
-        setVacationSchedule(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  };
-
   const fetchStudent = async () => {
     const token = localStorage.getItem("token");
 
@@ -111,24 +67,6 @@ export default function Home() {
         });
 
         setStudent(res.data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  };
-
-  const fetchHelpCooking = async () => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      try {
-        const res = await axios.get(`${BASE_URL}/commander/helpCookingByDate`, {
-          headers: {
-            token: `Bearer ${token}`,
-          },
-        });
-        console.log(res.data);
-        setHelpCooking(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -171,16 +109,33 @@ export default function Home() {
     }
   };
 
+  const fetchTrainingRatings = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(`${BASE_URL}/commander/trainingRatings`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+
+        setTrainingRatings(res.data);
+      } catch (error) {
+        console.log(error);
+        setTrainingRatings([]);
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       await Promise.all([
         fetchLearningResult(),
-        fetchPhisicalResult(),
-        fetchVacationSchedule(),
         fetchStudent(),
-        fetchHelpCooking(),
         fetchCutRice(),
         fetchAchievement(),
+        fetchTrainingRatings(),
       ]);
       setDataIsLoaded(true);
     };
@@ -198,521 +153,346 @@ export default function Home() {
     totalStudents > 0
       ? ((learningResult?.learningResults || 0) / totalStudents) * 100
       : 0;
-  const physicalProgress =
-    totalStudents > 0
-      ? ((phisicalResult?.filter(
-          (item) =>
-            item.semester === phisicalResult[0]?.semester &&
-            (item.practise === "Khá" ||
-              item.practise === "Tốt" ||
-              item.practise === "Xuất sắc")
-        ).length || 0) /
-          totalStudents) *
-        100
-      : 0;
+
+  // Tính toán dữ liệu xếp loại rèn luyện
+  const getLatestSchoolYear = () => {
+    if (!trainingRatings || trainingRatings.length === 0) return null;
+    const schoolYears = [
+      ...new Set(trainingRatings.map((item) => item.schoolYear)),
+    ];
+    return schoolYears.sort((a, b) => b.localeCompare(a))[0];
+  };
+
+  const getTrainingRatingStats = () => {
+    if (!trainingRatings || trainingRatings.length === 0)
+      return {
+        total: 0,
+        totalStudents: 0,
+        good: 0,
+        fair: 0,
+        average: 0,
+        poor: 0,
+      };
+
+    const latestYear = getLatestSchoolYear();
+    const latestYearData = trainingRatings.filter(
+      (item) => item.schoolYear === latestYear
+    );
+
+    const stats = {
+      total: latestYearData.filter(
+        (item) => item.trainingRating && item.trainingRating !== null
+      ).length,
+      totalStudents: latestYearData.length,
+      good: latestYearData.filter((item) => item.trainingRating === "Tốt")
+        .length,
+      fair: latestYearData.filter((item) => item.trainingRating === "Khá")
+        .length,
+      average: latestYearData.filter(
+        (item) => item.trainingRating === "Trung bình"
+      ).length,
+      poor: latestYearData.filter((item) => item.trainingRating === "Yếu")
+        .length,
+    };
+
+    return stats;
+  };
+
+  const trainingStats = getTrainingRatingStats();
+  const latestSchoolYear = getLatestSchoolYear();
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="flex-1 pt-20 p-6 overflow-y-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <Title
-                level={1}
-                className="text-gray-900 dark:text-white mb-2 font-black tracking-wide"
-              >
-                Trang tổng quan
-              </Title>
-              <Text className="text-gray-600 dark:text-gray-400 text-lg font-semibold">
-                Tổng quan hệ thống quản lý học viên
-              </Text>
-            </div>
-            <div className="text-right">
-              <Text className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                {daysOfWeek[currentDayIndex]}
-              </Text>
-              <div className="text-3xl font-black text-blue-600 dark:text-blue-400 tracking-wider">
-                {dayjs(new Date()).format("HH:mm")}
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="pt-20 p-4">
+        {/* Header bên trái */}
+        <div className="mb-6">
+          <div className="text-left">
+            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-1">
+              Dashboard Quản Lý
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 text-xs">
+              Hệ thống quản lý học viên
+            </p>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <Row gutter={[16, 16]} className="mb-8">
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="text-center shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-blue-500 to-blue-600">
-              <Statistic
-                title={
-                  <span className="text-white text-lg font-black tracking-wide">
-                    Tổng quân số
-                  </span>
-                }
-                value={totalPersonnel}
-                valueStyle={{
-                  color: "white",
-                  fontSize: "2.5rem",
-                  fontWeight: "900",
-                  letterSpacing: "0.1em",
-                }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="text-center shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-green-500 to-green-600">
-              <Statistic
-                title={
-                  <span className="text-white text-lg font-black tracking-wide">
-                    Học viên
-                  </span>
-                }
-                value={totalStudents}
-                valueStyle={{
-                  color: "white",
-                  fontSize: "2.5rem",
-                  fontWeight: "900",
-                  letterSpacing: "0.1em",
-                }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="text-center shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-orange-500 to-orange-600">
-              <Statistic
-                title={
-                  <span className="text-white text-lg font-black tracking-wide">
-                    Chỉ huy
-                  </span>
-                }
-                value={3}
-                valueStyle={{
-                  color: "white",
-                  fontSize: "2.5rem",
-                  fontWeight: "900",
-                  letterSpacing: "0.1em",
-                }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="text-center shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-purple-500 to-purple-600">
-              <Statistic
-                title={
-                  <span className="text-white text-lg font-black tracking-wide">
-                    Hoạt động hôm nay
-                  </span>
-                }
-                value={
-                  (cutRice?.breakfast || 0) +
-                  (cutRice?.lunch || 0) +
-                  (cutRice?.dinner || 0) +
-                  (helpCooking || 0) +
-                  (vacationSchedule || 0)
-                }
-                valueStyle={{
-                  color: "white",
-                  fontSize: "2.5rem",
-                  fontWeight: "900",
-                  letterSpacing: "0.1em",
-                }}
-              />
-            </Card>
-          </Col>
-        </Row>
+        {/* Grid Layout - 2x2 Cards */}
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            {/* Card 1: Tổng quan quân số */}
+            <div className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-slate-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <TeamOutlined className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                      Tổng quan quân số
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs">
+                      Thống kê tổng thể
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
+                    {totalPersonnel}
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">
+                    tổng quân số
+                  </p>
+                </div>
+              </div>
 
-        {/* Main Dashboard Cards */}
-        <Row gutter={[24, 24]} className="mb-8">
-          <Col xs={24} lg={12}>
-            <Link href="/admin/learning-results" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4">
-                      <BookOutlined className="text-white text-2xl" />
+              {/* Mini Chart */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                    <UserOutlined className="text-white text-sm" />
+                  </div>
+                  <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                    {totalStudents}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Học viên
+                  </p>
+                </div>
+                <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-3 text-center">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                    <UserOutlined className="text-white text-sm" />
+                  </div>
+                  <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                    3
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Chỉ huy
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Kết quả học tập */}
+            <Link href="/admin/learning-results" className="block">
+              <div className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-slate-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <BookOutlined className="text-white text-lg" />
                     </div>
                     <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         Kết quả học tập
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
-                        Học kỳ hiện tại
-                      </Text>
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs">
+                        {learningResult?.latestSemester
+                          ? learningResult.latestSemester
+                          : "Chưa có dữ liệu"}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-4xl font-black text-orange-600 dark:text-orange-400 tracking-wider">
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                       {learningResult?.learningResults || 0}
                     </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Đạt chuẩn
-                    </Text>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">
+                      đạt chuẩn
+                    </p>
                   </div>
                 </div>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">
-                      Tỷ lệ đạt chuẩn
-                    </span>
-                    <span className="font-black text-orange-600 dark:text-orange-400 tracking-wide">
-                      {learningProgress.toFixed(1)}%
-                    </span>
+
+                {/* Progress Ring */}
+                <div className="flex items-center justify-center mb-3">
+                  <div className="relative w-16 h-16">
+                    <svg
+                      className="w-16 h-16 transform -rotate-90"
+                      viewBox="0 0 100 100"
+                    >
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-slate-200 dark:text-slate-700"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 40}`}
+                        strokeDashoffset={`${
+                          2 * Math.PI * 40 * (1 - learningProgress / 100)
+                        }`}
+                        className="text-emerald-500 transition-all duration-1000 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {learningProgress.toFixed(0)}%
+                      </span>
+                    </div>
                   </div>
-                  <Progress
-                    percent={learningProgress}
-                    strokeColor="#f97316"
-                    trailColor="#e5e7eb"
-                    showInfo={false}
-                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {learningResult?.studentOweSubjects || 0}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       Nợ môn
-                    </div>
-                    <div className="text-xl font-black text-orange-600 dark:text-orange-400 tracking-wide">
-                      {learningResult?.studentOweSubjects || 0} đồng chí
-                    </div>
+                    </p>
                   </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {learningResult?.learningResults || 0}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       Khá/Giỏi/XS
-                    </div>
-                    <div className="text-xl font-black text-green-600 dark:text-green-400 tracking-wide">
-                      {learningResult?.learningResults || 0} đồng chí
-                    </div>
+                    </p>
                   </div>
                 </div>
-              </Card>
+              </div>
             </Link>
-          </Col>
+          </div>
 
-          <Col xs={24} lg={12}>
-            <Link href="/admin/physical-results" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4">
-                      <FireOutlined className="text-white text-2xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Card 3: Lịch cắt cơm */}
+            <Link href="/admin/cut-rice" className="block">
+              <div className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-slate-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <ClockCircleOutlined className="text-white text-lg" />
                     </div>
                     <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
-                        Kết quả rèn luyện
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
-                        {phisicalResult
-                          ? phisicalResult[0]?.semester
-                          : "Chưa có dữ liệu"}
-                      </Text>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-indigo-600 dark:text-indigo-400 tracking-wider">
-                      {phisicalResult?.filter(
-                        (item) =>
-                          item.semester === phisicalResult[0]?.semester &&
-                          (item.practise === "Khá" ||
-                            item.practise === "Tốt" ||
-                            item.practise === "Xuất sắc")
-                      ).length || 0}
-                    </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Đạt chuẩn
-                    </Text>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">
-                      Tỷ lệ đạt chuẩn
-                    </span>
-                    <span className="font-black text-indigo-600 dark:text-indigo-400 tracking-wide">
-                      {physicalProgress.toFixed(1)}%
-                    </span>
-                  </div>
-                  <Progress
-                    percent={physicalProgress}
-                    strokeColor="#6366f1"
-                    trailColor="#e5e7eb"
-                    showInfo={false}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Học kỳ
-                    </div>
-                    <div className="text-xl font-black text-indigo-600 dark:text-indigo-400 tracking-wide">
-                      {phisicalResult
-                        ? phisicalResult[0]?.semester
-                        : "Chưa có dữ liệus"}
-                    </div>
-                  </div>
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Đạt chuẩn
-                    </div>
-                    <div className="text-xl font-black text-green-600 dark:text-green-400 tracking-wide">
-                      {phisicalResult?.filter(
-                        (item) =>
-                          item.semester === phisicalResult[0]?.semester &&
-                          (item.practise === "Khá" ||
-                            item.practise === "Tốt" ||
-                            item.practise === "Xuất sắc")
-                      ).length || 0}{" "}
-                      đồng chí
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          </Col>
-        </Row>
-
-        <Row gutter={[24, 24]} className="mb-8">
-          <Col xs={24} lg={12}>
-            <Link href="/admin/cut-rice" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mr-4">
-                      <ClockCircleOutlined className="text-white text-2xl" />
-                    </div>
-                    <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                         Lịch cắt cơm
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs">
                         {daysOfWeek[currentDayIndex]}
-                      </Text>
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-4xl font-black text-purple-600 dark:text-purple-400 tracking-wider">
+                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">
                       {(cutRice?.breakfast || 0) +
                         (cutRice?.lunch || 0) +
                         (cutRice?.dinner || 0)}
                     </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Suất
-                    </Text>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">
+                      tổng suất
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-black text-yellow-600 dark:text-yellow-400 tracking-wide">
+
+                {/* Meal Schedule Cards */}
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-md p-2 text-center border border-yellow-200 dark:border-yellow-800">
+                    <div className="text-lg font-black text-yellow-600 dark:text-yellow-400">
                       {cutRice?.breakfast || 0}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Sáng
-                    </div>
+                    </p>
                   </div>
-                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-black text-orange-600 dark:text-orange-400 tracking-wide">
+
+                  <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-md p-2 text-center border border-orange-200 dark:border-orange-800">
+                    <div className="text-lg font-black text-orange-600 dark:text-orange-400">
                       {cutRice?.lunch || 0}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Trưa
-                    </div>
+                    </p>
                   </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-black text-blue-600 dark:text-blue-400 tracking-wide">
+
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-md p-2 text-center border border-blue-200 dark:border-blue-800">
+                    <div className="text-lg font-black text-blue-600 dark:text-blue-400">
                       {cutRice?.dinner || 0}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Tối
-                    </div>
+                    </p>
                   </div>
                 </div>
-              </Card>
+              </div>
             </Link>
-          </Col>
-          <Col xs={24} lg={12}>
-            <Link href="/admin/vacation-schedules" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center mr-4">
-                      <CalendarOutlined className="text-white text-2xl" />
-                    </div>
-                    <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
-                        Lịch tranh thủ
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
-                        Ngày {dayjs(new Date()).format("DD/MM/YYYY")}
-                      </Text>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-rose-600 dark:text-rose-400 tracking-wider">
-                      {vacationSchedule || 0}
-                    </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Đồng chí
-                    </Text>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-rose-50 dark:bg-rose-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Tổng số
-                    </div>
-                    <div className="text-xl font-black text-rose-600 dark:text-rose-400 tracking-wide">
-                      {vacationSchedule || 0} đồng chí
-                    </div>
-                  </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Ngày
-                    </div>
-                    <div className="text-xl font-black text-blue-600 dark:text-blue-400 tracking-wide">
-                      {dayjs(new Date()).format("DD/MM/YYYY")}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          </Col>
-        </Row>
 
-        {/* Daily Activities */}
-        <Row gutter={[24, 24]}>
-          <Col xs={24} lg={12}>
-            <Link href="/admin/list-help-cooking" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4">
-                      <TrophyOutlined className="text-white text-2xl" />
+            {/* Card 4: Xếp loại rèn luyện */}
+            <Link href="/admin/training-rating" className="block">
+              <div className="bg-white/30 dark:bg-slate-800/30 backdrop-blur-md rounded-2xl p-4 border border-white/20 dark:border-slate-700/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <TrophyOutlined className="text-white text-lg" />
                     </div>
                     <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
-                        Lịch giúp bếp
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
-                        Ngày {dayjs(new Date()).format("DD/MM/YYYY")}
-                      </Text>
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                        Xếp loại rèn luyện
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs">
+                        {latestSchoolYear
+                          ? `Năm học ${latestSchoolYear}`
+                          : "Chưa có dữ liệu"}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-4xl font-black text-green-600 dark:text-green-400 tracking-wider">
-                      {helpCooking || 0}
+                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">
+                      {trainingStats.total}/{trainingStats.totalStudents}
                     </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Đồng chí
-                    </Text>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">
+                      đã đánh giá
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Tổng số
-                    </div>
-                    <div className="text-xl font-black text-green-600 dark:text-green-400 tracking-wide">
-                      {helpCooking || 0} đồng chí
-                    </div>
-                  </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Ngày
-                    </div>
-                    <div className="text-xl font-black text-blue-600 dark:text-blue-400 tracking-wide">
-                      {dayjs(new Date()).format("DD/MM/YYYY")}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          </Col>
 
-          <Col xs={24} lg={12}>
-            <Link href="/admin/achievement" className="block h-full">
-              <Card
-                className="shadow-xl hover:shadow-2xl transition-all duration-300 border-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm h-full"
-                bodyStyle={{ padding: "24px" }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center mr-4">
-                      <TrophyOutlined className="text-white text-2xl" />
+                {/* Training Rating Types */}
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-1">
+                    <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {trainingStats.good}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Tốt
+                      </p>
                     </div>
-                    <div>
-                      <Title
-                        level={3}
-                        className="text-gray-900 dark:text-white mb-1 font-black tracking-wide"
-                      >
-                        Khen thưởng
-                      </Title>
-                      <Text className="text-gray-600 dark:text-gray-400 font-semibold">
-                        Năm {new Date().getFullYear()}
-                      </Text>
+                    <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {trainingStats.fair}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Khá
+                      </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-yellow-600 dark:text-yellow-400 tracking-wider">
-                      {achievement?.length || 0}
+                    <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {trainingStats.average}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Trung bình
+                      </p>
                     </div>
-                    <Text className="text-gray-500 dark:text-gray-400 font-semibold">
-                      Lần khen thưởng
-                    </Text>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Tổng số
-                    </div>
-                    <div className="text-xl font-black text-yellow-600 dark:text-yellow-400 tracking-wide">
-                      {achievement?.length || 0} lần
-                    </div>
-                  </div>
-                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      Danh hiệu gần nhất
-                    </div>
-                    <div className="text-xl font-black text-amber-600 dark:text-amber-400 tracking-wide">
-                      {achievement && achievement.length > 0
-                        ? achievement[achievement.length - 1]?.title ||
-                          "Chưa có"
-                        : "Chưa có"}
+                    <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {trainingStats.poor}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Yếu
+                      </p>
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             </Link>
-          </Col>
-        </Row>
+          </div>
+        </div>
       </div>
     </div>
   );

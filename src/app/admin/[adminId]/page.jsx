@@ -67,7 +67,7 @@ const UserProfile = ({ params }) => {
 
   useEffect(() => {
     fetchProfile();
-  }, [profile]);
+  }, [params.adminId]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");

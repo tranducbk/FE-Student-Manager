@@ -234,26 +234,24 @@ const YearlyStatistics = () => {
           );
 
           if (filteredYearlyResults.length > 0) {
-            // Thêm positionParty vào mỗi kết quả năm học và tính toán totalDebt
+            // Thêm positionParty và chuẩn hóa failedSubjects/debtCredits nếu thiếu
             const resultsWithPositionParty = filteredYearlyResults.map(
               (result) => {
-                // Tính toán totalDebt từ subjects nếu có
-                let calculatedTotalDebt = result.totalDebt || 0;
-                if (result.subjects) {
-                  const failedSubjects = result.subjects.filter(
-                    (subject) =>
-                      subject.letterGrade === "F" || subject.gradePoint4 === 0
-                  );
-                  calculatedTotalDebt = failedSubjects.reduce(
-                    (sum, subject) => sum + (subject.credits || 0),
-                    0
-                  );
-                }
-
+                const subjects = Array.isArray(result.subjects)
+                  ? result.subjects
+                  : [];
+                const failedSubjectsCalc = subjects.filter(
+                  (s) => s.letterGrade === "F" || s.gradePoint4 === 0
+                ).length;
+                const debtCreditsCalc = subjects.reduce((sum, s) => {
+                  const isDebt = s.letterGrade === "F" || s.gradePoint4 === 0;
+                  return sum + (isDebt ? s.credits || 0 : 0);
+                }, 0);
                 return {
                   ...result,
                   positionParty: positionParty,
-                  totalDebt: calculatedTotalDebt,
+                  failedSubjects: result.failedSubjects ?? failedSubjectsCalc,
+                  debtCredits: result.debtCredits ?? debtCreditsCalc,
                 };
               }
             );
@@ -307,25 +305,23 @@ const YearlyStatistics = () => {
             ];
           }
         } else {
-          // Thêm positionParty vào mỗi kết quả năm học và tính toán totalDebt
+          // Thêm positionParty và chuẩn hóa failedSubjects/debtCredits nếu thiếu
           finalResults = filteredYearlyResults.map((result) => {
-            // Tính toán totalDebt từ subjects nếu có
-            let calculatedTotalDebt = result.totalDebt || 0;
-            if (result.subjects) {
-              const failedSubjects = result.subjects.filter(
-                (subject) =>
-                  subject.letterGrade === "F" || subject.gradePoint4 === 0
-              );
-              calculatedTotalDebt = failedSubjects.reduce(
-                (sum, subject) => sum + (subject.credits || 0),
-                0
-              );
-            }
-
+            const subjects = Array.isArray(result.subjects)
+              ? result.subjects
+              : [];
+            const failedSubjectsCalc = subjects.filter(
+              (s) => s.letterGrade === "F" || s.gradePoint4 === 0
+            ).length;
+            const debtCreditsCalc = subjects.reduce((sum, s) => {
+              const isDebt = s.letterGrade === "F" || s.gradePoint4 === 0;
+              return sum + (isDebt ? s.credits || 0 : 0);
+            }, 0);
             return {
               ...result,
               positionParty: positionParty,
-              totalDebt: calculatedTotalDebt,
+              failedSubjects: result.failedSubjects ?? failedSubjectsCalc,
+              debtCredits: result.debtCredits ?? debtCreditsCalc,
             };
           });
         }
@@ -791,7 +787,7 @@ const YearlyStatistics = () => {
                           TC TÍCH LŨY
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          SỐ MÔN NỢ
+                          MÔN NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           XẾP LOẠI ĐẢNG VIÊN
@@ -877,8 +873,11 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-medium text-red-600 dark:text-red-400">
-                                {item.failedSubjects || 0} môn
+                              <div className="font-semibold text-red-600 dark:text-red-400 text-base">
+                                {item.failedSubjects || 0}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                TC nợ: {item.debtCredits || 0}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">

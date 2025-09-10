@@ -555,9 +555,13 @@ const CutRice = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  CẮT CƠM HỌC VIÊN
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">CẮT CƠM HỌC VIÊN</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem lịch cắt cơm của tất cả học viên
+                  </p>
                 </div>
+                QUẢN LÝ HỌC KỲ
                 <div className="flex space-x-3">
                   <button
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"

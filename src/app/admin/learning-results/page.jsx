@@ -427,8 +427,11 @@ const LearningResults = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  KẾT QUẢ HỌC TẬP HỌC VIÊN
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">KẾT QUẢ HỌC TẬP</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem kết quả học tập của tất cả học viên
+                  </p>
                 </div>
                 {/* <div className="flex gap-2">
                   <button
@@ -456,7 +459,7 @@ const LearningResults = () => {
 
               <div className="w-full p-5">
                 <div className="mb-4">
-                  <form className="flex items-end gap-4 flex-wrap">
+                  <form className="flex items-center gap-3 flex-wrap">
                     <div>
                       <label
                         htmlFor="semester"
@@ -483,7 +486,7 @@ const LearningResults = () => {
                           placeholder="Chọn học kỳ"
                           allowClear
                           showSearch={false}
-                          style={{ width: 280 }}
+                          style={{ width: 260, height: 36 }}
                           dropdownStyle={{
                             backgroundColor: isDark ? "#1f2937" : "#ffffff",
                             color: isDark ? "#e5e7eb" : "#111827",
@@ -538,7 +541,7 @@ const LearningResults = () => {
                         <Select
                           value={selectedUnit}
                           onChange={setSelectedUnit}
-                          style={{ width: 128 }}
+                          style={{ width: 160, height: 36 }}
                           options={[
                             { value: "all", label: "Tất cả đơn vị" },
                             { value: "L1 - H5", label: "L1 - H5" },
@@ -561,10 +564,10 @@ const LearningResults = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Tên hoặc mã sinh viên..."
-                        className="bg-gray-50 dark:bg-gray-700 border w-48 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 px-3"
+                        className="bg-gray-50 dark:bg-gray-700 border w-64 h-9 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3"
                       />
                     </div>
-                    <div>
+                    <div className="pt-6">
                       <button
                         onClick={() => {
                           setSearchTerm("");
@@ -588,7 +591,7 @@ const LearningResults = () => {
                         Xóa bộ lọc
                       </button>
                     </div>
-                    <div>
+                    <div className="pt-6">
                       <Link
                         href="/admin/semester-management"
                         className="h-9 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center mr-2"
@@ -609,7 +612,7 @@ const LearningResults = () => {
                         Quản lý học kỳ
                       </Link>
                     </div>
-                    <div>
+                    <div className="pt-6">
                       <Link
                         href="/admin/yearly-statistics"
                         className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center"
@@ -635,56 +638,74 @@ const LearningResults = () => {
 
                 {/* Thống kê tổng quan */}
                 {!loading && learningResults.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {getFilteredResults().length}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Tổng số sinh viên
                       </div>
                     </div>
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-green-600 dark:text-green-400">
                         {
                           getFilteredResults().filter(
                             (item) => item.warningLevel === 0
                           ).length
                         }
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Sinh viên tốt
                       </div>
                     </div>
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                        {
-                          getFilteredResults().filter(
-                            (item) => item.warningLevel > 0
-                          ).length
-                        }
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Cần cảnh báo
-                      </div>
-                    </div>
-                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                    <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-red-600 dark:text-red-400">
                         {getStudentsWithFGrade()}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Sinh viên nợ môn
                       </div>
                     </div>
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-pink-600 dark:text-pink-400">
                         {getFilteredResults().reduce(
-                          (sum, item) => sum + (item.totalDebt || 0),
+                          (sum, item) => sum + (item.failedSubjects || 0),
                           0
                         )}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Tổng số môn nợ
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                        {getFilteredResults().reduce(
+                          (sum, item) => sum + (item.debtCredits || 0),
+                          0
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Tổng tín chỉ nợ
+                      </div>
+                    </div>
+                    <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-teal-600 dark:text-teal-400">
+                        {(() => {
+                          const results = getFilteredResults();
+                          if (results.length === 0) return "0.00";
+                          const total = results.reduce((sum, item) => {
+                            const gpa =
+                              parseFloat(item.GPA) ||
+                              parseFloat(item.averageGrade4) ||
+                              0;
+                            return sum + gpa;
+                          }, 0);
+                          return (total / results.length).toFixed(2);
+                        })()}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        GPA trung bình
                       </div>
                     </div>
                   </div>
@@ -716,7 +737,7 @@ const LearningResults = () => {
                           TC TÍCH LŨY
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TC NỢ
+                          MÔN NỢ
                         </th>
 
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
@@ -728,7 +749,7 @@ const LearningResults = () => {
                       {loading ? (
                         <tr>
                           <td
-                            colSpan="10"
+                            colSpan="11"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -814,7 +835,14 @@ const LearningResults = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.totalDebt || "0"} tín chỉ
+                              <div className="flex flex-col items-center leading-tight">
+                                <span className="font-medium">
+                                  {item.failedSubjects || 0}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.debtCredits || 0} TC
+                                </span>
+                              </div>
                             </td>
 
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-center">
@@ -876,7 +904,7 @@ const LearningResults = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="9"
+                            colSpan="10"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">

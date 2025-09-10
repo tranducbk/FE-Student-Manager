@@ -57,6 +57,7 @@ import {
   NotificationFilled,
   CheckCircleFilled,
   ExclamationCircleFilled,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 
 const { SubMenu } = Menu;
@@ -147,6 +148,8 @@ const SideBarContent = () => {
     if (
       currentPath.startsWith("/admin/time-table") ||
       currentPath.startsWith("/admin/learning-results") ||
+      currentPath.startsWith("/admin/party-rating") ||
+      currentPath.startsWith("/admin/training-rating") ||
       currentPath.startsWith("/admin/semester-management") ||
       currentPath.startsWith("/admin/tuition-fees") ||
       currentPath.startsWith("/admin/yearly-statistics")
@@ -221,12 +224,12 @@ const SideBarContent = () => {
                 Thông tin cá nhân
               </Menu.Item>
 
-              <Menu.Item
+              {/* <Menu.Item
                 key="/admin/commander-duty-schedule"
                 icon={<CalendarOutlined />}
               >
                 Lịch trực
-              </Menu.Item>
+              </Menu.Item> */}
 
               <SubMenu
                 key="student-management"
@@ -261,19 +264,22 @@ const SideBarContent = () => {
                 >
                   Thống kê theo năm
                 </Menu.Item>
-                <Menu.Item
-                  key="/admin/semester-management"
-                  icon={<CalendarOutlined />}
-                >
-                  Quản lý các kì học
+                <Menu.Item key="/admin/party-rating" icon={<StarOutlined />}>
+                  Xếp loại Đảng viên
                 </Menu.Item>
-
                 <Menu.Item key="/admin/tuition-fees" icon={<DollarOutlined />}>
                   Học phí
                 </Menu.Item>
               </SubMenu>
               <Menu.Item key="/admin/cut-rice" icon={<CheckSquareOutlined />}>
                 Cắt cơm học viên
+              </Menu.Item>
+
+              <Menu.Item
+                key="/admin/semester-management"
+                icon={<CalendarOutlined />}
+              >
+                Quản lý các kì học
               </Menu.Item>
 
               {/* <Menu.Item
@@ -283,6 +289,13 @@ const SideBarContent = () => {
                 Tranh thủ học viên
               </Menu.Item> */}
 
+              <Menu.Item
+                key="/admin/training-rating"
+                icon={<ThunderboltOutlined />}
+              >
+                Xếp loại rèn luyện
+              </Menu.Item>
+              {/* 
               <SubMenu
                 key="training"
                 icon={<TrophyOutlined />}
@@ -304,18 +317,18 @@ const SideBarContent = () => {
 
               <Menu.Item key="/admin/list-guard" icon={<SafetyOutlined />}>
                 Danh sách gác đêm
-              </Menu.Item>
+              </Menu.Item> */}
 
               {/* <Menu.Item key="/admin/list-help-cooking" icon={<FireOutlined />}>
                 Danh sách giúp bếp
               </Menu.Item> */}
 
-              <Menu.Item
+              {/* <Menu.Item
                 key="/admin/regulatory-documents"
                 icon={<FileTextOutlined />}
               >
                 Văn bản quy định
-              </Menu.Item>
+              </Menu.Item> */}
 
               <Menu.Item key="/admin/achievement" icon={<CrownOutlined />}>
                 Khen thưởng học viên
