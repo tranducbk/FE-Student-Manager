@@ -94,7 +94,7 @@ const Statictical = () => {
 
       // Gom nhóm theo thang điểm hệ 4 (giống biểu đồ theo học kỳ)
       const buckets = [
-        { classification: "yếu", count: 0 },
+        { classification: "Yếu", count: 0 },
         { classification: "Trung bình", count: 0 },
         { classification: "Khá", count: 0 },
         { classification: "Giỏi", count: 0 },
@@ -393,7 +393,10 @@ const Statictical = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
             <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-600">
               <div className="text-gray-900 dark:text-white text-lg">
-                THỐNG KÊ KẾT QUẢ HỌC TẬP
+                <h1 className="text-2xl font-bold">THỐNG KÊ KẾT QUẢ HỌC TẬP</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Quản lý và xem thống kê kết quả học tập của tất cả học viên
+                </p>
               </div>
             </div>
             <div className="flex px-6 py-6 justify-around">
@@ -413,38 +416,38 @@ const Statictical = () => {
               </div>
             </div>
             {/* Top sinh viên theo lớp - theo năm học */}
-            <div className="my-2 mx-5">
+            <div className="my-2 mx-5 pb-6">
               <div className="font-bold text-gray-900 dark:text-white mb-3">
                 Danh sách đề xuất khen thưởng học viên - Năm học{" "}
                 {topStudentsLatestYear?.schoolYear || "-"}
               </div>
-              <div className="flex items-center gap-3 mb-3">
-                <label className="text-sm text-gray-700 dark:text-gray-300">
-                  Chọn năm học:
-                </label>
-                <div className="min-w-[280px]">
+              <div className="flex items-center gap-3 flex-wrap mb-3">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Năm học
+                  </label>
                   <Select
                     value={selectedYear}
                     onChange={(val) => setSelectedYear(val)}
                     placeholder="Chọn năm học"
-                    style={{ width: 320 }}
+                    style={{ width: 260, height: 36 }}
                     options={(availableSchoolYears || []).map((y) => ({
                       value: y,
                       label: y,
                     }))}
                   />
                 </div>
-                <label className="text-sm text-gray-700 dark:text-gray-300 ml-6">
-                  Lọc theo đơn vị (chọn nhiều):
-                </label>
-                <div className="min-w-[320px]">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Đơn vị
+                  </label>
                   <Select
                     mode="multiple"
                     allowClear
                     value={filterUnits}
                     onChange={(vals) => setFilterUnits(vals)}
                     placeholder="Chọn đơn vị"
-                    style={{ width: 360 }}
+                    style={{ width: 320, height: 36 }}
                     options={Array.from(
                       new Set(
                         (topStudentsLatestYear?.topStudents || []).map(

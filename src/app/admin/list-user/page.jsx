@@ -1888,31 +1888,6 @@ const ListUser = () => {
 
                             <div>
                               <label
-                                htmlFor="enrollment"
-                                className="block mb-2 text-sm font-medium dark:text-white"
-                              >
-                                Năm vào trường
-                              </label>
-                              <input
-                                type="number"
-                                id="enrollment"
-                                value={addFormData.enrollment}
-                                onChange={(e) =>
-                                  setAddFormData({
-                                    ...addFormData,
-                                    enrollment: e.target.value,
-                                  })
-                                }
-                                aria-describedby="helper-text-explanation"
-                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholder="Nhập năm vào trường"
-                                min="2017"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label
                                 htmlFor="positionGovernment"
                                 className="block mb-2 text-sm font-medium dark:text-white"
                               >
@@ -2776,6 +2751,104 @@ const ListUser = () => {
                     </svg>
                     <span className="text-sm">Thêm Học viên</span>
                   </div>
+                  <div
+                    onClick={async () => {
+                      if (!schoolYear) {
+                        try {
+                          const token = localStorage.getItem("token");
+                          const response = await axios.get(
+                            `${BASE_URL}/commander/political-management/school-years`,
+                            {
+                              headers: {
+                                token: `Bearer ${token}`,
+                              },
+                            }
+                          );
+
+                          if (
+                            response.data.success &&
+                            response.data.schoolYears.length > 0
+                          ) {
+                            const availableYears =
+                              response.data.schoolYears.join(", ");
+                            handleNotify(
+                              "error",
+                              "Lỗi!",
+                              `Vui lòng chọn năm học trước khi xuất file. Các năm học có sẵn: ${availableYears}`
+                            );
+                          } else {
+                            handleNotify(
+                              "error",
+                              "Lỗi!",
+                              "Vui lòng chọn năm học trước khi xuất file"
+                            );
+                          }
+                        } catch (error) {
+                          handleNotify(
+                            "error",
+                            "Lỗi!",
+                            "Vui lòng chọn năm học trước khi xuất file"
+                          );
+                        }
+                        return;
+                      }
+                      try {
+                        const token = localStorage.getItem("token");
+                        const response = await axios.get(
+                          `${BASE_URL}/commander/political-management/excel?schoolYear=${schoolYear}`,
+                          {
+                            headers: {
+                              token: `Bearer ${token}`,
+                            },
+                            responseType: "blob",
+                          }
+                        );
+
+                        const url = window.URL.createObjectURL(
+                          new Blob([response.data])
+                        );
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.setAttribute(
+                          "download",
+                          `quan-ly-chinh-tri-noi-bo-${schoolYear}.xlsx`
+                        );
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        window.URL.revokeObjectURL(url);
+
+                        handleNotify(
+                          "success",
+                          "Thành công!",
+                          "Xuất file Excel thành công"
+                        );
+                      } catch (error) {
+                        console.error("Lỗi khi xuất file:", error);
+                        const errorMessage =
+                          error.response?.data?.message ||
+                          "Không thể xuất file Excel";
+                        handleNotify("error", "Lỗi!", errorMessage);
+                      }
+                    }}
+                    className="flex hover:text-blue-700 cursor-pointer items-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      className="w-5 h-5 mr-1"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                      />
+                    </svg>
+                    <span className="text-sm">Xuất Excel QLCTNB</span>
+                  </div>
                 </div>
               </div>
               <div className="w-full pt-2 ml-5 pr-5 pb-5">
@@ -3183,7 +3256,6 @@ const ListUser = () => {
                       >
                         <div className="grid gap-6 mb-6 md:grid-cols-2">
                           {/* Thông tin cơ bản */}
-
                           <div>
                             <label
                               htmlFor="fullName"
@@ -3216,7 +3288,6 @@ const ListUser = () => {
                               placeholder="vd: 20200001"
                             />
                           </div>
-
                           <div>
                             <label
                               htmlFor="phoneNumber"
@@ -3233,7 +3304,6 @@ const ListUser = () => {
                               placeholder="vd: 0123456789"
                             />
                           </div>
-
                           <div>
                             <label
                               htmlFor="gender"
@@ -3251,7 +3321,6 @@ const ListUser = () => {
                               <option value="Nữ">Nữ</option>
                             </select>
                           </div>
-
                           <div>
                             <label
                               htmlFor="unit"
@@ -3273,7 +3342,6 @@ const ListUser = () => {
                               <option value="L6 - H5">L6 - H5</option>
                             </select>
                           </div>
-
                           <div>
                             <label
                               htmlFor="birthday"
@@ -3293,7 +3361,6 @@ const ListUser = () => {
                               wrapperClassName="w-full"
                             />
                           </div>
-
                           <div>
                             <label
                               htmlFor="rank"
@@ -3317,24 +3384,6 @@ const ListUser = () => {
 
                           <div>
                             <label
-                              htmlFor="enrollment"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Năm vào trường
-                            </label>
-                            <input
-                              type="number"
-                              id="enrollment"
-                              value={formData.enrollment}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="Nhập năm vào trường"
-                              min="2017"
-                            />
-                          </div>
-
-                          <div>
-                            <label
                               htmlFor="positionGovernment"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
@@ -3351,7 +3400,6 @@ const ListUser = () => {
                               <option value="Lớp trưởng">Lớp trưởng</option>
                             </select>
                           </div>
-
                           <div>
                             <label
                               htmlFor="dateOfEnlistment"
@@ -3371,7 +3419,25 @@ const ListUser = () => {
                               wrapperClassName="w-full"
                             />
                           </div>
-
+                          <div>
+                            <label
+                              htmlFor="graduationDate"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Ngày ra trường
+                            </label>
+                            <DatePicker
+                              id="graduationDate"
+                              selected={formData.graduationDate}
+                              onChange={(date) =>
+                                handleChangeDate("graduationDate", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
+                            />
+                          </div>
                           <div>
                             <label
                               htmlFor="probationaryPartyMember"
@@ -3394,51 +3460,6 @@ const ListUser = () => {
                               wrapperClassName="w-full"
                             />
                           </div>
-
-                          <div>
-                            <label
-                              htmlFor="fullPartyMember"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Đảng viên chính thức
-                            </label>
-                            <DatePicker
-                              id="fullPartyMember"
-                              selected={formData.fullPartyMember}
-                              onChange={(date) =>
-                                handleChangeDate("fullPartyMember", date)
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="positionParty"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Chức vụ đảng
-                            </label>
-                            <select
-                              id="positionParty"
-                              value={formData.positionParty}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            >
-                              <option value="Không">Không</option>
-                              <option value="Đảng viên">Đảng viên</option>
-                              <option value="Phó bí thư chi bộ">
-                                Phó bí thư chi bộ
-                              </option>
-                              <option value="Bí thư chi bộ">
-                                Bí thư chi bộ
-                              </option>
-                            </select>
-                          </div>
-
                           <div>
                             <label
                               htmlFor="university"
@@ -3478,24 +3499,25 @@ const ListUser = () => {
                               ))}
                             </select>
                           </div>
-
                           <div>
                             <label
-                              htmlFor="email"
+                              htmlFor="fullPartyMember"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Email
+                              Đảng viên chính thức
                             </label>
-                            <input
-                              type="email"
-                              id="email"
-                              value={formData.email}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
+                            <DatePicker
+                              id="fullPartyMember"
+                              selected={formData.fullPartyMember}
+                              onChange={(date) =>
+                                handleChangeDate("fullPartyMember", date)
+                              }
+                              dateFormat="dd/MM/yyyy"
+                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholderText="Ngày/Tháng/Năm"
+                              wrapperClassName="w-full"
                             />
                           </div>
-
                           <div>
                             <label
                               htmlFor="organization"
@@ -3534,26 +3556,29 @@ const ListUser = () => {
                               ))}
                             </select>
                           </div>
-
                           <div>
                             <label
-                              htmlFor="hometown"
+                              htmlFor="positionParty"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Quê quán
+                              Chức vụ đảng
                             </label>
-                            <input
-                              type="text"
-                              id="hometown"
-                              value={formData.hometown}
+                            <select
+                              id="positionParty"
+                              value={formData.positionParty}
                               onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Hà Nội"
-                            />
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            >
+                              <option value="Không">Không</option>
+                              <option value="Đảng viên">Đảng viên</option>
+                              <option value="Phó bí thư chi bộ">
+                                Phó bí thư chi bộ
+                              </option>
+                              <option value="Bí thư chi bộ">
+                                Bí thư chi bộ
+                              </option>
+                            </select>
                           </div>
-
-                          {/* Select động cho university, organization, level, class */}
-
                           <div>
                             <label
                               htmlFor="level"
@@ -3591,72 +3616,20 @@ const ListUser = () => {
                               ))}
                             </select>
                           </div>
-
                           <div>
                             <label
-                              htmlFor="hometown"
+                              htmlFor="email"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Quê quán
+                              Email
                             </label>
                             <input
-                              type="text"
-                              id="hometown"
-                              value={formData.hometown}
+                              type="email"
+                              id="email"
+                              value={formData.email}
                               onChange={handleChange}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Hà Nội"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="ethnicity"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Dân tộc
-                            </label>
-                            <input
-                              type="text"
-                              id="ethnicity"
-                              value={formData.ethnicity}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Kinh"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="religion"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Tôn giáo
-                            </label>
-                            <input
-                              type="text"
-                              id="religion"
-                              value={formData.religion}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Không"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              htmlFor="currentAddress"
-                              className="block mb-2 text-sm font-medium dark:text-white"
-                            >
-                              Nơi ở hiện nay
-                            </label>
-                            <input
-                              type="text"
-                              id="currentAddress"
-                              value={formData.currentAddress}
-                              onChange={handleChange}
-                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholder="vd: Hà Nội"
+                              placeholder="vd: x.nv200001@sis.hust.edu.vn"
                             />
                           </div>
 
@@ -3688,24 +3661,68 @@ const ListUser = () => {
                               ))}
                             </select>
                           </div>
-
                           <div>
                             <label
-                              htmlFor="graduationDate"
+                              htmlFor="ethnicity"
                               className="block mb-2 text-sm font-medium dark:text-white"
                             >
-                              Ngày ra trường
+                              Dân tộc
                             </label>
-                            <DatePicker
-                              id="graduationDate"
-                              selected={formData.graduationDate}
-                              onChange={(date) =>
-                                handleChangeDate("graduationDate", date)
-                              }
-                              dateFormat="dd/MM/yyyy"
-                              className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                              placeholderText="Ngày/Tháng/Năm"
-                              wrapperClassName="w-full"
+                            <input
+                              type="text"
+                              id="ethnicity"
+                              value={formData.ethnicity}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Kinh"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="religion"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Tôn giáo
+                            </label>
+                            <input
+                              type="text"
+                              id="religion"
+                              value={formData.religion}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Không"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="hometown"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Quê quán
+                            </label>
+                            <input
+                              type="text"
+                              id="hometown"
+                              value={formData.hometown}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="currentAddress"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Nơi ở hiện nay
+                            </label>
+                            <input
+                              type="text"
+                              id="currentAddress"
+                              value={formData.currentAddress}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: Hà Nội"
                             />
                           </div>
                         </div>

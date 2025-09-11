@@ -171,15 +171,15 @@ const CutRice = () => {
     fetchCutRice();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    router.push(`/admin/cut-rice?unit=${unit}`);
+  const handleUnitChange = async (newUnit) => {
+    setUnit(newUnit);
+    router.push(`/admin/cut-rice?unit=${newUnit}`);
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
         const res = await axios.get(
-          `${BASE_URL}/commander/cutRice?unit=${unit}`,
+          `${BASE_URL}/commander/cutRice?unit=${newUnit}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -561,7 +561,6 @@ const CutRice = () => {
                     Quản lý và xem lịch cắt cơm của tất cả học viên
                   </p>
                 </div>
-                QUẢN LÝ HỌC KỲ
                 <div className="flex space-x-3">
                   <button
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
@@ -626,43 +625,30 @@ const CutRice = () => {
               </div>
               <div className="w-full pt-2 pl-5 pb-5 pr-5">
                 <div className="w-full">
-                  <form
-                    className="flex items-end mb-4"
-                    onSubmit={(e) => handleSubmit(e)}
-                  >
-                    <div className="flex">
-                      <div>
-                        <label
-                          htmlFor="unit"
-                          className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >
-                          Chọn lớp
-                        </label>
-                        <select
-                          id="unit"
-                          value={unit}
-                          onChange={(e) => setUnit(e.target.value)}
-                          className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        >
-                          <option value="">Tất cả</option>
-                          <option value="L1 - H5">Lớp 1</option>
-                          <option value="L2 - H5">Lớp 2</option>
-                          <option value="L3 - H5">Lớp 3</option>
-                          <option value="L4 - H5">Lớp 4</option>
-                          <option value="L5 - H5">Lớp 5</option>
-                          <option value="L6 - H5">Lớp 6</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <button
-                        type="submit"
-                        className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
+                  <div className="mb-4">
+                    <div>
+                      <label
+                        htmlFor="unit"
+                        className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        Tìm kiếm
-                      </button>
+                        Chọn lớp
+                      </label>
+                      <select
+                        id="unit"
+                        value={unit}
+                        onChange={(e) => handleUnitChange(e.target.value)}
+                        className="bg-gray-50 border w-56 border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      >
+                        <option value="">Tất cả</option>
+                        <option value="L1 - H5">Lớp 1</option>
+                        <option value="L2 - H5">Lớp 2</option>
+                        <option value="L3 - H5">Lớp 3</option>
+                        <option value="L4 - H5">Lớp 4</option>
+                        <option value="L5 - H5">Lớp 5</option>
+                        <option value="L6 - H5">Lớp 6</option>
+                      </select>
                     </div>
-                  </form>
+                  </div>
                 </div>
 
                 {/* Thống kê cắt cơm */}

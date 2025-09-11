@@ -458,7 +458,7 @@ const PartyRating = () => {
 
               <div className="w-full p-5">
                 <div className="mb-4">
-                  <form className="flex items-end gap-4 flex-wrap">
+                  <form className="flex items-center gap-3 flex-wrap">
                     <div>
                       <label
                         htmlFor="schoolYear"
@@ -482,7 +482,7 @@ const PartyRating = () => {
                           value={selectedSchoolYear}
                           onChange={handleSchoolYearChange}
                           placeholder="Chọn năm học"
-                          style={{ width: 200 }}
+                          style={{ width: 260, height: 36 }}
                           options={schoolYearOptions}
                         />
                       </ConfigProvider>
@@ -507,7 +507,7 @@ const PartyRating = () => {
                         <Select
                           value={selectedUnit}
                           onChange={setSelectedUnit}
-                          style={{ width: 128 }}
+                          style={{ width: 160, height: 36 }}
                           options={[
                             { value: "all", label: "Tất cả đơn vị" },
                             { value: "L1 - H5", label: "L1 - H5" },
@@ -525,21 +525,20 @@ const PartyRating = () => {
                         Tìm kiếm
                       </label>
                       <input
-                        size="small"
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Tên hoặc mã sinh viên..."
-                        className="bg-gray-50 dark:bg-gray-700 border w-48 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 px-3"
+                        className="bg-gray-50 dark:bg-gray-700 border w-64 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block h-9 px-3"
                       />
                     </div>
-                    <div>
+                    <div className="pt-6">
                       <button
                         onClick={() => {
                           setSearchTerm("");
                           setSelectedUnit("all");
                         }}
-                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center mr-2"
+                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center"
                       >
                         <svg
                           className="w-4 h-4 mr-2"
@@ -889,10 +888,10 @@ const PartyRating = () => {
       {showBulkUpdateModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] overflow-auto mt-6 md:mt-10">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Cập nhật đồng loạt xếp loại đảng viên
+                Cập nhật đồng loạt xếp loại Đảng viên
               </h2>
               <button
                 onClick={() => {
@@ -920,7 +919,20 @@ const PartyRating = () => {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
               <div className="space-y-6">
                 {/* Bộ lọc và tìm kiếm */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Tìm kiếm theo tên/mã
+                    </label>
+                    <input
+                      type="text"
+                      value={bulkSearchTerm}
+                      onChange={(e) => setBulkSearchTerm(e.target.value)}
+                      placeholder="Nhập tên hoặc mã sinh viên..."
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full h-10 px-3"
+                    />
+                  </div>
+
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Lọc theo đơn vị
@@ -935,6 +947,7 @@ const PartyRating = () => {
                       <Select
                         value={bulkFilterUnit}
                         onChange={setBulkFilterUnit}
+                        size="large"
                         style={{ width: "100%" }}
                         options={[
                           { value: "all", label: "Tất cả đơn vị" },
@@ -946,38 +959,43 @@ const PartyRating = () => {
                       />
                     </ConfigProvider>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Tìm kiếm theo tên/mã
-                    </label>
-                    <input
-                      type="text"
-                      value={bulkSearchTerm}
-                      onChange={(e) => setBulkSearchTerm(e.target.value)}
-                      placeholder="Nhập tên hoặc mã sinh viên..."
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
-                  </div>
-
-                  <div className="flex items-end space-x-2">
-                    <button
-                      onClick={handleSelectAllStudents}
-                      className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors duration-200"
-                    >
-                      Chọn tất cả
-                    </button>
-                    <button
-                      onClick={handleDeselectAllStudents}
-                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
-                    >
-                      Bỏ chọn tất cả
-                    </button>
-                  </div>
+                <div className="flex items-center justify-start md:justify-end gap-2">
+                  <button
+                    onClick={handleSelectAllStudents}
+                    className="px-3 h-10 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors duration-200"
+                  >
+                    Chọn tất cả
+                  </button>
+                  <button
+                    onClick={handleDeselectAllStudents}
+                    className="px-3 h-10 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors duration-200"
+                  >
+                    Bỏ chọn tất cả
+                  </button>
                 </div>
 
                 {/* Thông tin cập nhật */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Số quyết định
+                    </label>
+                    <input
+                      type="text"
+                      value={bulkUpdateData.decisionNumber}
+                      onChange={(e) =>
+                        setBulkUpdateData((prev) => ({
+                          ...prev,
+                          decisionNumber: e.target.value,
+                        }))
+                      }
+                      placeholder="Nhập số quyết định"
+                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full h-10 px-3"
+                    />
+                  </div>
+
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Xếp loại đảng viên
@@ -998,6 +1016,7 @@ const PartyRating = () => {
                           }))
                         }
                         placeholder="Chọn xếp loại đảng viên"
+                        size="large"
                         style={{ width: "100%" }}
                         options={[
                           { value: "", label: "Hãy chọn xếp loại Đảng viên" },
@@ -1014,24 +1033,6 @@ const PartyRating = () => {
                         ]}
                       />
                     </ConfigProvider>
-                  </div>
-
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Số quyết định
-                    </label>
-                    <input
-                      type="text"
-                      value={bulkUpdateData.decisionNumber}
-                      onChange={(e) =>
-                        setBulkUpdateData((prev) => ({
-                          ...prev,
-                          decisionNumber: e.target.value,
-                        }))
-                      }
-                      placeholder="Nhập số quyết định"
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
                   </div>
                 </div>
 

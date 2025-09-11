@@ -164,6 +164,51 @@ const TimeTable = () => {
     }
   };
 
+  const handleExportTimeTableWithCutRice = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Hiển thị loading
+        handleNotify(
+          "info",
+          "Đang xử lý...",
+          "Đang tạo file Excel thời khóa biểu kèm lịch cắt cơm"
+        );
+
+        const unitParam = unit ? `?unit=${encodeURIComponent(unit)}` : "";
+
+        const response = await axios.get(
+          `${BASE_URL}/commander/time-table-with-cut-rice/excel${unitParam}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+            responseType: "blob",
+          }
+        );
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "thoikhoabieu.xlsx");
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+
+        handleNotify(
+          "success",
+          "Thành công!",
+          "Xuất file Excel thời khóa biểu kèm lịch cắt cơm thành công"
+        );
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message || "Có lỗi xảy ra khi xuất file Excel";
+        handleNotify("danger", "Lỗi!", errorMessage);
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex-1">
@@ -247,7 +292,7 @@ const TimeTable = () => {
                     {isLoading ? "Đang tải..." : "Làm mới"}
                   </button>
                   <button
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 mr-4 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={handleGenerateAutoCutRice}
                   >
                     <svg
@@ -264,6 +309,25 @@ const TimeTable = () => {
                       />
                     </svg>
                     Tạo lịch cắt cơm tự động
+                  </button>
+                  <button
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-2 mr-4 border border-purple-600 hover:border-purple-700 rounded-lg transition-colors duration-200 flex items-center"
+                    onClick={handleExportTimeTableWithCutRice}
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Xuất TKB + Cắt cơm
                   </button>
                 </div>
               </div>
@@ -346,127 +410,57 @@ const TimeTable = () => {
             {/* Thống kê */}
             <div className="w-full pl-5 pb-5 pr-5">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                      <svg
-                        className="w-6 h-6 text-blue-600 dark:text-blue-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                        Tổng số học viên
-                      </p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                        {filteredStudents.length}
-                      </p>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Tổng số học viên
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {filteredStudents.length}
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-                      <svg
-                        className="w-6 h-6 text-green-600 dark:text-green-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                        Tổng số lịch học
-                      </p>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                        {timeTable.length}
-                      </p>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Tổng số lịch học
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {timeTable.length}
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
-                      <svg
-                        className="w-6 h-6 text-purple-600 dark:text-purple-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                        Môn học
-                      </p>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                        {
-                          new Set(
-                            timeTable
-                              .map((item) => item.subject)
-                              .filter(Boolean)
-                          ).size
-                        }
-                      </p>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Môn học
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {
+                        new Set(
+                          timeTable.map((item) => item.subject).filter(Boolean)
+                        ).size
+                      }
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-orange-100 dark:bg-orange-800 rounded-lg">
-                      <svg
-                        className="w-6 h-6 text-orange-600 dark:text-orange-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                        Tuần học
-                      </p>
-                      <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                        {
-                          new Set(
-                            timeTable
-                              .map((item) => item.schoolWeek)
-                              .filter(Boolean)
-                          ).size
-                        }
-                      </p>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Tuần học
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {
+                        new Set(
+                          timeTable
+                            .map((item) => item.schoolWeek)
+                            .filter(Boolean)
+                        ).size
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
@@ -536,112 +530,74 @@ const TimeTable = () => {
                             {student.fullName}
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                              {student.scheduleCount} lịch
-                            </span>
+                            {student.scheduleCount}
                           </td>
                           <td className="text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
-                            <div className="flex flex-wrap gap-1 justify-center">
-                              {student.subjects.length > 0 ? (
-                                <>
-                                  {student.subjects
-                                    .slice(0, 3)
-                                    .map((subject, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-r border-green-300 dark:border-green-700 pr-2 last:border-r-0"
-                                      >
-                                        {subject}
-                                      </span>
-                                    ))}
-                                  {student.subjects.length > 3 && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 pl-2">
-                                      +{student.subjects.length - 3}
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-gray-400">N/A</span>
-                              )}
-                            </div>
+                            {student.subjects.length > 0 ? (
+                              <div className="space-y-1">
+                                {student.subjects
+                                  .slice(0, 3)
+                                  .map((subject, idx) => (
+                                    <div key={idx} className="text-xs">
+                                      {subject}
+                                    </div>
+                                  ))}
+                                {student.subjects.length > 3 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{student.subjects.length - 3} môn khác
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-6">
-                            <div className="flex flex-wrap gap-1 justify-center">
-                              {student.classrooms.length > 0 ? (
-                                <>
-                                  {student.classrooms
-                                    .slice(0, 3)
-                                    .map((classroom, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 border-r border-purple-300 dark:border-purple-700 pr-2 last:border-r-0"
-                                      >
-                                        {classroom}
-                                      </span>
-                                    ))}
-                                  {student.classrooms.length > 3 && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 pl-2">
-                                      +{student.classrooms.length - 3}
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-gray-400">N/A</span>
-                              )}
-                            </div>
+                            {student.classrooms.length > 0 ? (
+                              <div className="space-y-1">
+                                {student.classrooms
+                                  .slice(0, 3)
+                                  .map((classroom, idx) => (
+                                    <div key={idx} className="text-xs">
+                                      {classroom}
+                                    </div>
+                                  ))}
+                                {student.classrooms.length > 3 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{student.classrooms.length - 3} phòng khác
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center py-4 px-2">
-                            <div className="flex flex-wrap gap-1 justify-center">
-                              {student.weeks.length > 0 ? (
-                                <>
-                                  {student.weeks
-                                    .slice(0, 3)
-                                    .map((week, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 border-r border-orange-300 dark:border-orange-700 pr-1 last:border-r-0"
-                                      >
-                                        {week}
-                                      </span>
-                                    ))}
-                                  {student.weeks.length > 3 && (
-                                    <span className="inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-l border-gray-300 dark:border-gray-600 pl-1">
-                                      +{student.weeks.length - 3}
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-gray-400">N/A</span>
-                              )}
-                            </div>
+                            {student.weeks.length > 0 ? (
+                              <div className="space-y-1">
+                                {student.weeks.slice(0, 3).map((week, idx) => (
+                                  <div key={idx} className="text-xs">
+                                    Tuần {week}
+                                  </div>
+                                ))}
+                                {student.weeks.length > 3 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{student.weeks.length - 3} tuần khác
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
                           </td>
                           <td className="whitespace-nowrap text-sm text-gray-900 dark:text-white text-center py-4 px-6">
                             <button
                               onClick={(e) => {
-                                e.stopPropagation(); // Ngăn event bubbling lên tr
+                                e.stopPropagation();
                                 handleRowClick(student.studentId);
                               }}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                             >
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
                               Xem chi tiết
                             </button>
                           </td>

@@ -630,119 +630,109 @@ const TuitionFees = () => {
             </div>
             <div className="w-full p-5">
               <form
-                className="flex items-end"
+                className="flex items-center gap-3 flex-wrap"
                 onSubmit={(e) => handleSubmit(e)}
               >
-                <div className="flex">
-                  <div>
-                    <label
-                      htmlFor="semester"
-                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Chọn học kỳ
-                    </label>
-                    <ConfigProvider
-                      theme={{
-                        algorithm: isDark
-                          ? theme.darkAlgorithm
-                          : theme.defaultAlgorithm,
-                        token: {
-                          colorPrimary: "#2563eb",
-                          borderRadius: 8,
-                          controlOutline: "rgba(37,99,235,0.2)",
-                        },
-                      }}
-                    >
-                      <TreeSelect
-                        treeData={treeData}
-                        treeCheckable
-                        showCheckedStrategy={TreeSelect.SHOW_PARENT}
-                        placeholder="Chọn học kỳ"
-                        allowClear
-                        showSearch={false}
-                        style={{ width: 360 }}
-                        dropdownStyle={{
-                          backgroundColor: isDark ? "#1f2937" : "#ffffff",
-                          color: isDark ? "#e5e7eb" : "#111827",
-                          border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
-                          borderRadius: 8,
-                        }}
-                        tagRender={(props) => {
-                          const { label, onClose } = props;
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 mr-1 mb-1"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                            >
-                              <span className="text-xs">{label}</span>
-                              <button
-                                onClick={onClose}
-                                className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
-                                aria-label="remove"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          );
-                        }}
-                        onChange={(values) => setSelectedSemesters(values)}
-                      />
-                    </ConfigProvider>
-                  </div>
-                  <div className="ml-4">
-                    <label
-                      htmlFor="class"
-                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Chọn lớp
-                    </label>
-                    <ConfigProvider
-                      theme={{
-                        algorithm: isDark
-                          ? theme.darkAlgorithm
-                          : theme.defaultAlgorithm,
-                        token: {
-                          colorPrimary: "#2563eb",
-                          borderRadius: 8,
-                          controlOutline: "rgba(37,99,235,0.2)",
-                        },
-                      }}
-                    >
-                      <Select
-                        placeholder="Chọn lớp"
-                        allowClear
-                        style={{ width: 224 }}
-                        value={selectedClass || undefined}
-                        onChange={(value) => setSelectedClass(value || "")}
-                        dropdownStyle={{
-                          backgroundColor: isDark ? "#1f2937" : "#ffffff",
-                          color: isDark ? "#e5e7eb" : "#111827",
-                          border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
-                          borderRadius: 8,
-                        }}
-                        options={[
-                          { value: "Tất cả các lớp", label: "Tất cả các lớp" },
-                          { value: "L1 - H5", label: "L1 - H5" },
-                          { value: "L2 - H5", label: "L2 - H5" },
-                          { value: "L3 - H5", label: "L3 - H5" },
-                          { value: "L4 - H5", label: "L4 - H5" },
-                          { value: "L5 - H5", label: "L5 - H5" },
-                          { value: "L6 - H5", label: "L6 - H5" },
-                        ]}
-                      />
-                    </ConfigProvider>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  {/* <button
-                    type="submit"
-                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-5 transition-colors duration-200"
+                <div>
+                  <label
+                    htmlFor="semester"
+                    className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Tìm kiếm
-                  </button> */}
+                    Chọn học kỳ
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                      token: {
+                        colorPrimary: "#2563eb",
+                        borderRadius: 8,
+                        controlOutline: "rgba(37,99,235,0.2)",
+                      },
+                    }}
+                  >
+                    <TreeSelect
+                      treeData={treeData}
+                      treeCheckable
+                      showCheckedStrategy={TreeSelect.SHOW_PARENT}
+                      placeholder="Chọn học kỳ"
+                      allowClear
+                      showSearch={false}
+                      style={{ width: 260, height: 36 }}
+                      dropdownStyle={{
+                        backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                        color: isDark ? "#e5e7eb" : "#111827",
+                        border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                        borderRadius: 8,
+                      }}
+                      tagRender={(props) => {
+                        const { label, onClose } = props;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 mr-1 mb-1"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <span className="text-xs">{label}</span>
+                            <button
+                              onClick={onClose}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
+                              aria-label="remove"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      }}
+                      onChange={(values) => setSelectedSemesters(values)}
+                    />
+                  </ConfigProvider>
+                </div>
+                <div>
+                  <label
+                    htmlFor="class"
+                    className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Chọn lớp
+                  </label>
+                  <ConfigProvider
+                    theme={{
+                      algorithm: isDark
+                        ? theme.darkAlgorithm
+                        : theme.defaultAlgorithm,
+                      token: {
+                        colorPrimary: "#2563eb",
+                        borderRadius: 8,
+                        controlOutline: "rgba(37,99,235,0.2)",
+                      },
+                    }}
+                  >
+                    <Select
+                      placeholder="Chọn lớp"
+                      allowClear
+                      style={{ width: 160, height: 36 }}
+                      value={selectedClass || undefined}
+                      onChange={(value) => setSelectedClass(value || "")}
+                      dropdownStyle={{
+                        backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                        color: isDark ? "#e5e7eb" : "#111827",
+                        border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
+                        borderRadius: 8,
+                      }}
+                      options={[
+                        { value: "Tất cả các lớp", label: "Tất cả các lớp" },
+                        { value: "L1 - H5", label: "L1 - H5" },
+                        { value: "L2 - H5", label: "L2 - H5" },
+                        { value: "L3 - H5", label: "L3 - H5" },
+                        { value: "L4 - H5", label: "L4 - H5" },
+                        { value: "L5 - H5", label: "L5 - H5" },
+                        { value: "L6 - H5", label: "L6 - H5" },
+                      ]}
+                    />
+                  </ConfigProvider>
                 </div>
               </form>
             </div>
@@ -770,7 +760,7 @@ const TuitionFees = () => {
                         {formatNumberWithCommas(paymentStats.paidSum)}đ
                       </div>
                       <div className="text-xs text-green-700 dark:text-green-300">
-                        {paymentStats.paidCount} mục
+                        {paymentStats.paidCount} sinh viên
                       </div>
                     </div>
                   </div>
@@ -783,7 +773,7 @@ const TuitionFees = () => {
                         {formatNumberWithCommas(paymentStats.unpaidSum)}đ
                       </div>
                       <div className="text-xs text-red-700 dark:text-red-300">
-                        {paymentStats.unpaidCount} mục
+                        {paymentStats.unpaidCount} sinh viên
                       </div>
                     </div>
                   </div>

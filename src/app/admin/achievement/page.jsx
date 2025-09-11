@@ -479,8 +479,14 @@ const Achievement = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 pt-2 dark:text-white text-lg">
-                  QUẢN LÝ KHEN THƯỞNG THEO HỌC VIÊN
+                  <h1 className="text-2xl font-bold">
+                    QUẢN LÝ KHEN THƯỞNG HỌC VIÊN
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem khen thưởng của tất cả học viên
+                  </p>
                 </div>
+
                 <div className="flex space-x-2">
                   <Link
                     href="/admin/achievement/statistics"
