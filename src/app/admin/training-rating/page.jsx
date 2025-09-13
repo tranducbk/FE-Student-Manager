@@ -8,7 +8,6 @@ import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
 import { useLoading } from "@/hooks";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
-import { useState as useThemeState } from "react";
 
 const TrainingRating = () => {
   const [trainingRatings, setTrainingRatings] = useState([]);
@@ -32,7 +31,7 @@ const TrainingRating = () => {
   const [bulkFilterUnit, setBulkFilterUnit] = useState("all");
   const [bulkSearchTerm, setBulkSearchTerm] = useState("");
 
-  const [isDark, setIsDark] = useThemeState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     const checkTheme = () => {
@@ -124,7 +123,6 @@ const TrainingRating = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/commander/trainingRatings?schoolYear=${year}`,
@@ -478,7 +476,7 @@ const TrainingRating = () => {
                           value={selectedSchoolYear}
                           onChange={handleSchoolYearChange}
                           placeholder="Chọn năm học"
-                          style={{ width: 200 }}
+                          style={{ width: 200, height: 36 }}
                           options={schoolYearOptions}
                         />
                       </ConfigProvider>
@@ -503,7 +501,7 @@ const TrainingRating = () => {
                         <Select
                           value={selectedUnit}
                           onChange={setSelectedUnit}
-                          style={{ width: 128 }}
+                          style={{ width: 128, height: 36 }}
                           options={[
                             { value: "all", label: "Tất cả đơn vị" },
                             { value: "L1 - H5", label: "L1 - H5" },
@@ -521,12 +519,11 @@ const TrainingRating = () => {
                         Tìm kiếm
                       </label>
                       <input
-                        size="small"
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Tên hoặc mã sinh viên..."
-                        className="bg-gray-50 dark:bg-gray-700 border w-48 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 px-3"
+                        className="bg-gray-50 dark:bg-gray-700 border w-48 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block h-9 px-3"
                       />
                     </div>
                     <div>
@@ -535,7 +532,7 @@ const TrainingRating = () => {
                           setSearchTerm("");
                           setSelectedUnit("all");
                         }}
-                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center mr-2"
+                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center justify-center"
                       >
                         <svg
                           className="w-4 h-4 mr-2"
@@ -587,38 +584,7 @@ const TrainingRating = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {loading ? (
-                        <tr>
-                          <td
-                            colSpan="8"
-                            className="text-center py-8 text-gray-500 dark:text-gray-400"
-                          >
-                            <div className="flex flex-col items-center">
-                              <svg
-                                className="animate-spin h-8 w-8 text-blue-500 mb-4"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                              <p>Đang tải dữ liệu...</p>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : getFilteredResults().length > 0 ? (
+                      {getFilteredResults().length > 0 ? (
                         getFilteredResults().map((item) => (
                           <tr
                             key={`${item._id}-${item.schoolYear}`}
@@ -1035,6 +1001,116 @@ const TrainingRating = () => {
           </div>
         </div>
       )}
+      <style jsx global>{`
+        .ant-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        /* Tokens chỉ áp dụng cho chế độ multiple */
+        .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(239 246 255) !important; /* blue-50 */
+          border-color: rgb(191 219 254) !important; /* blue-200 */
+          color: rgb(30 58 138) !important; /* blue-900 */
+        }
+        /* Single select: chữ rõ, không nền */
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(17 24 39) !important; /* gray-900 */
+          font-weight: 600;
+        }
+        .ant-select-arrow,
+        .ant-select-clear {
+          color: rgb(107 114 128);
+        }
+        .ant-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+        }
+        .ant-select-item {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+
+        .dark .ant-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        /* Tokens ở chế độ multiple trong dark */
+        .dark .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(75 85 99) !important; /* gray-600 */
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+        /* Single select dark: chữ rõ, không nền */
+        .dark
+          .ant-select-single
+          .ant-select-selector
+          .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(255 255 255) !important;
+          font-weight: 600;
+        }
+        .dark .ant-select-arrow,
+        .dark .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+        }
+        .dark .ant-select-item {
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-selected:not(
+            .ant-select-item-option-disabled
+          ) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
     </>
   );
 };
