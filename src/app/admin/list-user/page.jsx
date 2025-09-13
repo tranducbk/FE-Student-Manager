@@ -1690,7 +1690,7 @@ const ListUser = () => {
           </div>
           {showFormAdd && (
             <>
-              <div className="bg-slate-400 z-10 opacity-50 fixed top-0 left-0 right-0 bottom-0"></div>
+              <div className="bg-slate-400 dark:bg-gray-900 z-10 opacity-50 fixed top-0 left-0 right-0 bottom-0"></div>
               <div
                 tabIndex="-1"
                 aria-hidden="true"
@@ -1701,7 +1701,7 @@ const ListUser = () => {
                     <div className="w-full">
                       <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
                         <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                          THÊM QUÂN NHÂN
+                          THÊM HỌC VIÊN
                         </h3>
                         <button
                           type="button"
