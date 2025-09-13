@@ -728,13 +728,15 @@ export default function Home() {
                                 ? latestYear.gpa4
                                 : latestSemester
                                 ? latestSemester.gpa4
-                                : "0.00"}
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>Năm học:</span>
                             <span className="font-semibold">
-                              {latestYear ? latestYear.schoolYear : "-"}
+                              {latestYear
+                                ? latestYear.schoolYear
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
@@ -744,7 +746,7 @@ export default function Home() {
                                 ? latestYear.credits
                                 : latestSemester
                                 ? latestSemester.credits
-                                : 0}
+                                : "Chưa có dữ liệu"}
                             </span>
                           </div>
                         </>
