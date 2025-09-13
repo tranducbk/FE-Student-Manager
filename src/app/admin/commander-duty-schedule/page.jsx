@@ -100,8 +100,10 @@ const CommanderDutySchedule = () => {
         setShowFormEdit(false);
         fetchSchedule();
       } catch (error) {
-        handleNotify("danger", "Lỗi!", error);
-        setShowFormEdit(false);
+        const errorMessage =
+          error.response?.data?.message || error.message || "Có lỗi xảy ra";
+        handleNotify("danger", "Lỗi!", errorMessage);
+        // Không tắt modal khi có lỗi để người dùng có thể sửa lại
       }
     }
   };
@@ -134,7 +136,9 @@ const CommanderDutySchedule = () => {
       });
       fetchSchedule();
     } catch (error) {
-      handleNotify("danger", "Lỗi!", error);
+      const errorMessage =
+        error.response?.data?.message || error.message || "Có lỗi xảy ra";
+      handleNotify("danger", "Lỗi!", errorMessage);
     }
   };
 
@@ -340,7 +344,7 @@ const CommanderDutySchedule = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
                 <div className="fixed top-0 left-0 z-20 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
-                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                  <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow sm:p-5">
                     <button
                       onClick={handleCancelDelete}
                       type="button"

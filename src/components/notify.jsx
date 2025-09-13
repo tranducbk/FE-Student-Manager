@@ -37,7 +37,9 @@ export function handleNotify(type, title, message) {
 
   notification[notificationType]({
     message: title,
-    description: message,
+    description: message
+      .split("\n")
+      .map((line, index) => <div key={index}>{line}</div>),
     placement: "bottomRight",
     duration: 3,
     className: isDark ? "dark-notification" : "light-notification",

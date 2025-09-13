@@ -177,6 +177,13 @@ const CutRice = () => {
     loadData();
   }, [withLoading]);
 
+  // Cleanup scroll khi component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   const handleUnitChange = async (newUnit) => {
     setUnit(newUnit);
     router.push(`/admin/cut-rice?unit=${newUnit}`);
@@ -336,6 +343,8 @@ const CutRice = () => {
 
   const handleEditClick = async (cutRiceItem) => {
     setSelectedStudent(cutRiceItem);
+    // Ngăn scroll ở body khi modal mở
+    document.body.style.overflow = "hidden";
     const token = localStorage.getItem("token");
     try {
       const res = await axios.get(
@@ -409,6 +418,12 @@ const CutRice = () => {
     setShowEditModal(true);
   };
 
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    // Khôi phục scroll ở body khi đóng modal
+    document.body.style.overflow = "unset";
+  };
+
   const handleUpdateCutRice = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -427,7 +442,7 @@ const CutRice = () => {
 
         if (response.status === 200) {
           handleNotify("success", "Thành công!", response.data.message);
-          setShowEditModal(false);
+          handleCloseEditModal();
           withLoading(fetchCutRice); // Refresh data
         }
       } catch (error) {
@@ -1108,15 +1123,18 @@ const CutRice = () => {
 
       {/* Modal chỉnh sửa lịch cắt cơm */}
       {showEditModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4 overflow-hidden">
+          <div
+            className="bg-black bg-opacity-50 inset-0 fixed"
+            onClick={handleCloseEditModal}
+          ></div>
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Chỉnh sửa lịch cắt cơm - {selectedStudent?.fullName}
               </h2>
               <button
-                onClick={() => setShowEditModal(false)}
+                onClick={handleCloseEditModal}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <svg
@@ -1136,7 +1154,7 @@ const CutRice = () => {
             </div>
             <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
               <form onSubmit={handleUpdateCutRice} className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {Object.entries(formData).map(([day, meals]) => (
                     <div
                       key={day}
@@ -1181,8 +1199,8 @@ const CutRice = () => {
                 <div className="flex justify-end mt-6">
                   <button
                     type="button"
-                    className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900 mr-2"
-                    onClick={() => setShowEditModal(false)}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-gray-100 mr-2"
+                    onClick={handleCloseEditModal}
                   >
                     Hủy
                   </button>
@@ -1266,7 +1284,7 @@ const CutRice = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-gray-100"
                   onClick={() => {
                     setShowExportModal(false);
                     setExportSelectedUnits([]);
@@ -1354,7 +1372,7 @@ const CutRice = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg hover:bg-gray-300 hover:text-gray-900"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 hover:text-gray-900 dark:hover:text-gray-100"
                   onClick={() => {
                     setShowExportExcelWithScheduleModal(false);
                     setExportExcelWithScheduleSelectedUnits([]);
