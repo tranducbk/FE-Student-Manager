@@ -569,8 +569,13 @@ const YearlyStatistics = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  THỐNG KÊ KẾT QUẢ HỌC TẬP THEO NĂM
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">
+                    THỐNG KÊ KẾT QUẢ HỌC TẬP THEO NĂM
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem thống kê kết quả học tập theo năm
+                  </p>
                 </div>
                 <Link
                   href="/users/learning-information?tab=results"

@@ -18,6 +18,10 @@ export default function Home() {
   const [semesterResults, setSemesterResults] = useState([]);
   const [tuitionFee, setTuitionFee] = useState([]);
   const [timeTable, setTimeTable] = useState([]);
+  const [cutRice, setCutRice] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchLearningResult = async () => {
     const token = localStorage.getItem("token");
@@ -98,6 +102,50 @@ export default function Home() {
         );
 
         setTimeTable(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const fetchCutRice = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        const res = await axios.get(
+          `${BASE_URL}/student/${decodedToken.id}/cut-rice`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.data && typeof res.data === "object") {
+          setCutRice(res.data);
+        } else {
+          setCutRice(null);
+        }
+      } catch (error) {
+        console.log(error);
+        setCutRice(null);
+      }
+    }
+  };
+
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        const res = await axios.get(`${BASE_URL}/student/${decodedToken.id}`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+        setProfile(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -197,8 +245,12 @@ export default function Home() {
 
     if (token) {
       try {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
         const res = await axios.get(
-          `${BASE_URL}/user/commanderDutyScheduleCurrent`,
+          `${BASE_URL}/user/commanderDutySchedule?page=1&year=${currentYear}&month=${currentMonth}`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -207,10 +259,9 @@ export default function Home() {
         );
 
         // Lấy dữ liệu của phần tử có ngày là ngày hiện tại
-        const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0); // Đặt giờ, phút, giây, mili giây về 0
 
-        const currentSchedule = res.data.find((schedule) => {
+        const currentSchedule = res.data?.schedules?.find((schedule) => {
           const scheduleDate = new Date(schedule.workDay);
           scheduleDate.setHours(0, 0, 0, 0); // Đặt giờ, phút, giây, mili giây về 0
 
@@ -220,20 +271,59 @@ export default function Home() {
         setCommanderDutySchedule(currentSchedule);
       } catch (error) {
         console.log(error);
+        setCommanderDutySchedule(null);
       }
     }
   };
 
+  const refreshAllData = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        fetchLearningResult(),
+        fetchSemesterResults(),
+        fetchTuitionFee(),
+        fetchTimeTable(),
+        fetchCutRice(),
+        fetchPhisicalResult(),
+        fetchVacationSchedule(),
+        fetchAchievement(),
+        fetchHelpCooking(),
+        fetchSchedule(),
+        fetchProfile(),
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const initialLoad = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        fetchLearningResult(),
+        fetchSemesterResults(),
+        fetchTuitionFee(),
+        fetchTimeTable(),
+        fetchCutRice(),
+        fetchPhisicalResult(),
+        fetchVacationSchedule(),
+        fetchAchievement(),
+        fetchHelpCooking(),
+        fetchSchedule(),
+        fetchProfile(),
+      ]);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchLearningResult();
-    fetchSemesterResults();
-    fetchTuitionFee();
-    fetchTimeTable();
-    fetchPhisicalResult();
-    fetchVacationSchedule();
-    fetchAchievement();
-    fetchHelpCooking();
-    fetchSchedule();
+    initialLoad();
   }, []);
 
   // Tính toán thống kê
@@ -259,6 +349,37 @@ export default function Home() {
     ).length;
   };
 
+  const getUnpaidTuitionAmount = () => {
+    const unpaidFees = tuitionFee.filter(
+      (fee) =>
+        fee.status?.toLowerCase().includes("chưa thanh toán") ||
+        fee.status?.toLowerCase().includes("chưa đóng")
+    );
+    return unpaidFees.reduce(
+      (total, fee) => total + (parseInt(fee.totalAmount) || 0),
+      0
+    );
+  };
+
+  const getPaidTuitionAmount = () => {
+    const paidFees = tuitionFee.filter(
+      (fee) =>
+        !fee.status?.toLowerCase().includes("chưa thanh toán") &&
+        !fee.status?.toLowerCase().includes("chưa đóng")
+    );
+    return paidFees.reduce(
+      (total, fee) => total + (parseInt(fee.totalAmount) || 0),
+      0
+    );
+  };
+
+  const getTotalTuitionAmount = () => {
+    return tuitionFee.reduce(
+      (total, fee) => total + (parseInt(fee.totalAmount) || 0),
+      0
+    );
+  };
+
   const getTodayClasses = () => {
     const today = new Date().toLocaleDateString("vi-VN", { weekday: "long" });
     const dayMap = {
@@ -274,14 +395,49 @@ export default function Home() {
     return timeTable.filter((item) => item.day === todayKey).length;
   };
 
+  const getTodayTimeTablePreview = () => {
+    const today = new Date().toLocaleDateString("vi-VN", { weekday: "long" });
+    const dayMap = {
+      "Thứ Hai": "Thứ 2",
+      "Thứ Ba": "Thứ 3",
+      "Thứ Tư": "Thứ 4",
+      "Thứ Năm": "Thứ 5",
+      "Thứ Sáu": "Thứ 6",
+      "Thứ Bảy": "Thứ 7",
+      "Chủ Nhật": "Chủ nhật",
+    };
+    const todayKey = dayMap[today] || today;
+    const list = timeTable
+      .filter((i) => i.day === todayKey)
+      .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""))
+      .slice(0, 2);
+    return list;
+  };
+
+  const getTodayCutRice = () => {
+    if (!cutRice) return null;
+    const jsDay = new Date().getDay();
+    const map = {
+      1: "monday",
+      2: "tuesday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday",
+      6: "saturday",
+      0: "sunday",
+    };
+    const key = map[jsDay];
+    return cutRice[key] || { breakfast: false, lunch: false, dinner: false };
+  };
+
   // Tính toán thống kê khen thưởng
   const getAchievementStats = () => {
     if (!achievement || !achievement.yearlyAchievements) {
       return {
         totalCount: 0,
-        currentYearTitle: "Chưa có",
-        latestTitle: "Chưa có",
-        latestYear: "N/A",
+        currentYearTitle: "Chưa có khen thưởng",
+        latestTitle: "Chưa có dữ liệu",
+        latestYear: "Chưa có dữ liệu",
       };
     }
 
@@ -301,13 +457,51 @@ export default function Home() {
     const currentYearTitle =
       currentYearAchievements.length > 0
         ? currentYearAchievements[0].title
-        : "Chưa có";
+        : "Chưa có dữ liệu";
 
     return {
       totalCount: achievement.yearlyAchievements.length,
       currentYearTitle: currentYearTitle,
-      latestTitle: latestAchievement?.title || "Chưa có",
-      latestYear: latestAchievement?.year || "N/A",
+      latestTitle: latestAchievement?.title || "Chưa có dữ liệu",
+      latestYear: latestAchievement?.year || "Chưa có dữ liệu",
+    };
+  };
+
+  const getLatestSchoolYearStats = () => {
+    if (!semesterResults || semesterResults.length === 0) return null;
+    const valid = semesterResults.filter(
+      (s) => s && s.schoolYear && typeof s.totalCredits === "number"
+    );
+    if (valid.length === 0) return null;
+    const years = [...new Set(valid.map((s) => s.schoolYear))];
+    if (years.length === 0) return null;
+    const latestYear = years.sort((a, b) => b.localeCompare(a))[0];
+    const inYear = valid.filter((s) => s.schoolYear === latestYear);
+    let totalCredits = 0;
+    let totalGradePoints4 = 0;
+    let totalGradePoints10 = 0;
+    let totalSubjects = 0;
+    inYear.forEach((s) => {
+      const credits = s.totalCredits || 0;
+      const g4 = s.averageGrade4 || 0;
+      const g10 = s.averageGrade10 || 0;
+      totalCredits += credits;
+      totalGradePoints4 += g4 * credits;
+      totalGradePoints10 += g10 * credits;
+      totalSubjects += s.subjects?.length || 0;
+    });
+    const gpa4 =
+      totalCredits > 0 ? (totalGradePoints4 / totalCredits).toFixed(2) : "0.00";
+    const gpa10 =
+      totalCredits > 0
+        ? (totalGradePoints10 / totalCredits).toFixed(2)
+        : "0.00";
+    return {
+      schoolYear: latestYear,
+      gpa4,
+      gpa10,
+      credits: totalCredits,
+      subjects: totalSubjects,
     };
   };
 
@@ -325,13 +519,38 @@ export default function Home() {
         <div className="w-full pt-20 pl-5 pr-6 mb-5">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Tổng quan học tập và rèn luyện
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Chào mừng bạn trở lại! Đây là tổng quan về tình hình học tập và
-              rèn luyện của bạn.
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  Tổng quan học tập và rèn luyện
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Chào mừng bạn trở lại! Đây là tổng quan về tình hình học tập
+                  và rèn luyện của bạn.
+                </p>
+              </div>
+              <button
+                onClick={refreshAllData}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+                title="Làm mới dữ liệu"
+              >
+                <svg
+                  className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {isRefreshing ? "Đang tải..." : "Làm mới"}
+              </button>
+            </div>
           </div>
 
           {/* Thống kê nhanh */}
@@ -453,7 +672,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* Học tập */}
             <Link href="/users/learning-information" className="group">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-blue-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 shadow-lg border border-blue-200 dark:border-blue-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
                     <svg
@@ -487,143 +706,49 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100 mb-2">
                   Học tập
                 </h3>
-                <div className="space-y-2 text-blue-800 dark:text-blue-200">
-                  <div className="flex justify-between">
-                    <span>GPA hiện tại:</span>
-                    <span className="font-semibold">
-                      {latestSemester ? latestSemester.gpa4 : "0.00"}/4.0
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Học kỳ - Số môn:</span>
-                    <span className="font-semibold">
-                      {latestSemester
-                        ? `${latestSemester.semester} - ${latestSemester.subjects} môn`
-                        : "Chưa có dữ liệu"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Rèn luyện */}
-            <Link href="/users/phisical-result" className="group">
-              <div className="bg-gradient-to-br from-orange-50 to-red-100 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-orange-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-                    <svg
-                      className="w-8 h-8 text-orange-600 dark:text-orange-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                  </div>
-                  <svg
-                    className="w-6 h-6 text-orange-600 dark:text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-orange-900 dark:text-orange-100 mb-2">
-                  Rèn luyện
-                </h3>
-                <div className="space-y-2 text-orange-800 dark:text-orange-200">
-                  <div className="flex justify-between">
-                    <span>Học kỳ:</span>
-                    <span className="font-semibold">
-                      {phisicalResult && phisicalResult.length > 0
-                        ? phisicalResult[phisicalResult.length - 1]?.semester
-                        : "Chưa có dữ liệu"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Xếp loại:</span>
-                    <span className="font-semibold">
-                      {phisicalResult && phisicalResult.length > 0
-                        ? phisicalResult[phisicalResult.length - 1]?.practise
-                        : "Chưa có dữ liệu"}
-                    </span>
+                <div className="h-24 flex flex-col justify-between text-blue-800 dark:text-blue-200">
+                  <div className="space-y-2">
+                    {(() => {
+                      const latestYear = getLatestSchoolYearStats();
+                      return (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span>GPA năm (hệ 4):</span>
+                            <span className="font-semibold">
+                              {latestYear
+                                ? latestYear.gpa4
+                                : latestSemester
+                                ? latestSemester.gpa4
+                                : "0.00"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Năm học:</span>
+                            <span className="font-semibold">
+                              {latestYear ? latestYear.schoolYear : "-"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Tổng tín chỉ năm:</span>
+                            <span className="font-semibold">
+                              {latestYear
+                                ? latestYear.credits
+                                : latestSemester
+                                ? latestSemester.credits
+                                : 0}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
             </Link>
 
-            {/* Tranh thủ */}
-            <Link href="/users/vacation-schedule" className="group">
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 shadow-lg border border-indigo-200 dark:border-indigo-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-                    <svg
-                      className="w-8 h-8 text-indigo-600 dark:text-indigo-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <svg
-                    className="w-6 h-6 text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-100 mb-2">
-                  Tranh thủ
-                </h3>
-                <div className="space-y-2 text-indigo-800 dark:text-indigo-200">
-                  <div className="flex justify-between">
-                    <span>Đã đi:</span>
-                    <span className="font-semibold">
-                      {vacationSchedule ? vacationSchedule.length : 0} lần
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Lần gần nhất:</span>
-                    <span className="font-semibold">
-                      {vacationSchedule?.length > 0
-                        ? dayjs(
-                            vacationSchedule[vacationSchedule.length - 1]
-                              ?.dayoff
-                          ).format("DD/MM/YYYY")
-                        : "Chưa có"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Khen thưởng */}
-            <Link href="/users/achievement" className="group">
-              <div className="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl p-6 shadow-lg border border-rose-200 dark:border-rose-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
+            {/* Cắt cơm hôm nay */}
+            <Link href="/users/cut-rice" className="group">
+              <div className="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl p-6 shadow-lg border border-rose-200 dark:border-rose-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
                 <div className="flex items-center justify-between mb-4">
                   <div className="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-xl">
                     <svg
@@ -636,7 +761,13 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        d="M5 3v8M7 3v8M9 3v8M5 11h4M7 11v10"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M18 3a3 3 0 013 3c0 2-2 4-3 4v11"
                       />
                     </svg>
                   </div>
@@ -655,32 +786,121 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-rose-900 dark:text-rose-100 mb-2">
-                  Khen thưởng
+                  Cắt cơm hôm nay
                 </h3>
-                <div className="space-y-2 text-rose-800 dark:text-rose-200">
-                  <div className="flex justify-between">
-                    <span>Tổng số:</span>
-                    <span className="font-semibold">
-                      {achievementStats.totalCount} lần
-                    </span>
+                <div className="h-24 flex flex-col justify-center text-rose-800 dark:text-rose-200">
+                  {(() => {
+                    const today = getTodayCutRice();
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Bữa sáng</span>
+                          <span className="inline-flex items-center justify-center h-5 w-5 rounded border border-rose-300 dark:border-rose-700 text-xs font-semibold">
+                            {today?.breakfast ? "x" : ""}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Bữa trưa</span>
+                          <span className="inline-flex items-center justify-center h-5 w-5 rounded border border-rose-300 dark:border-rose-700 text-xs font-semibold">
+                            {today?.lunch ? "x" : ""}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Bữa tối</span>
+                          <span className="inline-flex items-center justify-center h-5 w-5 rounded border border-rose-300 dark:border-rose-700 text-xs font-semibold">
+                            {today?.dinner ? "x" : ""}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </Link>
+
+            {/* Thời khóa biểu hôm nay */}
+            <Link
+              href="/users/learning-information?tab=time-table"
+              className="group"
+            >
+              <div className="bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl p-6 shadow-lg border border-emerald-200 dark:border-emerald-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                    <svg
+                      className="w-8 h-8 text-emerald-600 dark:text-emerald-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
                   </div>
+                  <svg
+                    className="w-6 h-6 text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 mb-2">
+                  Thời khóa biểu hôm nay
+                </h3>
+                <div className="h-24 flex flex-col justify-between text-emerald-800 dark:text-emerald-200">
                   <div className="flex justify-between">
-                    <span>Danh hiệu gần nhất:</span>
-                    <span className="font-semibold text-sm">
-                      {achievementStats.latestTitle}
-                    </span>
+                    <span>Số lớp hôm nay:</span>
+                    <span className="font-semibold">{todayClasses}</span>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    {todayClasses === 0 ? (
+                      <div className="text-sm text-emerald-600 dark:text-emerald-400 italic">
+                        Không có lớp học
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {getTodayTimeTablePreview().map((c, index) => (
+                          <div
+                            key={c._id}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="truncate">
+                              {c.subject || "N/A"}
+                            </span>
+                            <span className="font-semibold ml-2 flex-shrink-0">
+                              {c.startTime} - {c.endTime}
+                            </span>
+                          </div>
+                        ))}
+                        {todayClasses > 2 && (
+                          <div className="text-xs text-emerald-600 dark:text-emerald-400 italic">
+                            ... Bấm để xem thêm
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </Link>
 
-            {/* Trực chỉ huy */}
+            {/* Lịch trực chỉ huy */}
             <Link href="/users/commander-duty-schedule" className="group">
-              <div className="bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-2xl p-6 shadow-lg border border-purple-200 dark:border-purple-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/20 dark:to-amber-900/20 rounded-2xl p-6 shadow-lg border border-orange-200 dark:border-orange-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
                     <svg
-                      className="w-8 h-8 text-purple-600 dark:text-purple-400"
+                      className="w-8 h-8 text-orange-600 dark:text-orange-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -689,12 +909,12 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
                   </div>
                   <svg
-                    className="w-6 h-6 text-purple-600 dark:text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="w-6 h-6 text-orange-600 dark:text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -707,45 +927,57 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-purple-900 dark:text-purple-100 mb-2">
-                  Trực chỉ huy
-                  {commanderDutySchedule && (
-                    <span className="text-xl font-normal text-purple-700 dark:text-purple-300 ml-2">
-                      {" "}
-                      {dayjs(commanderDutySchedule?.workDay).format(
-                        "DD/MM/YYYY"
-                      )}
-                    </span>
-                  )}
+                <h3 className="text-xl font-bold text-orange-900 dark:text-orange-100 mb-2">
+                  Lịch trực chỉ huy
                 </h3>
-                <div className="space-y-2 text-purple-800 dark:text-purple-200">
-                  <div className="flex justify-between">
-                    <span>Tên:</span>
-                    <span className="font-semibold">
-                      {commanderDutySchedule
-                        ? commanderDutySchedule?.fullName
-                        : "Chưa có lịch trực"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Chức vụ:</span>
-                    <span className="font-semibold">
-                      {commanderDutySchedule
-                        ? commanderDutySchedule?.position
-                        : "Chưa có lịch trực"}
-                    </span>
+                <div className="h-24 flex flex-col justify-center text-orange-800 dark:text-orange-200">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Ngày hôm nay:</span>
+                      <span className="font-semibold">
+                        {new Date().toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Trực hôm nay:</span>
+                      <span className="font-semibold">
+                        {commanderDutySchedule
+                          ? "Đã có lịch trực"
+                          : "Chưa có lịch trực"}
+                      </span>
+                    </div>
+                    {commanderDutySchedule && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span>Chỉ huy:</span>
+                          <span className="font-semibold">
+                            {commanderDutySchedule.fullName ||
+                              "Chưa có dữ liệu"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Cấp bậc:</span>
+                          <span className="font-semibold text-xs">
+                            {commanderDutySchedule.rank || "Chưa có dữ liệu"}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             </Link>
 
-            {/* Giúp bếp */}
-            <Link href="/users/help-cooking" className="group">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 shadow-lg border border-green-200 dark:border-green-700 transition-all duration-300 hover:shadow-xl hover:scale-105">
+            {/* Học phí */}
+            <Link
+              href="/users/learning-information?tab=tuition-fee"
+              className="group"
+            >
+              <div className="bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/20 dark:to-purple-900/20 rounded-2xl p-6 shadow-lg border border-violet-200 dark:border-violet-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                  <div className="p-3 bg-violet-100 dark:bg-violet-900/30 rounded-xl">
                     <svg
-                      className="w-8 h-8 text-green-600 dark:text-green-400"
+                      className="w-8 h-8 text-violet-600 dark:text-violet-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -754,12 +986,12 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
                       />
                     </svg>
                   </div>
                   <svg
-                    className="w-6 h-6 text-green-600 dark:text-green-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="w-6 h-6 text-violet-600 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -772,29 +1004,81 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-green-900 dark:text-green-100 mb-2">
-                  Giúp bếp
+                <h3 className="text-xl font-bold text-violet-900 dark:text-violet-100 mb-2">
+                  Học phí
                 </h3>
-                <div className="space-y-2 text-green-800 dark:text-green-200">
-                  <div className="flex justify-between">
-                    <span>Đã đi:</span>
-                    <span className="font-semibold">
-                      {helpCooking ? helpCooking.length : 0} lần
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Lần gần nhất:</span>
-                    <span className="font-semibold">
-                      {helpCooking?.length > 0
-                        ? dayjs(
-                            helpCooking[helpCooking.length - 1]?.dayHelpCooking
-                          ).format("DD/MM/YYYY")
-                        : "Chưa có"}
-                    </span>
+                <div className="h-24 flex flex-col justify-center text-violet-800 dark:text-violet-200">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Tổng số tiền:</span>
+                      <span className="font-semibold">
+                        {getTotalTuitionAmount().toLocaleString("vi-VN")} VNĐ
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Chưa đóng:</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">
+                        {getUnpaidTuitionAmount().toLocaleString("vi-VN")} VNĐ
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Đã đóng:</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {getPaidTuitionAmount().toLocaleString("vi-VN")} VNĐ
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </Link>
+
+            {/* Thông tin giấy tờ */}
+            <div className="group">
+              <div className="bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/20 dark:to-gray-900/20 rounded-2xl p-6 shadow-lg border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:shadow-xl hover:scale-105 h-64">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-slate-100 dark:bg-slate-900/30 rounded-xl">
+                    <svg
+                      className="w-8 h-8 text-slate-700 dark:text-slate-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 7H8a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 11h4m-8 4h8"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Thông tin giấy tờ
+                </h3>
+                <div className="h-24 flex flex-col justify-center text-slate-800 dark:text-slate-200">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>CCCD:</span>
+                      <span className="font-semibold">
+                        {profile?.cccdNumber || "Chưa có dữ liệu"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Số thẻ Đảng viên:</span>
+                      <span className="font-semibold">
+                        {profile?.partyMemberCardNumber || "Chưa có dữ liệu"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

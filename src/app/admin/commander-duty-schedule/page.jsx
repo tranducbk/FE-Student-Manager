@@ -20,12 +20,14 @@ const CommanderDutySchedule = () => {
   const [date, setDate] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [id, setId] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
   const [showFormAdd, setShowFormAdd] = useState(false);
   const [showFormEdit, setShowFormEdit] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [addFormData, setAddFormData] = useState({
     workDay: format(new Date(), "yyyy-MM-dd"),
   });
+  const [commanders, setCommanders] = useState([]);
 
   useModalScroll(showFormAdd || showFormEdit || showConfirm);
 
@@ -62,6 +64,18 @@ const CommanderDutySchedule = () => {
 
   const handleUpdate = async (e, id) => {
     e.preventDefault();
+
+    if (
+      !editFormData.fullName ||
+      !editFormData.phoneNumber ||
+      !editFormData.rank ||
+      !editFormData.position ||
+      !editFormData.workDay
+    ) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -91,6 +105,18 @@ const CommanderDutySchedule = () => {
 
   const handleAddFormData = async (e) => {
     e.preventDefault();
+
+    if (
+      !addFormData.fullName ||
+      !addFormData.phoneNumber ||
+      !addFormData.rank ||
+      !addFormData.position ||
+      !addFormData.workDay
+    ) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     try {
       await axios.post(`${BASE_URL}/user/commanderDutySchedule`, addFormData, {
@@ -100,7 +126,9 @@ const CommanderDutySchedule = () => {
       });
       handleNotify("success", "Thành công!", "Thêm lịch trực thành công");
       setShowFormAdd(false);
-      setAddFormData({});
+      setAddFormData({
+        workDay: format(new Date(), "yyyy-MM-dd"),
+      });
       fetchSchedule();
     } catch (error) {
       handleNotify("danger", "Lỗi!", error);
@@ -108,7 +136,11 @@ const CommanderDutySchedule = () => {
   };
 
   const handleDelete = (id) => {
+    const item = commanderDutySchedule.schedules.find(
+      (schedule) => schedule._id === id
+    );
     setId(id);
+    setDeleteItem(item);
     setShowConfirm(true);
   };
 
@@ -135,14 +167,17 @@ const CommanderDutySchedule = () => {
         .catch((error) => handleNotify("danger", "Lỗi!", error));
     }
     setShowConfirm(false);
+    setDeleteItem(null);
   };
 
   const handleCancelDelete = () => {
     setShowConfirm(false);
+    setDeleteItem(null);
   };
 
   useEffect(() => {
     fetchSchedule();
+    fetchCommanders();
   }, [currentPage]);
 
   const fetchSchedule = async () => {
@@ -163,6 +198,23 @@ const CommanderDutySchedule = () => {
 
         if (res.status === 404) setCommanderDutySchedule([]);
         setCommanderDutySchedule(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const fetchCommanders = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(`${BASE_URL}/commander`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+        setCommanders(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -196,6 +248,29 @@ const CommanderDutySchedule = () => {
         setCommanderDutySchedule(res.data);
       } catch (error) {
         console.log(error);
+      }
+    }
+  };
+
+  const handleCommanderSelect = (commanderId, formType) => {
+    const commander = commanders.find((cmd) => cmd._id === commanderId);
+    if (commander) {
+      if (formType === "add") {
+        setAddFormData({
+          ...addFormData,
+          fullName: commander.fullName,
+          phoneNumber: commander.phoneNumber || "",
+          rank: commander.rank || "",
+          position: commander.positionGovernment || "",
+        });
+      } else {
+        setEditFormData({
+          ...editFormData,
+          fullName: commander.fullName,
+          phoneNumber: commander.phoneNumber || "",
+          rank: commander.rank || "",
+          position: commander.positionGovernment || "",
+        });
       }
     }
   };
@@ -252,7 +327,7 @@ const CommanderDutySchedule = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               {showConfirm && (
-                <div className="fixed top-0 left-0 z-20 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
+                <div className="fixed top-0 left-0 z-20 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
                   <div className="relative p-4 text-center bg-white dark:bg-gray-800 rounded-lg shadow dark:bg-gray-800 sm:p-5">
                     <button
                       onClick={handleCancelDelete}
@@ -289,7 +364,17 @@ const CommanderDutySchedule = () => {
                       ></path>
                     </svg>
                     <p className="mb-4 text-gray-700 dark:text-gray-300">
-                      Bạn có chắc chắn muốn xóa?
+                      Bạn có chắc chắn muốn xóa lịch trực của{" "}
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">
+                        {deleteItem?.fullName}
+                      </span>{" "}
+                      ngày{" "}
+                      <span className="font-semibold text-red-600 dark:text-red-400">
+                        {deleteItem?.workDay
+                          ? dayjs(deleteItem.workDay).format("DD/MM/YYYY")
+                          : ""}
+                      </span>
+                      ?
                     </p>
                     <div className="flex justify-center items-center space-x-4">
                       <button
@@ -311,15 +396,32 @@ const CommanderDutySchedule = () => {
                   </div>
                 </div>
               )}
-              <div className="font-bold p-4 flex justify-between border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 pt-1 dark:text-white">
-                  LỊCH TRỰC
+              <div className="font-bold p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">LỊCH TRỰC CHỈ HUY</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem lịch trực chỉ huy
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowFormAdd(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs"
                 >
-                  Thêm
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-3.5 h-3.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                  Thêm lịch trực
                 </button>
               </div>
               <div className="w-full pt-2 pl-5 pb-5 pr-5">
@@ -630,7 +732,7 @@ const CommanderDutySchedule = () => {
               </div>
               {showFormEdit ? (
                 <div className="fixed inset-0 mt-16 flex items-center justify-center z-30">
-                  <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
+                  <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
                   <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12 max-h-[80vh] overflow-y-auto">
                     <button
                       onClick={() => setShowFormEdit(false)}
@@ -662,25 +764,35 @@ const CommanderDutySchedule = () => {
 
                       <div className="mb-4">
                         <label
-                          htmlFor="fullName1"
+                          htmlFor="commanderSelect1"
                           className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
-                          Họ và tên
+                          Chọn chỉ huy
                         </label>
-                        <input
-                          type="tel"
-                          id="fullName1"
-                          name="fullName1"
-                          value={editFormData.fullName}
-                          onChange={(e) =>
-                            setEditFormData({
-                              ...editFormData,
-                              fullName: e.target.value,
-                            })
+                        <select
+                          id="commanderSelect1"
+                          name="commanderSelect1"
+                          value={
+                            commanders.find(
+                              (cmd) => cmd.fullName === editFormData.fullName
+                            )?._id || ""
                           }
-                          placeholder="Nhập số điện thoại..."
+                          onChange={(e) =>
+                            handleCommanderSelect(e.target.value, "edit")
+                          }
                           className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                        />
+                        >
+                          <option value="">Chọn chỉ huy</option>
+                          {commanders.map((commander) => (
+                            <option
+                              key={commander._id}
+                              value={commander._id}
+                              className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                              {commander.fullName}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="mb-4">
@@ -694,7 +806,7 @@ const CommanderDutySchedule = () => {
                           type="tel"
                           id="phoneNumber1"
                           name="phoneNumber1"
-                          value={editFormData.phoneNumber}
+                          value={editFormData.phoneNumber || ""}
                           onChange={(e) =>
                             setEditFormData({
                               ...editFormData,
@@ -702,7 +814,12 @@ const CommanderDutySchedule = () => {
                             })
                           }
                           placeholder="Nhập số điện thoại..."
-                          className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
+                          readOnly={!!editFormData.phoneNumber}
+                          className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                            editFormData.phoneNumber
+                              ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                              : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          }`}
                         />
                       </div>
 
@@ -713,20 +830,31 @@ const CommanderDutySchedule = () => {
                         >
                           Cấp bậc
                         </label>
-                        <input
-                          type="text"
+                        <select
                           id="rank1"
                           name="rank1"
-                          value={editFormData.rank}
+                          value={editFormData.rank || ""}
                           onChange={(e) =>
                             setEditFormData({
                               ...editFormData,
                               rank: e.target.value,
                             })
                           }
-                          placeholder="Nhập cấp bậc..."
-                          className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                        />
+                          disabled={!!editFormData.rank}
+                          className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                            editFormData.rank
+                              ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                              : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          }`}
+                        >
+                          <option value="">Chọn cấp bậc</option>
+                          <option value="Thượng úy">Thượng úy</option>
+                          <option value="Đại úy">Đại úy</option>
+                          <option value="Thiếu tá">Thiếu tá</option>
+                          <option value="Trung tá">Trung tá</option>
+                          <option value="Thượng tá">Thượng tá</option>
+                          <option value="Đại tá">Đại tá</option>
+                        </select>
                       </div>
 
                       <div className="mb-4">
@@ -736,20 +864,28 @@ const CommanderDutySchedule = () => {
                         >
                           Chức vụ
                         </label>
-                        <input
-                          type="text"
+                        <select
                           id="position1"
                           name="position1"
-                          value={editFormData.position}
+                          value={editFormData.position || ""}
                           onChange={(e) =>
                             setEditFormData({
                               ...editFormData,
                               position: e.target.value,
                             })
                           }
-                          placeholder="Nhập chức vụ..."
-                          className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                        />
+                          disabled={!!editFormData.position}
+                          className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                            editFormData.position
+                              ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                              : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                          }`}
+                        >
+                          <option value="">Chọn chức vụ</option>
+                          <option value="Hệ trưởng">Hệ trưởng</option>
+                          <option value="Hệ phó">Hệ phó</option>
+                          <option value="Chính trị viên">Chính trị viên</option>
+                        </select>
                       </div>
 
                       <div className="mb-6">
@@ -757,7 +893,7 @@ const CommanderDutySchedule = () => {
                           htmlFor="workDay1"
                           className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
-                          Ngày làm việc
+                          Ngày trực chỉ huy
                         </label>
                         <DatePicker
                           id="workDay1"
@@ -800,7 +936,7 @@ const CommanderDutySchedule = () => {
           </div>
           {showFormAdd ? (
             <div className="fixed inset-0 mt-16 flex items-center justify-center z-30">
-              <div className="bg-slate-400 opacity-50 inset-0 fixed"></div>
+              <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg w-6/12 max-h-[80vh] overflow-y-auto">
                 <button
                   onClick={() => setShowFormAdd(false)}
@@ -832,26 +968,36 @@ const CommanderDutySchedule = () => {
 
                   <div className="mb-4">
                     <label
-                      htmlFor="name"
+                      htmlFor="commanderSelect"
                       className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Họ và tên
+                      Chọn chỉ huy
                     </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={addFormData.fullName}
+                    <select
+                      id="commanderSelect"
+                      name="commanderSelect"
+                      value={
+                        commanders.find(
+                          (cmd) => cmd.fullName === addFormData.fullName
+                        )?._id || ""
+                      }
                       onChange={(e) =>
-                        setAddFormData({
-                          ...addFormData,
-                          fullName: e.target.value,
-                        })
+                        handleCommanderSelect(e.target.value, "add")
                       }
                       required
-                      placeholder="Nhập họ và tên..."
                       className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                    />
+                    >
+                      <option value="">Chọn chỉ huy</option>
+                      {commanders.map((commander) => (
+                        <option
+                          key={commander._id}
+                          value={commander._id}
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                          {commander.fullName}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="mb-4">
@@ -865,7 +1011,7 @@ const CommanderDutySchedule = () => {
                       type="tel"
                       id="phoneNumber"
                       name="phoneNumber"
-                      value={addFormData.phoneNumber}
+                      value={addFormData.phoneNumber || ""}
                       onChange={(e) =>
                         setAddFormData({
                           ...addFormData,
@@ -874,7 +1020,12 @@ const CommanderDutySchedule = () => {
                       }
                       required
                       placeholder="Nhập số điện thoại..."
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
+                      readOnly={!!addFormData.phoneNumber}
+                      className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                        addFormData.phoneNumber
+                          ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                          : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
                     />
                   </div>
 
@@ -885,11 +1036,10 @@ const CommanderDutySchedule = () => {
                     >
                       Cấp bậc
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="rank"
                       name="rank"
-                      value={addFormData.rank}
+                      value={addFormData.rank || ""}
                       onChange={(e) =>
                         setAddFormData({
                           ...addFormData,
@@ -897,9 +1047,21 @@ const CommanderDutySchedule = () => {
                         })
                       }
                       required
-                      placeholder="Nhập cấp bậc..."
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                    />
+                      disabled={!!addFormData.rank}
+                      className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                        addFormData.rank
+                          ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                          : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
+                    >
+                      <option value="">Chọn cấp bậc</option>
+                      <option value="Thượng úy">Thượng úy</option>
+                      <option value="Đại úy">Đại úy</option>
+                      <option value="Thiếu tá">Thiếu tá</option>
+                      <option value="Trung tá">Trung tá</option>
+                      <option value="Thượng tá">Thượng tá</option>
+                      <option value="Đại tá">Đại tá</option>
+                    </select>
                   </div>
 
                   <div className="mb-4">
@@ -909,11 +1071,10 @@ const CommanderDutySchedule = () => {
                     >
                       Chức vụ
                     </label>
-                    <input
-                      type="text"
+                    <select
                       id="position"
                       name="position"
-                      value={addFormData.position}
+                      value={addFormData.position || ""}
                       onChange={(e) =>
                         setAddFormData({
                           ...addFormData,
@@ -921,9 +1082,18 @@ const CommanderDutySchedule = () => {
                         })
                       }
                       required
-                      placeholder="Nhập chức vụ..."
-                      className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-1"
-                    />
+                      disabled={!!addFormData.position}
+                      className={`border text-gray-900 dark:text-white text-sm rounded-lg block w-full p-2.5 mt-1 ${
+                        addFormData.position
+                          ? "bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 cursor-not-allowed"
+                          : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500"
+                      }`}
+                    >
+                      <option value="">Chọn chức vụ</option>
+                      <option value="Hệ trưởng">Hệ trưởng</option>
+                      <option value="Hệ phó">Hệ phó</option>
+                      <option value="Chính trị viên">Chính trị viên</option>
+                    </select>
                   </div>
 
                   <div className="mb-6">
@@ -931,7 +1101,7 @@ const CommanderDutySchedule = () => {
                       htmlFor="workDay"
                       className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Ngày làm việc
+                      Ngày trực chỉ huy
                     </label>
                     <DatePicker
                       id="workDay"

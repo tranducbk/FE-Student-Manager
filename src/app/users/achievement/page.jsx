@@ -10,6 +10,7 @@ import { BASE_URL } from "@/configs";
 
 const AchievementContent = () => {
   const [achievement, setAchievement] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
   const searchParams = useSearchParams();
 
   const fetchAchievement = async () => {
@@ -30,6 +31,19 @@ const AchievementContent = () => {
         );
 
         setAchievement(res.data);
+
+        // Fetch recommendations (đề xuất) - sử dụng endpoint cho user
+        try {
+          const recRes = await axios.get(
+            `${BASE_URL}/achievement/${targetStudentId}/recommendations`,
+            {
+              headers: { token: `Bearer ${token}` },
+            }
+          );
+          setRecommendations(recRes.data);
+        } catch (e) {
+          setRecommendations({ suggestions: [] });
+        }
       } catch (error) {
         console.log(error);
       }
@@ -96,9 +110,13 @@ const AchievementContent = () => {
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
             <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-              <div className="text-gray-900 dark:text-white text-lg">
-                THÀNH TÍCH
+              <div className="text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold">THÀNH TÍCH</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Quản lý và xem thành tích
+                </p>
               </div>
+              <div className="text-gray-900 dark:text-white text-lg"></div>
             </div>
             <div className="w-full pl-6 pb-6 pr-6 mt-4">
               <div className="overflow-x-auto">
@@ -259,94 +277,27 @@ const AchievementContent = () => {
                 </table>
               </div>
 
-              {/* Phần đề xuất */}
-              {achievement?.nextYearRecommendations && (
-                <div className="w-full pl-6 pb-6 pr-6 mt-6">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
-                      Đề xuất khen thưởng
-                    </h3>
-                    <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                      <div className="flex items-center">
-                        <span className="font-medium mr-2">
-                          Chuỗi thi đua liên tiếp:
-                        </span>
-                        <span>
-                          {
-                            achievement.nextYearRecommendations
-                              .consecutiveCompetitiveYears
-                          }{" "}
-                          năm
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="font-medium mr-2">
-                          Năm thi đua cuối:
-                        </span>
-                        <span>
-                          {
-                            achievement.nextYearRecommendations
-                              .lastCompetitiveYear
-                          }
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="font-medium mr-2">Năm tiếp theo:</span>
-                        <span>
-                          {achievement.nextYearRecommendations.nextYear}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="font-medium mr-2">
-                          Có thể tiếp tục chuỗi:
-                        </span>
-                        <span>
-                          {achievement.nextYearRecommendations.canContinueStreak
-                            ? "Có"
-                            : "Không"}
-                        </span>
-                      </div>
-                      {!achievement.eligibleForMinistryReward && (
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">
-                            Cần thêm năm thi đua để đạt BQP:
-                          </span>
-                          <span>
-                            {
-                              achievement.nextYearRecommendations
-                                .yearsToMinistryReward
-                            }{" "}
-                            năm
-                          </span>
-                        </div>
-                      )}
-                      {!achievement.eligibleForNationalReward && (
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">
-                            Cần thêm năm thi đua để đạt toàn quân:
-                          </span>
-                          <span>
-                            {
-                              achievement.nextYearRecommendations
-                                .yearsToNationalReward
-                            }{" "}
-                            năm
-                          </span>
-                        </div>
-                      )}
-                      {achievement.nextYearRecommendations
-                        .needScientificTopic && (
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">
-                            Cần đề tài/sáng kiến:
-                          </span>
-                          <span>Có</span>
-                        </div>
-                      )}
+              {/* Đề xuất khen thưởng - giống hệt bên admin */}
+              {recommendations?.suggestions &&
+                recommendations.suggestions.length > 0 && (
+                  <div className="w-full pl-6 pb-6 pr-6 mt-6">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+                        💡 Đề xuất khen thưởng
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {recommendations.suggestions.map((s, idx) => (
+                          <li
+                            key={idx}
+                            className="text-sm text-blue-700 dark:text-blue-300"
+                          >
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>

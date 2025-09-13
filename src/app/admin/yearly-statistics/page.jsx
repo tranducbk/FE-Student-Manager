@@ -506,7 +506,7 @@ const YearlyStatistics = () => {
 
               <div className="w-full p-5">
                 <div className="mb-4">
-                  <form className="flex items-end gap-4 flex-wrap">
+                  <form className="flex items-end gap-3 flex-wrap">
                     <div>
                       <label
                         htmlFor="schoolYear"
@@ -530,7 +530,7 @@ const YearlyStatistics = () => {
                           value={selectedSchoolYear}
                           onChange={handleSchoolYearChange}
                           placeholder="Chọn năm học"
-                          style={{ width: 200 }}
+                          style={{ width: 180, height: 36 }}
                           options={schoolYearOptions}
                         />
                       </ConfigProvider>
@@ -555,7 +555,7 @@ const YearlyStatistics = () => {
                         <Select
                           value={selectedUnit}
                           onChange={setSelectedUnit}
-                          style={{ width: 128 }}
+                          style={{ width: 180, height: 36 }}
                           options={[
                             { value: "all", label: "Tất cả đơn vị" },
                             { value: "L1 - H5", label: "L1 - H5" },
@@ -578,34 +578,27 @@ const YearlyStatistics = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Tên hoặc mã sinh viên..."
-                        className="bg-gray-50 dark:bg-gray-700 border w-48 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 px-3"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3"
+                        style={{ width: 250, height: 36 }}
                       />
                     </div>
                     <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300 opacity-0">
+                        &nbsp;
+                      </label>
                       <button
                         onClick={() => {
                           setSearchTerm("");
                           setSelectedUnit("all");
+                          setSelectedSchoolYear("all");
+                          fetchInitialData();
                         }}
-                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center mr-2"
+                        className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-4 transition-colors duration-200"
                       >
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
                         Xóa bộ lọc
                       </button>
                     </div>
-                    <div>
+                    <div className="self-end">
                       <Link
                         href="/admin/semester-management"
                         className="h-9 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg text-sm w-full sm:w-auto px-4 transition-colors duration-200 flex items-center"
@@ -644,7 +637,7 @@ const YearlyStatistics = () => {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedSchoolYear === "all"
-                          ? "Tổng số bản ghi (năm học × sinh viên)"
+                          ? "Tổng số kết quả"
                           : "Tổng số sinh viên"}
                       </div>
                     </div>
@@ -1209,10 +1202,10 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-semibold text-red-600 dark:text-red-400 text-base">
+                              <div className="font-medium text-red-600 dark:text-red-400">
                                 {item.failedSubjects || 0}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                                 TC nợ: {item.debtCredits || 0}
                               </div>
                             </td>
@@ -1715,6 +1708,116 @@ const YearlyStatistics = () => {
           </div>
         </div>
       )}
+      <style jsx global>{`
+        .ant-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        /* Tokens chỉ áp dụng cho chế độ multiple */
+        .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(239 246 255) !important; /* blue-50 */
+          border-color: rgb(191 219 254) !important; /* blue-200 */
+          color: rgb(30 58 138) !important; /* blue-900 */
+        }
+        /* Single select: chữ rõ, không nền */
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(17 24 39) !important; /* gray-900 */
+          font-weight: 600;
+        }
+        .ant-select-arrow,
+        .ant-select-clear {
+          color: rgb(107 114 128);
+        }
+        .ant-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+        }
+        .ant-select-item {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+
+        .dark .ant-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        /* Tokens ở chế độ multiple trong dark */
+        .dark .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(75 85 99) !important; /* gray-600 */
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+        /* Single select dark: chữ rõ, không nền */
+        .dark
+          .ant-select-single
+          .ant-select-selector
+          .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(255 255 255) !important;
+          font-weight: 600;
+        }
+        .dark .ant-select-arrow,
+        .dark .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+        }
+        .dark .ant-select-item {
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-selected:not(
+            .ant-select-item-option-disabled
+          ) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
     </>
   );
 };

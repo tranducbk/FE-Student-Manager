@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../../components/notify";
+import { Select } from "antd";
 import { BASE_URL } from "@/configs";
 
 const AchievementStatistics = () => {
@@ -413,6 +414,85 @@ const AchievementStatistics = () => {
 
   return (
     <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .ant-select .ant-select-selector {
+            background-color: rgb(255 255 255) !important;
+            border-color: rgb(209 213 219) !important;
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select .ant-select-selection-placeholder {
+            color: rgb(156 163 175) !important;
+          }
+          .ant-select-multiple .ant-select-selection-item {
+            background-color: rgb(239 246 255) !important;
+            border-color: rgb(59 130 246) !important;
+            color: rgb(30 64 175) !important;
+          }
+          .ant-select-single .ant-select-selector .ant-select-selection-item {
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select-arrow {
+            color: rgb(107 114 128) !important;
+          }
+          .ant-select-clear {
+            color: rgb(107 114 128) !important;
+          }
+          .ant-select-dropdown {
+            background-color: rgb(255 255 255) !important;
+            border-color: rgb(209 213 219) !important;
+          }
+          .ant-select-item {
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select-item-option-active {
+            background-color: rgb(239 246 255) !important;
+          }
+          .ant-select-item-option-selected {
+            background-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+
+          .dark .ant-select .ant-select-selector {
+            background-color: rgb(55 65 81) !important;
+            border-color: rgb(75 85 99) !important;
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select .ant-select-selection-placeholder {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-multiple .ant-select-selection-item {
+            background-color: rgb(30 64 175) !important;
+            border-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-single .ant-select-selector .ant-select-selection-item {
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-arrow {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-clear {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-dropdown {
+            background-color: rgb(55 65 81) !important;
+            border-color: rgb(75 85 99) !important;
+          }
+          .dark .ant-select-item {
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-item-option-active {
+            background-color: rgb(30 64 175) !important;
+          }
+          .dark .ant-select-item-option-selected {
+            background-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+        `,
+        }}
+      />
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex-1">
           <div className="w-full pt-20 pl-5">
@@ -489,13 +569,19 @@ const AchievementStatistics = () => {
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 pt-2 dark:text-white text-lg">
-                  THỐNG KÊ KHEN THƯỞNG TỔNG QUAN
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">
+                    {" "}
+                    THỐNG KÊ KHEN THƯỞNG TỔNG QUAN
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem khen thưởng của tất cả học viên
+                  </p>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 items-center">
                   <Link
                     href="/admin/achievement"
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   >
                     ← Quay lại
                   </Link>
@@ -522,25 +608,43 @@ const AchievementStatistics = () => {
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
                         className="w-40 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        style={{ height: 36 }}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                         Chọn đơn vị
                       </label>
-                      <select
+                      <Select
                         value={selectedUnit}
-                        onChange={(e) => setSelectedUnit(e.target.value)}
-                        className="w-48 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        onChange={setSelectedUnit}
+                        placeholder="Chọn đơn vị"
+                        style={{ width: 200, height: 36 }}
+                        options={[
+                          { value: "", label: "Tất cả đơn vị" },
+                          { value: "L1 - H5", label: "L1 - H5" },
+                          { value: "L2 - H5", label: "L2 - H5" },
+                          { value: "L3 - H5", label: "L3 - H5" },
+                          { value: "L4 - H5", label: "L4 - H5" },
+                          { value: "L5 - H5", label: "L5 - H5" },
+                          { value: "L6 - H5", label: "L6 - H5" },
+                        ]}
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300 opacity-0">
+                        &nbsp;
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedYear(new Date().getFullYear());
+                          setSelectedUnit("");
+                        }}
+                        className="h-9 px-4 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium"
                       >
-                        <option value="">Tất cả đơn vị</option>
-                        <option value="L1 - H5">L1 - H5</option>
-                        <option value="L2 - H5">L2 - H5</option>
-                        <option value="L3 - H5">L3 - H5</option>
-                        <option value="L4 - H5">L4 - H5</option>
-                        <option value="L5 - H5">L5 - H5</option>
-                        <option value="L6 - H5">L6 - H5</option>
-                      </select>
+                        Xóa bộ lọc
+                      </button>
                     </div>
                   </div>
 
@@ -569,7 +673,7 @@ const AchievementStatistics = () => {
                         {yearStats.advancedCount}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Tổng tiên tiến ({selectedYear})
+                        Tổng CSTT ({selectedYear})
                       </div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
@@ -577,7 +681,7 @@ const AchievementStatistics = () => {
                         {yearStats.competitiveCount}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Tổng thi đua ({selectedYear})
+                        Tổng CSTĐ ({selectedYear})
                       </div>
                     </div>
                     <div className="text-center p-4 bg-indigo-50 dark:bg-indigo-900 rounded-lg">
@@ -704,10 +808,10 @@ const AchievementStatistics = () => {
                     </div>
                   </div>
 
-                  {/* Danh sách tất cả học viên */}
+                  {/* Danh sách học viên có khen thưởng */}
                   <div className="mb-8">
                     <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
-                      Danh sách tất cả học viên
+                      Danh sách học viên có khen thưởng
                     </h4>
                     <div className="overflow-x-auto">
                       <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm">
@@ -732,11 +836,51 @@ const AchievementStatistics = () => {
                         </thead>
                         <tbody>
                           {(() => {
-                            const list = selectedUnit
-                              ? students.filter((s) => s.unit === selectedUnit)
-                              : students;
-                            return list && list.length > 0 ? (
-                              list.map((student) => {
+                            // Chỉ hiển thị học viên có khen thưởng
+                            let list = students.filter((student) => {
+                              const achievement = achievements[student._id];
+                              const hasAchievements =
+                                achievement &&
+                                achievement.yearlyAchievements.length > 0;
+                              return hasAchievements;
+                            });
+
+                            // Lọc theo đơn vị nếu được chọn
+                            if (selectedUnit) {
+                              list = list.filter(
+                                (s) => s.unit === selectedUnit
+                              );
+                            }
+
+                            // Sắp xếp theo thứ tự đơn vị từ L1-H5 đến L6-H5
+                            const unitOrder = [
+                              "L1 - H5",
+                              "L2 - H5",
+                              "L3 - H5",
+                              "L4 - H5",
+                              "L5 - H5",
+                              "L6 - H5",
+                            ];
+
+                            const sortedList = list.sort((a, b) => {
+                              const aIndex = unitOrder.indexOf(a.unit || "");
+                              const bIndex = unitOrder.indexOf(b.unit || "");
+
+                              // Nếu cả hai đều có trong danh sách, sắp xếp theo thứ tự
+                              if (aIndex !== -1 && bIndex !== -1) {
+                                return aIndex - bIndex;
+                              }
+
+                              // Nếu chỉ một trong hai có trong danh sách, ưu tiên cái có trong danh sách
+                              if (aIndex !== -1) return -1;
+                              if (bIndex !== -1) return 1;
+
+                              // Nếu cả hai đều không có trong danh sách, sắp xếp theo tên
+                              return (a.unit || "").localeCompare(b.unit || "");
+                            });
+
+                            return sortedList && sortedList.length > 0 ? (
+                              sortedList.map((student) => {
                                 const achievement = achievements[student._id];
                                 const hasAchievements =
                                   achievement &&
@@ -823,7 +967,7 @@ const AchievementStatistics = () => {
                                   className="border px-3 py-2 text-center text-gray-400"
                                   colSpan="5"
                                 >
-                                  Không có dữ liệu học viên
+                                  Không có học viên nào có khen thưởng
                                 </td>
                               </tr>
                             );
@@ -833,10 +977,10 @@ const AchievementStatistics = () => {
                     </div>
                   </div>
 
-                  {/* Danh sách học viên có khen thưởng */}
+                  {/* Chi tiết khen thưởng học viên */}
                   <div>
                     <h4 className="text-md font-semibold mb-4 text-gray-900 dark:text-white">
-                      Danh sách học viên có khen thưởng
+                      Chi tiết khen thưởng học viên
                     </h4>
                     <div className="overflow-x-auto">
                       <table className="min-w-full border border-gray-200 dark:border-gray-700 text-sm">
@@ -888,8 +1032,38 @@ const AchievementStatistics = () => {
                               }
                             );
 
-                            if (studentsWithAchievements.length > 0) {
-                              return studentsWithAchievements.map((student) => {
+                            // Sắp xếp theo thứ tự đơn vị từ L1-H5 đến L6-H5
+                            const unitOrder = [
+                              "L1 - H5",
+                              "L2 - H5",
+                              "L3 - H5",
+                              "L4 - H5",
+                              "L5 - H5",
+                              "L6 - H5",
+                            ];
+
+                            const sortedStudents =
+                              studentsWithAchievements.sort((a, b) => {
+                                const aIndex = unitOrder.indexOf(a.unit || "");
+                                const bIndex = unitOrder.indexOf(b.unit || "");
+
+                                // Nếu cả hai đều có trong danh sách, sắp xếp theo thứ tự
+                                if (aIndex !== -1 && bIndex !== -1) {
+                                  return aIndex - bIndex;
+                                }
+
+                                // Nếu chỉ một trong hai có trong danh sách, ưu tiên cái có trong danh sách
+                                if (aIndex !== -1) return -1;
+                                if (bIndex !== -1) return 1;
+
+                                // Nếu cả hai đều không có trong danh sách, sắp xếp theo tên
+                                return (a.unit || "").localeCompare(
+                                  b.unit || ""
+                                );
+                              });
+
+                            if (sortedStudents.length > 0) {
+                              return sortedStudents.map((student) => {
                                 const achievement = achievements[student._id];
                                 return (
                                   <tr
@@ -973,32 +1147,11 @@ const AchievementStatistics = () => {
                             } else {
                               return (
                                 <tr>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    Không có dữ liệu
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
-                                  </td>
-                                  <td className="border px-3 py-2 text-center text-gray-400">
-                                    -
+                                  <td
+                                    className="border px-3 py-2 text-center text-gray-400"
+                                    colSpan="9"
+                                  >
+                                    Không có học viên nào có khen thưởng
                                   </td>
                                 </tr>
                               );
@@ -1644,6 +1797,122 @@ const AchievementStatistics = () => {
               </div>
             </div>
           )}
+          <style jsx global>{`
+            .ant-select .ant-select-selector {
+              background-color: rgb(255 255 255) !important;
+              border-color: rgb(209 213 219) !important; /* gray-300 */
+              color: rgb(17 24 39) !important; /* gray-900 */
+            }
+            .ant-select .ant-select-selection-placeholder {
+              color: rgb(107 114 128) !important; /* gray-500 */
+            }
+            /* Tokens chỉ áp dụng cho chế độ multiple */
+            .ant-select-multiple .ant-select-selection-item {
+              background-color: rgb(239 246 255) !important; /* blue-50 */
+              border-color: rgb(191 219 254) !important; /* blue-200 */
+              color: rgb(30 58 138) !important; /* blue-900 */
+            }
+            /* Single select: chữ rõ, không nền */
+            .ant-select-single .ant-select-selector .ant-select-selection-item {
+              background-color: transparent !important;
+              color: rgb(17 24 39) !important; /* gray-900 */
+              font-weight: 600;
+            }
+            .ant-select-arrow,
+            .ant-select-clear {
+              color: rgb(107 114 128);
+            }
+            .ant-select-dropdown {
+              background-color: rgb(255 255 255) !important;
+              border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+            }
+            .ant-select-item {
+              color: rgb(17 24 39) !important;
+            }
+            .ant-select-item-option-active:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.12
+              ) !important; /* blue-500/12 */
+              color: rgb(30 58 138) !important;
+            }
+            .ant-select-item-option-selected:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.18
+              ) !important; /* blue-500/18 */
+              color: rgb(30 58 138) !important;
+              font-weight: 600 !important;
+            }
+
+            .dark .ant-select .ant-select-selector {
+              background-color: rgb(55 65 81) !important; /* gray-700 */
+              border-color: rgb(75 85 99) !important; /* gray-600 */
+              color: rgb(255 255 255) !important;
+            }
+            .dark .ant-select .ant-select-selection-placeholder {
+              color: rgb(156 163 175) !important; /* gray-400 */
+            }
+            /* Tokens ở chế độ multiple trong dark */
+            .dark .ant-select-multiple .ant-select-selection-item {
+              background-color: rgb(75 85 99) !important; /* gray-600 */
+              border-color: rgb(75 85 99) !important;
+              color: rgb(255 255 255) !important;
+            }
+            /* Single select dark: chữ rõ, không nền */
+            .dark
+              .ant-select-single
+              .ant-select-selector
+              .ant-select-selection-item {
+              background-color: transparent !important;
+              color: rgb(255 255 255) !important;
+              font-weight: 600;
+            }
+            .dark .ant-select-arrow,
+            .dark .ant-select-clear {
+              color: rgb(209 213 219) !important; /* gray-300 */
+            }
+            .dark .ant-select-dropdown {
+              background-color: rgb(31 41 55) !important; /* gray-800 */
+              border-color: rgb(55 65 81) !important; /* gray-700 */
+            }
+            .dark .ant-select-item {
+              color: rgb(255 255 255) !important;
+            }
+            .dark
+              .ant-select-item-option-active:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.25
+              ) !important; /* blue-500/25 */
+              color: rgb(255 255 255) !important;
+            }
+            .dark
+              .ant-select-item-option-selected:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.35
+              ) !important; /* blue-500/35 */
+              color: rgb(255 255 255) !important;
+              font-weight: 600 !important;
+            }
+          `}</style>
         </div>
       </div>
     </>

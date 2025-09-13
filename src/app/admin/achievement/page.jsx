@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import { Select } from "antd";
+import { useModalScroll } from "../../../hooks/useModalScroll";
 
 import { BASE_URL } from "@/configs";
 
@@ -22,6 +24,9 @@ const Achievement = () => {
   const [addFormData, setAddFormData] = useState({});
   const [selectedStudentForForm, setSelectedStudentForForm] = useState(null);
   const [recommendations, setRecommendations] = useState({});
+
+  // Disable scroll when modal is open
+  useModalScroll(showFormAdd || showFormEdit);
 
   const fetchStudents = async () => {
     const token = localStorage.getItem("token");
@@ -427,6 +432,96 @@ const Achievement = () => {
 
   return (
     <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .ant-select .ant-select-selector {
+            background-color: rgb(255 255 255) !important;
+            border-color: rgb(209 213 219) !important;
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select .ant-select-selection-placeholder {
+            color: rgb(156 163 175) !important;
+          }
+          .ant-select-multiple .ant-select-selection-item {
+            background-color: rgb(239 246 255) !important;
+            border-color: rgb(59 130 246) !important;
+            color: rgb(30 64 175) !important;
+          }
+          .ant-select-single .ant-select-selector .ant-select-selection-item {
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select-arrow {
+            color: rgb(107 114 128) !important;
+          }
+          .ant-select-clear {
+            color: rgb(107 114 128) !important;
+          }
+          .ant-select-dropdown {
+            background-color: rgb(255 255 255) !important;
+            border-color: rgb(209 213 219) !important;
+          }
+          .ant-select-item {
+            color: rgb(17 24 39) !important;
+          }
+          .ant-select-item-option-active {
+            background-color: rgb(239 246 255) !important;
+          }
+          .ant-select-item-option-selected {
+            background-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+
+          .dark .ant-select .ant-select-selector {
+            background-color: rgb(55 65 81) !important;
+            border-color: rgb(75 85 99) !important;
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select .ant-select-selection-placeholder {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-multiple .ant-select-selection-item {
+            background-color: rgb(30 64 175) !important;
+            border-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-single .ant-select-selector .ant-select-selection-item {
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-arrow {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-clear {
+            color: rgb(156 163 175) !important;
+          }
+          .dark .ant-select-dropdown {
+            background-color: rgb(55 65 81) !important;
+            border-color: rgb(75 85 99) !important;
+          }
+          .dark .ant-select-item {
+            color: rgb(255 255 255) !important;
+          }
+          .dark .ant-select-item-option-active {
+            background-color: rgb(30 64 175) !important;
+          }
+          .dark .ant-select-item-option-selected {
+            background-color: rgb(59 130 246) !important;
+            color: rgb(255 255 255) !important;
+          }
+
+          /* Hide datalist arrow */
+          input[list]::-webkit-calendar-picker-indicator {
+            display: none !important;
+          }
+          input[list]::-webkit-list-button {
+            display: none !important;
+          }
+          input[list]::-webkit-clear-button {
+            display: none !important;
+          }
+        `,
+        }}
+      />
       <div className="flex">
         <div className="flex-1 min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="w-full pt-20 pl-5">
@@ -474,7 +569,6 @@ const Achievement = () => {
               </ol>
             </nav>
           </div>
-
           <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
@@ -487,24 +581,11 @@ const Achievement = () => {
                   </p>
                 </div>
 
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 items-center">
                   <Link
                     href="/admin/achievement/statistics"
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
                     Xem thống kê
                   </Link>
                   <button
@@ -512,7 +593,7 @@ const Achievement = () => {
                       setSelectedStudentForForm(null);
                       setShowFormAdd(true);
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   >
                     + Thêm khen thưởng
                   </button>
@@ -522,12 +603,21 @@ const Achievement = () => {
               <div className="p-5">
                 {/* Debug info */}
                 <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                  Tổng số học viên: {students ? students.length : 0}
+                  Tổng số học viên có khen thưởng:{" "}
+                  {students
+                    ? students.filter((student) => {
+                        const achievement = achievements[student._id];
+                        return (
+                          achievement &&
+                          achievement.yearlyAchievements.length > 0
+                        );
+                      }).length
+                    : 0}
                 </div>
 
                 {/* Form tìm kiếm */}
                 <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div className="flex items-end gap-2">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                         Tìm theo năm
@@ -537,7 +627,8 @@ const Achievement = () => {
                         value={filterYear}
                         onChange={(e) => setFilterYear(e.target.value)}
                         placeholder="VD: 2024"
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-40 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        style={{ height: 36 }}
                       />
                     </div>
                     <div>
@@ -552,8 +643,9 @@ const Achievement = () => {
                           setFilterStudentId("");
                         }}
                         placeholder="Nhập tên để tìm..."
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-48 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         list="student-suggestions"
+                        style={{ height: 36 }}
                       />
                       <datalist id="student-suggestions">
                         {students
@@ -574,32 +666,26 @@ const Achievement = () => {
                       <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                         Chọn đơn vị
                       </label>
-                      <select
+                      <Select
                         value={filterClassId}
-                        onChange={(e) => setFilterClassId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      >
-                        <option value="">Tất cả</option>
-                        <option value="L1 - H5">L1 - H5</option>
-                        <option value="L2 - H5">L2 - H5</option>
-                        <option value="L3 - H5">L3 - H5</option>
-                        <option value="L4 - H5">L4 - H5</option>
-                        <option value="L5 - H5">L5 - H5</option>
-                        <option value="L6 - H5">L6 - H5</option>
-                      </select>
+                        onChange={setFilterClassId}
+                        placeholder="Chọn đơn vị"
+                        style={{ width: 200, height: 36 }}
+                        options={[
+                          { value: "", label: "Tất cả" },
+                          { value: "L1 - H5", label: "L1 - H5" },
+                          { value: "L2 - H5", label: "L2 - H5" },
+                          { value: "L3 - H5", label: "L3 - H5" },
+                          { value: "L4 - H5", label: "L4 - H5" },
+                          { value: "L5 - H5", label: "L5 - H5" },
+                          { value: "L6 - H5", label: "L6 - H5" },
+                        ]}
+                      />
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // kích hoạt re-render theo filter hiện có
-                          setFilterYear(String(filterYear || ""));
-                          setFilterStudentId(String(filterStudentId || ""));
-                        }}
-                        className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                      >
-                        Tìm kiếm
-                      </button>
+                    <div>
+                      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300 opacity-0">
+                        &nbsp;
+                      </label>
                       <button
                         type="button"
                         onClick={() => {
@@ -608,9 +694,9 @@ const Achievement = () => {
                           setFilterStudentKeyword("");
                           setFilterClassId("");
                         }}
-                        className="h-10 px-4 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                        className="h-9 px-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm font-medium"
                       >
-                        Đặt lại
+                        Xóa bộ lọc
                       </button>
                     </div>
                   </div>
@@ -618,8 +704,18 @@ const Achievement = () => {
 
                 {students && students.length > 0 ? (
                   <div className="space-y-6">
-                    {students
-                      .filter((s) =>
+                    {(() => {
+                      // Chỉ hiển thị học viên có khen thưởng
+                      let filteredStudents = students.filter((student) => {
+                        const achievement = achievements[student._id];
+                        const hasAchievements =
+                          achievement &&
+                          achievement.yearlyAchievements.length > 0;
+                        return hasAchievements;
+                      });
+
+                      // Lọc theo tên học viên
+                      filteredStudents = filteredStudents.filter((s) =>
                         filterStudentId
                           ? s._id === filterStudentId
                           : filterStudentKeyword
@@ -627,15 +723,62 @@ const Achievement = () => {
                               .toLowerCase()
                               .includes(filterStudentKeyword.toLowerCase())
                           : true
-                      )
-                      .filter((s) =>
+                      );
+
+                      // Lọc theo đơn vị
+                      filteredStudents = filteredStudents.filter((s) =>
                         !filterClassId
                           ? true
                           : (s.unit || "")
                               .toLowerCase()
                               .includes(filterClassId.toLowerCase())
-                      )
-                      .map((student) => {
+                      );
+
+                      // Lọc theo năm nếu có
+                      if (filterYear) {
+                        filteredStudents = filteredStudents.filter(
+                          (student) => {
+                            const achievement = achievements[student._id];
+                            return (
+                              achievement &&
+                              achievement.yearlyAchievements.some(
+                                (ya) => String(ya.year) === String(filterYear)
+                              )
+                            );
+                          }
+                        );
+                      }
+
+                      if (filteredStudents.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                                Không tìm thấy học viên nào có khen thưởng
+                              </p>
+                              <p className="text-sm text-gray-400 dark:text-gray-500">
+                                Vui lòng thử lại với từ khóa khác
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return filteredStudents.map((student) => {
                         const achievement = achievements[student._id] || {
                           yearlyAchievements: [],
                           totalYears: 0,
@@ -921,7 +1064,8 @@ const Achievement = () => {
                             })()}
                           </div>
                         );
-                      })}
+                      });
+                    })()}
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -941,12 +1085,12 @@ const Achievement = () => {
                         />
                       </svg>
                       <p className="text-lg font-medium text-gray-500 dark:text-gray-400">
-                        Không có dữ liệu học viên
+                        Không có học viên nào có khen thưởng
                       </p>
                       <p className="text-sm text-gray-400 dark:text-gray-500">
                         {students === null || students === undefined
                           ? "Đang tải dữ liệu..."
-                          : "Không tìm thấy học viên nào trong hệ thống"}
+                          : "Không tìm thấy học viên nào có khen thưởng trong hệ thống"}
                       </p>
                       <button
                         onClick={fetchStudents}
@@ -960,7 +1104,6 @@ const Achievement = () => {
               </div>
             </div>
           </div>
-
           {/* Form thêm khen thưởng */}
           {showFormAdd && (
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pt-16">
@@ -996,24 +1139,21 @@ const Achievement = () => {
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                             Chọn học viên
                           </label>
-                          <select
+                          <Select
                             value={selectedStudentForForm?._id || ""}
-                            onChange={(e) => {
+                            onChange={(value) => {
                               const student = students.find(
-                                (s) => s._id === e.target.value
+                                (s) => s._id === value
                               );
                               setSelectedStudentForForm(student);
                             }}
-                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            required
-                          >
-                            <option value="">Chọn học viên</option>
-                            {students.map((student) => (
-                              <option key={student._id} value={student._id}>
-                                {student.fullName} - {student.unit}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="Chọn học viên"
+                            style={{ width: "100%" }}
+                            options={students.map((student) => ({
+                              value: student._id,
+                              label: `${student.fullName} - ${student.unit}`,
+                            }))}
+                          />
                         </div>
                       )}
 
@@ -1075,32 +1215,35 @@ const Achievement = () => {
                         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                           Danh hiệu
                         </label>
-                        <select
+                        <Select
                           value={addFormData.title || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setAddFormData({
                               ...addFormData,
-                              title: e.target.value,
+                              title: value,
                             })
                           }
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          required
-                        >
-                          <option value="">Chọn danh hiệu</option>
-                          <option value="Chiến sĩ tiên tiến">
-                            Chiến sĩ tiên tiến
-                          </option>
-                          <option value="Chiến sĩ thi đua">
-                            Chiến sĩ thi đua
-                          </option>
-                        </select>
+                          placeholder="Chọn danh hiệu"
+                          style={{ width: "100%" }}
+                          options={[
+                            { value: "", label: "Chọn danh hiệu" },
+                            {
+                              value: "Chiến sĩ tiên tiến",
+                              label: "Chiến sĩ tiên tiến",
+                            },
+                            {
+                              value: "Chiến sĩ thi đua",
+                              label: "Chiến sĩ thi đua",
+                            },
+                          ]}
+                        />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                           Bằng khen
                         </label>
-                        <select
+                        <Select
                           value={
                             addFormData.hasMinistryReward
                               ? "bằng khen bộ quốc phòng"
@@ -1108,8 +1251,7 @@ const Achievement = () => {
                               ? "CSTĐ Toàn Quân"
                               : ""
                           }
-                          onChange={(e) => {
-                            const value = e.target.value;
+                          onChange={(value) => {
                             setAddFormData({
                               ...addFormData,
                               hasMinistryReward:
@@ -1117,26 +1259,30 @@ const Achievement = () => {
                               hasNationalReward: value === "CSTĐ Toàn Quân",
                             });
                           }}
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        >
-                          <option value="">Không có bằng khen</option>
-                          <option
-                            value="bằng khen bộ quốc phòng"
-                            disabled={!canSelectMinistryReward()}
-                          >
-                            🏆 Bằng khen Bộ Quốc Phòng
-                            {!canSelectMinistryReward() &&
-                              " (Chưa đủ điều kiện)"}
-                          </option>
-                          <option
-                            value="CSTĐ Toàn Quân"
-                            disabled={!canSelectNationalReward()}
-                          >
-                            🥇 CSTĐ Toàn Quân
-                            {!canSelectNationalReward() &&
-                              " (Chưa đủ điều kiện)"}
-                          </option>
-                        </select>
+                          placeholder="Chọn bằng khen"
+                          style={{ width: "100%" }}
+                          options={[
+                            { value: "", label: "Không có bằng khen" },
+                            {
+                              value: "bằng khen bộ quốc phòng",
+                              label: `🏆 Bằng khen Bộ Quốc Phòng${
+                                !canSelectMinistryReward()
+                                  ? " (Chưa đủ điều kiện)"
+                                  : ""
+                              }`,
+                              disabled: !canSelectMinistryReward(),
+                            },
+                            {
+                              value: "CSTĐ Toàn Quân",
+                              label: `🥇 CSTĐ Toàn Quân${
+                                !canSelectNationalReward()
+                                  ? " (Chưa đủ điều kiện)"
+                                  : ""
+                              }`,
+                              disabled: !canSelectNationalReward(),
+                            },
+                          ]}
+                        />
                       </div>
                     </div>
 
@@ -1293,12 +1439,12 @@ const Achievement = () => {
                               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                               rows="5"
                             />
-                            <select
+                            <Select
                               value={
                                 addFormData.scientific?.topics?.[0]?.status ||
                                 "pending"
                               }
-                              onChange={(e) =>
+                              onChange={(value) =>
                                 setAddFormData({
                                   ...addFormData,
                                   scientific: {
@@ -1306,18 +1452,19 @@ const Achievement = () => {
                                     topics: [
                                       {
                                         ...addFormData.scientific.topics[0],
-                                        status: e.target.value,
+                                        status: value,
                                       },
                                     ],
                                   },
                                 })
                               }
-                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            >
-                              <option value="pending">Chờ duyệt</option>
-                              <option value="approved">Đã duyệt</option>
-                              <option value="rejected">Từ chối</option>
-                            </select>
+                              style={{ width: "100%" }}
+                              options={[
+                                { value: "pending", label: "Chờ duyệt" },
+                                { value: "approved", label: "Đã duyệt" },
+                                { value: "rejected", label: "Từ chối" },
+                              ]}
+                            />
                           </div>
                         </div>
                       )}
@@ -1376,12 +1523,12 @@ const Achievement = () => {
                               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                               rows="5"
                             />
-                            <select
+                            <Select
                               value={
                                 addFormData.scientific?.initiatives?.[0]
                                   ?.status || "pending"
                               }
-                              onChange={(e) =>
+                              onChange={(value) =>
                                 setAddFormData({
                                   ...addFormData,
                                   scientific: {
@@ -1390,18 +1537,19 @@ const Achievement = () => {
                                       {
                                         ...addFormData.scientific
                                           .initiatives[0],
-                                        status: e.target.value,
+                                        status: value,
                                       },
                                     ],
                                   },
                                 })
                               }
-                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            >
-                              <option value="pending">Chờ duyệt</option>
-                              <option value="approved">Đã duyệt</option>
-                              <option value="rejected">Từ chối</option>
-                            </select>
+                              style={{ width: "100%" }}
+                              options={[
+                                { value: "pending", label: "Chờ duyệt" },
+                                { value: "approved", label: "Đã duyệt" },
+                                { value: "rejected", label: "Từ chối" },
+                              ]}
+                            />
                           </div>
                         </div>
                       )}
@@ -1448,7 +1596,6 @@ const Achievement = () => {
               </div>
             </div>
           )}
-
           {/* Form chỉnh sửa khen thưởng */}
           {showFormEdit && selectedStudentForForm && (
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pt-16 ">
@@ -1562,32 +1709,35 @@ const Achievement = () => {
                         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                           Danh hiệu
                         </label>
-                        <select
+                        <Select
                           value={editFormData.title || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setEditFormData({
                               ...editFormData,
-                              title: e.target.value,
+                              title: value,
                             })
                           }
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          required
-                        >
-                          <option value="">Chọn danh hiệu</option>
-                          <option value="Chiến sĩ tiên tiến">
-                            Chiến sĩ tiên tiến
-                          </option>
-                          <option value="Chiến sĩ thi đua">
-                            Chiến sĩ thi đua
-                          </option>
-                        </select>
+                          placeholder="Chọn danh hiệu"
+                          style={{ width: "100%" }}
+                          options={[
+                            { value: "", label: "Chọn danh hiệu" },
+                            {
+                              value: "Chiến sĩ tiên tiến",
+                              label: "Chiến sĩ tiên tiến",
+                            },
+                            {
+                              value: "Chiến sĩ thi đua",
+                              label: "Chiến sĩ thi đua",
+                            },
+                          ]}
+                        />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                           Bằng khen
                         </label>
-                        <select
+                        <Select
                           value={
                             editFormData.hasMinistryReward
                               ? "bằng khen bộ quốc phòng"
@@ -1595,8 +1745,7 @@ const Achievement = () => {
                               ? "CSTĐ Toàn Quân"
                               : ""
                           }
-                          onChange={(e) => {
-                            const value = e.target.value;
+                          onChange={(value) => {
                             setEditFormData({
                               ...editFormData,
                               hasMinistryReward:
@@ -1604,26 +1753,30 @@ const Achievement = () => {
                               hasNationalReward: value === "CSTĐ Toàn Quân",
                             });
                           }}
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        >
-                          <option value="">Không có bằng khen</option>
-                          <option
-                            value="bằng khen bộ quốc phòng"
-                            disabled={!canSelectMinistryReward()}
-                          >
-                            🏆 Bằng khen Bộ Quốc Phòng
-                            {!canSelectMinistryReward() &&
-                              " (Chưa đủ điều kiện)"}
-                          </option>
-                          <option
-                            value="CSTĐ Toàn Quân"
-                            disabled={!canSelectNationalReward()}
-                          >
-                            🥇 CSTĐ Toàn Quân
-                            {!canSelectNationalReward() &&
-                              " (Chưa đủ điều kiện)"}
-                          </option>
-                        </select>
+                          placeholder="Chọn bằng khen"
+                          style={{ width: "100%" }}
+                          options={[
+                            { value: "", label: "Không có bằng khen" },
+                            {
+                              value: "bằng khen bộ quốc phòng",
+                              label: `🏆 Bằng khen Bộ Quốc Phòng${
+                                !canSelectMinistryReward()
+                                  ? " (Chưa đủ điều kiện)"
+                                  : ""
+                              }`,
+                              disabled: !canSelectMinistryReward(),
+                            },
+                            {
+                              value: "CSTĐ Toàn Quân",
+                              label: `🥇 CSTĐ Toàn Quân${
+                                !canSelectNationalReward()
+                                  ? " (Chưa đủ điều kiện)"
+                                  : ""
+                              }`,
+                              disabled: !canSelectNationalReward(),
+                            },
+                          ]}
+                        />
                       </div>
                     </div>
 
@@ -1781,12 +1934,12 @@ const Achievement = () => {
                               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                               rows="5"
                             />
-                            <select
+                            <Select
                               value={
                                 editFormData.scientific?.topics?.[0]?.status ||
                                 "pending"
                               }
-                              onChange={(e) =>
+                              onChange={(value) =>
                                 setEditFormData({
                                   ...editFormData,
                                   scientific: {
@@ -1794,18 +1947,19 @@ const Achievement = () => {
                                     topics: [
                                       {
                                         ...editFormData.scientific.topics[0],
-                                        status: e.target.value,
+                                        status: value,
                                       },
                                     ],
                                   },
                                 })
                               }
-                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            >
-                              <option value="pending">Chờ duyệt</option>
-                              <option value="approved">Đã duyệt</option>
-                              <option value="rejected">Từ chối</option>
-                            </select>
+                              style={{ width: "100%" }}
+                              options={[
+                                { value: "pending", label: "Chờ duyệt" },
+                                { value: "approved", label: "Đã duyệt" },
+                                { value: "rejected", label: "Từ chối" },
+                              ]}
+                            />
                           </div>
                         </div>
                       )}
@@ -1864,12 +2018,12 @@ const Achievement = () => {
                               className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                               rows="5"
                             />
-                            <select
+                            <Select
                               value={
                                 editFormData.scientific?.initiatives?.[0]
                                   ?.status || "pending"
                               }
-                              onChange={(e) =>
+                              onChange={(value) =>
                                 setEditFormData({
                                   ...editFormData,
                                   scientific: {
@@ -1878,18 +2032,19 @@ const Achievement = () => {
                                       {
                                         ...editFormData.scientific
                                           .initiatives[0],
-                                        status: e.target.value,
+                                        status: value,
                                       },
                                     ],
                                   },
                                 })
                               }
-                              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                            >
-                              <option value="pending">Chờ duyệt</option>
-                              <option value="approved">Đã duyệt</option>
-                              <option value="rejected">Từ chối</option>
-                            </select>
+                              style={{ width: "100%" }}
+                              options={[
+                                { value: "pending", label: "Chờ duyệt" },
+                                { value: "approved", label: "Đã duyệt" },
+                                { value: "rejected", label: "Từ chối" },
+                              ]}
+                            />
                           </div>
                         </div>
                       )}
@@ -1936,6 +2091,122 @@ const Achievement = () => {
               </div>
             </div>
           )}
+          <style jsx global>{`
+            .ant-select .ant-select-selector {
+              background-color: rgb(255 255 255) !important;
+              border-color: rgb(209 213 219) !important; /* gray-300 */
+              color: rgb(17 24 39) !important; /* gray-900 */
+            }
+            .ant-select .ant-select-selection-placeholder {
+              color: rgb(107 114 128) !important; /* gray-500 */
+            }
+            /* Tokens chỉ áp dụng cho chế độ multiple */
+            .ant-select-multiple .ant-select-selection-item {
+              background-color: rgb(239 246 255) !important; /* blue-50 */
+              border-color: rgb(191 219 254) !important; /* blue-200 */
+              color: rgb(30 58 138) !important; /* blue-900 */
+            }
+            /* Single select: chữ rõ, không nền */
+            .ant-select-single .ant-select-selector .ant-select-selection-item {
+              background-color: transparent !important;
+              color: rgb(17 24 39) !important; /* gray-900 */
+              font-weight: 600;
+            }
+            .ant-select-arrow,
+            .ant-select-clear {
+              color: rgb(107 114 128);
+            }
+            .ant-select-dropdown {
+              background-color: rgb(255 255 255) !important;
+              border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+            }
+            .ant-select-item {
+              color: rgb(17 24 39) !important;
+            }
+            .ant-select-item-option-active:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.12
+              ) !important; /* blue-500/12 */
+              color: rgb(30 58 138) !important;
+            }
+            .ant-select-item-option-selected:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.18
+              ) !important; /* blue-500/18 */
+              color: rgb(30 58 138) !important;
+              font-weight: 600 !important;
+            }
+
+            .dark .ant-select .ant-select-selector {
+              background-color: rgb(55 65 81) !important; /* gray-700 */
+              border-color: rgb(75 85 99) !important; /* gray-600 */
+              color: rgb(255 255 255) !important;
+            }
+            .dark .ant-select .ant-select-selection-placeholder {
+              color: rgb(156 163 175) !important; /* gray-400 */
+            }
+            /* Tokens ở chế độ multiple trong dark */
+            .dark .ant-select-multiple .ant-select-selection-item {
+              background-color: rgb(75 85 99) !important; /* gray-600 */
+              border-color: rgb(75 85 99) !important;
+              color: rgb(255 255 255) !important;
+            }
+            /* Single select dark: chữ rõ, không nền */
+            .dark
+              .ant-select-single
+              .ant-select-selector
+              .ant-select-selection-item {
+              background-color: transparent !important;
+              color: rgb(255 255 255) !important;
+              font-weight: 600;
+            }
+            .dark .ant-select-arrow,
+            .dark .ant-select-clear {
+              color: rgb(209 213 219) !important; /* gray-300 */
+            }
+            .dark .ant-select-dropdown {
+              background-color: rgb(31 41 55) !important; /* gray-800 */
+              border-color: rgb(55 65 81) !important; /* gray-700 */
+            }
+            .dark .ant-select-item {
+              color: rgb(255 255 255) !important;
+            }
+            .dark
+              .ant-select-item-option-active:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.25
+              ) !important; /* blue-500/25 */
+              color: rgb(255 255 255) !important;
+            }
+            .dark
+              .ant-select-item-option-selected:not(
+                .ant-select-item-option-disabled
+              ) {
+              background-color: rgba(
+                59,
+                130,
+                246,
+                0.35
+              ) !important; /* blue-500/35 */
+              color: rgb(255 255 255) !important;
+              font-weight: 600 !important;
+            }
+          `}</style>{" "}
         </div>
       </div>
     </>

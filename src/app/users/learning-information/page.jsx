@@ -1094,7 +1094,7 @@ const LearningInformation = () => {
     fetchSemesters();
   }, []);
 
-  // refetch tuition when semester changes (kể cả chọn "Tất cả")
+  // refetch tuition-fee when semester changes (kể cả chọn "Tất cả")
   useEffect(() => {
     fetchTuitionFee();
   }, [selectedSemester]);
@@ -1155,35 +1155,19 @@ const LearningInformation = () => {
             {currentTab === "time-table" && (
               <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
                 <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                  <div className="text-gray-900 dark:text-white text-lg">
-                    THỜI KHÓA BIỂU
+                  <div className="text-gray-900 dark:text-white">
+                    <h1 className="text-2xl font-bold">THỜI KHÓA BIỂU</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Quản lý và xem thời khóa biểu
+                    </p>
                   </div>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={handleUpdateAutoCutRice}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
-                    >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      Cập nhật lịch cắt cơm
-                    </button>
+                  <div className="flex items-center">
                     <button
                       onClick={() => setShowFormAddTimeTable(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center text-xs"
                     >
                       <svg
-                        className="w-4 h-4 mr-2"
+                        className="w-4 h-4 mr-1.5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1322,14 +1306,17 @@ const LearningInformation = () => {
 
             {currentTab === "results" && (
               <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-                <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                  <div className="text-gray-900 dark:text-white text-lg">
-                    KẾT QUẢ HỌC TẬP
+                <div className="flex justify-between items-center font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="text-gray-900 dark:text-white">
+                    <h1 className="text-2xl font-bold">KẾT QUẢ HỌC TẬP</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Quản lý và xem kết quả học tập
+                    </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={openGradeModal}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center text-xs"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1337,7 +1324,7 @@ const LearningInformation = () => {
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
                         stroke="currentColor"
-                        className="w-5 h-5 mr-2"
+                        className="w-4 h-4 mr-1.5"
                       >
                         <path
                           strokeLinecap="round"
@@ -1350,7 +1337,7 @@ const LearningInformation = () => {
                     </button>
                     <Link
                       href="/users/yearly-statistics"
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center text-xs"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -1358,7 +1345,7 @@ const LearningInformation = () => {
                         viewBox="0 0 24 24"
                         strokeWidth="1.5"
                         stroke="currentColor"
-                        className="w-5 h-5 mr-2"
+                        className="w-4 h-4 mr-1.5"
                       >
                         <path
                           strokeLinecap="round"
@@ -2026,19 +2013,24 @@ const LearningInformation = () => {
               </div>
             )}
 
-            {currentTab === "tuition" && (
+            {currentTab === "tuition-fee" && (
               <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
-                <div className="flex justify-between items-end font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                  <div>
-                    <div className="text-gray-900 dark:text-white text-lg mb-2">
-                      HỌC PHÍ
-                    </div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      <label className="mr-2">Chọn học kỳ</label>
+                <div className="flex justify-between items-center font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="text-gray-900 dark:text-white">
+                    <h1 className="text-2xl font-bold">HỌC PHÍ</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Quản lý và xem học phí
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Chọn học kỳ:
+                      </label>
                       <select
                         value={selectedSemester}
                         onChange={(e) => setSelectedSemester(e.target.value)}
-                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-3 py-1"
+                        className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-3 py-2 min-w-[200px]"
                       >
                         <option value="">Tất cả học kỳ</option>
                         {semesters
@@ -2065,26 +2057,26 @@ const LearningInformation = () => {
                           ))}
                       </select>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => setShowFormAddTuitionFee(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <button
+                      onClick={() => setShowFormAddTuitionFee(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    Thêm học phí
-                  </button>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Thêm học phí
+                    </button>
+                  </div>
                 </div>
                 <div className="w-full pl-6 pb-6 pr-6 mt-4">
                   <div className="overflow-x-auto">
@@ -2796,7 +2788,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Xác nhận xóa học phí */}
-      {currentTab === "tuition" && showConfirmFee && (
+      {currentTab === "tuition-fee" && showConfirmFee && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
@@ -3105,7 +3097,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Thêm Học Phí */}
-      {currentTab === "tuition" && showFormAddTuitionFee && (
+      {currentTab === "tuition-fee" && showFormAddTuitionFee && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
@@ -3261,7 +3253,7 @@ const LearningInformation = () => {
       )}
 
       {/* Modal Sửa Học Phí */}
-      {currentTab === "tuition" && isOpenTuitionFee && (
+      {currentTab === "tuition-fee" && isOpenTuitionFee && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
           <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">

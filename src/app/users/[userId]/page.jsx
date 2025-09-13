@@ -56,7 +56,7 @@ const UserProfile = ({ params }) => {
     religion: "",
     currentAddress: "",
     avatar:
-      "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+      "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
   });
 
   // Fetch functions cho cascading dropdowns
@@ -171,6 +171,9 @@ const UserProfile = ({ params }) => {
         university: profile.university?._id || profile.university || "",
         positionParty: profile.positionParty || "Không",
         email: profile.email || "",
+        cccdNumber: profile.cccdNumber || "",
+        placeOfBirth: profile.placeOfBirth || "",
+        partyMemberCardNumber: profile.partyMemberCardNumber || "",
         hometown: profile.hometown || "",
         ethnicity: profile.ethnicity || "",
         religion: profile.religion || "",
@@ -439,7 +442,7 @@ const UserProfile = ({ params }) => {
       positionParty: "Không",
       currentAddress: "",
       avatar:
-        "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+        "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
     });
     // Reset thông tin gia đình và yếu tố nước ngoài
     setFamilyMembers([]);
@@ -512,6 +515,9 @@ const UserProfile = ({ params }) => {
     try {
       const submitData = {
         ...formData,
+        avatar:
+          formData.avatar?.trim() ||
+          "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg", // Sử dụng ảnh mặc định nếu để trống
         university: selectedUniversity?._id, // Sử dụng ObjectId của university đã chọn
         organization: selectedOrganization, // Tên khoa/viện đã chọn
         educationLevel: selectedLevel, // Trình độ đã chọn
@@ -732,13 +738,16 @@ const UserProfile = ({ params }) => {
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  THÔNG TIN HỌC VIÊN
+              <div className="flex justify-between items-center font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">THÔNG TIN HỌC VIÊN</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem thông tin học viên
+                  </p>
                 </div>
                 <button
                   onClick={openForm}
-                  className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -746,7 +755,7 @@ const UserProfile = ({ params }) => {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
-                    className="w-4 h-4 mr-2"
+                    className="w-3.5 h-3.5"
                   >
                     <path
                       strokeLinecap="round"
@@ -819,6 +828,38 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              CCCD:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.cccdNumber || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Số điện thoại:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.phoneNumber || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Email:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.email || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Nơi sinh:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.placeOfBirth || "Chưa có dữ liệu"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Ngày ra trường:
                             </span>
                             <span className="text-gray-900 dark:text-white">
@@ -869,14 +910,7 @@ const UserProfile = ({ params }) => {
                                 "Chưa có dữ liệu"}
                             </span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Email:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.email || "Chưa có dữ liệu"}
-                            </span>
-                          </div>
+                          {/* Ẩn Email theo yêu cầu */}
                         </div>
                       </div>
                       <div className="space-y-4">
@@ -895,14 +929,6 @@ const UserProfile = ({ params }) => {
                           THÔNG TIN QUÂN NHÂN
                         </h3>
                         <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Số điện thoại:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.phoneNumber || "Chưa có dữ liệu"}
-                            </span>
-                          </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Đơn vị:
@@ -961,6 +987,15 @@ const UserProfile = ({ params }) => {
                                     "DD/MM/YYYY"
                                   )
                                 : "Không"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Số thẻ Đảng viên:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.partyMemberCardNumber ||
+                                "Chưa có dữ liệu"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -1744,7 +1779,55 @@ const UserProfile = ({ params }) => {
                             value={formData.email}
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: x.nv200001@sis.hust.edu.vn"
+                            placeholder="vd: example@email.com"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="cccdNumber"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Số CCCD
+                          </label>
+                          <input
+                            type="text"
+                            id="cccdNumber"
+                            value={formData.cccdNumber}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: 012345678901"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="placeOfBirth"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Nơi sinh
+                          </label>
+                          <input
+                            type="text"
+                            id="placeOfBirth"
+                            value={formData.placeOfBirth}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hà Nội"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="partyMemberCardNumber"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Số thẻ Đảng viên
+                          </label>
+                          <input
+                            type="text"
+                            id="partyMemberCardNumber"
+                            value={formData.partyMemberCardNumber}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: 123456789"
                           />
                         </div>
 
@@ -1813,6 +1896,22 @@ const UserProfile = ({ params }) => {
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="vd: Hà Nội"
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="avatar"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Ảnh đại diện
+                          </label>
+                          <input
+                            type="url"
+                            id="avatar"
+                            value={formData.avatar}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: https://example.com/avatar.jpg"
                           />
                         </div>
                       </div>

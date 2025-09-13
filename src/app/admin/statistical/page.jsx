@@ -27,6 +27,7 @@ const Statictical = () => {
   const [availableSchoolYears, setAvailableSchoolYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [filterUnits, setFilterUnits] = useState([]);
+  const [filterTrainingRating, setFilterTrainingRating] = useState([]);
 
   const fetchLearningClassification = async () => {
     const token = localStorage.getItem("token");
@@ -459,6 +460,28 @@ const Statictical = () => {
                       .map((u) => ({ value: u, label: u }))}
                   />
                 </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Kết quả rèn luyện
+                  </label>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    value={filterTrainingRating}
+                    onChange={(vals) => setFilterTrainingRating(vals)}
+                    placeholder="Chọn kết quả rèn luyện"
+                    style={{ width: 320, height: 36 }}
+                    options={Array.from(
+                      new Set(
+                        (topStudentsLatestYear?.topStudents || []).map(
+                          (x) => x.trainingRating
+                        )
+                      )
+                    )
+                      .filter(Boolean)
+                      .map((rating) => ({ value: rating, label: rating }))}
+                  />
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full border border-gray-200 dark:border-gray-700 text-center text-sm font-light text-gray-900 dark:text-white rounded-lg">
@@ -488,45 +511,50 @@ const Statictical = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800">
-                    {(filterUnits.length
-                      ? (topStudentsLatestYear?.topStudents || []).filter((i) =>
-                          filterUnits.includes(i.unit)
-                        )
-                      : topStudentsLatestYear?.topStudents || []
-                    ).map((item, index) => (
-                      <tr
-                        key={`${item.classId}-${item.studentId}`}
-                        className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                      >
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {index + 1}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.fullName}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.className}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.unit}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.averageGrade4?.toFixed?.(2) ??
-                            item.averageGrade4}
-                        </td>
-                        <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                          {item.averageGrade10?.toFixed?.(2) ??
-                            item.averageGrade10}
-                        </td>
-                        <td className="whitespace-nowrap font-medium py-4 px-4">
-                          {item.trainingRating || "Chưa có dữ liệu"}
-                        </td>
-                      </tr>
-                    ))}
+                    {(topStudentsLatestYear?.topStudents || [])
+                      .filter((i) => {
+                        const unitMatch =
+                          filterUnits.length === 0 ||
+                          filterUnits.includes(i.unit);
+                        const ratingMatch =
+                          filterTrainingRating.length === 0 ||
+                          filterTrainingRating.includes(i.trainingRating);
+                        return unitMatch && ratingMatch;
+                      })
+                      .map((item, index) => (
+                        <tr
+                          key={`${item.classId}-${item.studentId}`}
+                          className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                        >
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {index + 1}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.fullName}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.className}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.unit}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.averageGrade4?.toFixed?.(2) ??
+                              item.averageGrade4}
+                          </td>
+                          <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
+                            {item.averageGrade10?.toFixed?.(2) ??
+                              item.averageGrade10}
+                          </td>
+                          <td className="whitespace-nowrap font-medium py-4 px-4">
+                            {item.trainingRating || "Chưa có dữ liệu"}
+                          </td>
+                        </tr>
+                      ))}
                     {(!topStudentsLatestYear?.topStudents ||
                       topStudentsLatestYear.topStudents.length === 0) && (
                       <tr>
-                        <td colSpan={5} className="py-4 px-4 text-gray-400">
+                        <td colSpan={7} className="py-4 px-4 text-gray-400">
                           Không có dữ liệu
                         </td>
                       </tr>

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { handleNotify } from "../../../components/notify";
+import { Select } from "antd";
 
 import { BASE_URL } from "@/configs";
 
@@ -335,7 +336,7 @@ const TimeTable = () => {
 
             <div className="w-full pt-2 pl-5 pb-5 pr-5">
               <div className="flex items-end gap-4">
-                <div className="flex gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
                   <div>
                     <label
                       htmlFor="fullName"
@@ -353,56 +354,50 @@ const TimeTable = () => {
                     />
                   </div>
                   <div>
-                    <label
-                      htmlFor="unit"
-                      className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
+                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
                       Lọc theo đơn vị
                     </label>
-                    <select
-                      id="unit"
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      className="bg-gray-50 dark:bg-gray-700 border w-56 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pb-1 pt-1.5 pr-10"
-                    >
-                      <option value="">Tất cả đơn vị</option>
-                      <option value="L1 - H5">L1 - H5</option>
-                      <option value="L2 - H5">L2 - H5</option>
-                      <option value="L3 - H5">L3 - H5</option>
-                      <option value="L4 - H5">L4 - H5</option>
-                      <option value="L5 - H5">L5 - H5</option>
-                      <option value="L6 - H5">L6 - H5</option>
-                    </select>
+                    <Select
+                      value={unit || ""}
+                      onChange={(val) => setUnit(val || "")}
+                      placeholder="Chọn đơn vị"
+                      style={{ width: 200, height: 36 }}
+                      allowClear
+                      options={[
+                        { value: "", label: "Tất cả đơn vị" },
+                        { value: "L1 - H5", label: "L1 - H5" },
+                        { value: "L2 - H5", label: "L2 - H5" },
+                        { value: "L3 - H5", label: "L3 - H5" },
+                        { value: "L4 - H5", label: "L4 - H5" },
+                        { value: "L5 - H5", label: "L5 - H5" },
+                        { value: "L6 - H5", label: "L6 - H5" },
+                      ]}
+                    />
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200 flex items-center"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300 opacity-0">
+                      &nbsp;
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleSearch}
+                      className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200 flex items-center"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                    Tìm kiếm
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleClearFilter}
-                    className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200"
-                  >
-                    Xóa bộ lọc
-                  </button>
+                      Tìm kiếm
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300 opacity-0">
+                      &nbsp;
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleClearFilter}
+                      className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-5 transition-colors duration-200"
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -655,6 +650,116 @@ const TimeTable = () => {
           </div>
         </div>
       </div>
+      <style jsx global>{`
+        .ant-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        /* Tokens chỉ áp dụng cho chế độ multiple */
+        .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(239 246 255) !important; /* blue-50 */
+          border-color: rgb(191 219 254) !important; /* blue-200 */
+          color: rgb(30 58 138) !important; /* blue-900 */
+        }
+        /* Single select: chữ rõ, không nền */
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(17 24 39) !important; /* gray-900 */
+          font-weight: 600;
+        }
+        .ant-select-arrow,
+        .ant-select-clear {
+          color: rgb(107 114 128);
+        }
+        .ant-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+        }
+        .ant-select-item {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+
+        .dark .ant-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        /* Tokens ở chế độ multiple trong dark */
+        .dark .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(75 85 99) !important; /* gray-600 */
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+        /* Single select dark: chữ rõ, không nền */
+        .dark
+          .ant-select-single
+          .ant-select-selector
+          .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(255 255 255) !important;
+          font-weight: 600;
+        }
+        .dark .ant-select-arrow,
+        .dark .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+        }
+        .dark .ant-select-item {
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-selected:not(
+            .ant-select-item-option-disabled
+          ) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+      `}</style>
     </div>
   );
 };

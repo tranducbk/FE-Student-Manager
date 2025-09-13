@@ -45,6 +45,9 @@ const UserProfile = ({ params }) => {
         ethnicity: profile.ethnicity || "Kinh",
         religion: profile.religion || "Không",
         currentAddress: profile.currentAddress || "",
+        placeOfBirth: profile.placeOfBirth || "",
+        cccd: profile.cccd || "",
+        partyCardNumber: profile.partyCardNumber || "",
         avatar:
           profile.avatar ||
           "https://i.pinimg.com/736x/d4/a1/ff/d4a1ff9d0f243e50062e2b21f2f2496d.jpg",
@@ -186,7 +189,7 @@ const UserProfile = ({ params }) => {
           </div>
           <div className="w-full pt-8 pb-5 pl-5 pr-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-              <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center font-bold p-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white">
                   <h1 className="text-2xl font-bold">THÔNG TIN QUÂN NHÂN</h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -195,7 +198,7 @@ const UserProfile = ({ params }) => {
                 </div>
                 <button
                   onClick={openForm}
-                  className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-0.5 px-3 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -203,7 +206,7 @@ const UserProfile = ({ params }) => {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
-                    className="w-4 h-4 mr-2"
+                    className="w-3.5 h-3.5"
                   >
                     <path
                       strokeLinecap="round"
@@ -265,10 +268,26 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Nơi sinh:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.placeOfBirth}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
                               Quê quán:
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.hometown}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Số CCCD:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.cccd}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -302,14 +321,6 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.phoneNumber}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Email:
-                            </span>
-                            <span className="text-gray-900 dark:text-white">
-                              {profile?.email}
                             </span>
                           </div>
                         </div>
@@ -393,6 +404,14 @@ const UserProfile = ({ params }) => {
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.positionParty}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              Số thẻ đảng viên:
+                            </span>
+                            <span className="text-gray-900 dark:text-white">
+                              {profile?.partyCardNumber}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -522,6 +541,23 @@ const UserProfile = ({ params }) => {
 
                         <div>
                           <label
+                            htmlFor="cccd"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Số CCCD
+                          </label>
+                          <input
+                            type="text"
+                            id="cccd"
+                            value={formData.cccd}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: 123456789012"
+                          />
+                        </div>
+
+                        <div>
+                          <label
                             htmlFor="gender"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
@@ -572,6 +608,23 @@ const UserProfile = ({ params }) => {
                             className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholderText="Ngày/Tháng/Năm"
                             wrapperClassName="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="placeOfBirth"
+                            className="block mb-2 text-sm font-medium dark:text-white"
+                          >
+                            Nơi sinh
+                          </label>
+                          <input
+                            type="text"
+                            id="placeOfBirth"
+                            value={formData.placeOfBirth}
+                            onChange={handleChange}
+                            className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="vd: Hà Nội"
                           />
                         </div>
 
@@ -737,18 +790,18 @@ const UserProfile = ({ params }) => {
 
                         <div>
                           <label
-                            htmlFor="email"
+                            htmlFor="partyCardNumber"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
-                            Email
+                            Số thẻ đảng viên
                           </label>
                           <input
-                            type="email"
-                            id="email"
-                            value={formData.email}
+                            type="text"
+                            id="partyCardNumber"
+                            value={formData.partyCardNumber}
                             onChange={handleChange}
                             className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="vd: example@gmail.com"
+                            placeholder="vd: 123456789"
                           />
                         </div>
 

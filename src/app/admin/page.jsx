@@ -23,6 +23,8 @@ export default function Home() {
   const [cutRice, setCutRice] = useState(null);
   const [achievement, setAchievement] = useState(null);
   const [trainingRatings, setTrainingRatings] = useState(null);
+  const [semesters, setSemesters] = useState([]);
+  const [detailedLearningResults, setDetailedLearningResults] = useState([]);
   const [dataIsLoaded, setDataIsLoaded] = useState(false);
 
   const currentDate = new Date();
@@ -128,15 +130,92 @@ export default function Home() {
     }
   };
 
+  const fetchSemesters = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const res = await axios.get(`${BASE_URL}/semester`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+
+        setSemesters(res.data || []);
+      } catch (error) {
+        console.log(error);
+        setSemesters([]);
+      }
+    }
+  };
+
+  const fetchDetailedLearningResults = async () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Lấy học kỳ mới nhất trước
+        const semesterRes = await axios.get(`${BASE_URL}/semester`, {
+          headers: {
+            token: `Bearer ${token}`,
+          },
+        });
+
+        const semesters = semesterRes.data || [];
+        console.log("Semesters data:", semesters);
+
+        if (semesters.length === 0) {
+          console.log("No semesters found");
+          setDetailedLearningResults([]);
+          return;
+        }
+
+        // Tìm học kỳ mới nhất
+        const sortedSemesters = semesters.sort((a, b) => {
+          if (a.schoolYear !== b.schoolYear) {
+            return b.schoolYear.localeCompare(a.schoolYear);
+          }
+          const semesterOrder = { HK1: 1, HK2: 2, HK3: 3 };
+          return (semesterOrder[b.code] || 0) - (semesterOrder[a.code] || 0);
+        });
+
+        const latestSemester = sortedSemesters[0];
+        console.log("Latest semester:", latestSemester);
+
+        // Lấy kết quả học tập chi tiết cho học kỳ mới nhất
+        const res = await axios.get(
+          `${BASE_URL}/commander/allStudentsGrades?semester=${latestSemester.code}&schoolYear=${latestSemester.schoolYear}`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Detailed learning results:", res.data);
+        console.log("Detailed learning results length:", res.data?.length);
+        setDetailedLearningResults(res.data || []);
+      } catch (error) {
+        console.log("Error fetching detailed learning results:", error);
+        console.log("Error response:", error.response?.data);
+        setDetailedLearningResults([]);
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      console.log("=== STARTING FETCH DATA ===");
       await Promise.all([
         fetchLearningResult(),
         fetchStudent(),
         fetchCutRice(),
         fetchAchievement(),
         fetchTrainingRatings(),
+        fetchSemesters(),
+        fetchDetailedLearningResults(),
       ]);
+      console.log("=== ALL DATA FETCHED ===");
       setDataIsLoaded(true);
     };
 
@@ -153,6 +232,96 @@ export default function Home() {
     totalStudents > 0
       ? ((learningResult?.learningResults || 0) / totalStudents) * 100
       : 0;
+
+  // Tìm học kỳ mới nhất
+  const getLatestSemester = () => {
+    if (!semesters || semesters.length === 0) return null;
+
+    // Sắp xếp theo năm học và học kỳ
+    const sortedSemesters = semesters.sort((a, b) => {
+      // So sánh năm học trước
+      if (a.schoolYear !== b.schoolYear) {
+        return b.schoolYear.localeCompare(a.schoolYear);
+      }
+      // Nếu cùng năm học, so sánh học kỳ
+      const semesterOrder = { HK1: 1, HK2: 2, HK3: 3 };
+      return (semesterOrder[b.code] || 0) - (semesterOrder[a.code] || 0);
+    });
+
+    return sortedSemesters[0];
+  };
+
+  const latestSemester = getLatestSemester();
+
+  // Tính toán tỷ lệ học tập chi tiết
+  const getDetailedLearningStats = () => {
+    console.log(
+      "Detailed learning results for stats:",
+      detailedLearningResults
+    );
+
+    if (!detailedLearningResults || detailedLearningResults.length === 0) {
+      console.log("No detailed learning results available");
+      return {
+        excellent: 0, // Xuất sắc (GPA >= 3.6)
+        good: 0, // Giỏi (GPA >= 3.2)
+        fair: 0, // Khá (GPA >= 2.5)
+        average: 0, // Trung bình (GPA >= 2.0)
+        poor: 0, // Yếu (GPA < 2.0)
+        debt: 0, // Nợ môn
+        total: 0,
+      };
+    }
+
+    let stats = {
+      excellent: 0,
+      good: 0,
+      fair: 0,
+      average: 0,
+      poor: 0,
+      debt: 0,
+      total: detailedLearningResults.length,
+    };
+
+    detailedLearningResults.forEach((student) => {
+      const gpa =
+        parseFloat(student.GPA) || parseFloat(student.averageGrade4) || 0;
+      const hasDebt = student.failedSubjects > 0 || student.debtCredits > 0;
+
+      console.log(
+        `Student: ${student.fullName}, GPA: ${gpa}, hasDebt: ${hasDebt}`
+      );
+
+      if (hasDebt) {
+        stats.debt++;
+      } else if (gpa >= 3.6) {
+        stats.excellent++;
+      } else if (gpa >= 3.2) {
+        stats.good++;
+      } else if (gpa >= 2.5) {
+        stats.fair++;
+      } else if (gpa >= 2.0) {
+        stats.average++;
+      } else {
+        stats.poor++;
+      }
+    });
+
+    console.log("Final stats:", stats);
+    return stats;
+  };
+
+  const learningStats = getDetailedLearningStats();
+
+  // Debug logs
+  console.log("=== DEBUG LEARNING STATS ===");
+  console.log("learningStats:", learningStats);
+  console.log(
+    "detailedLearningResults length:",
+    detailedLearningResults?.length
+  );
+  console.log("totalStudents:", totalStudents);
+  console.log("learningResult (old API):", learningResult);
 
   // Tính toán dữ liệu xếp loại rèn luyện
   const getLatestSchoolYear = () => {
@@ -285,75 +454,279 @@ export default function Home() {
                         Kết quả học tập
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 text-xs">
-                        {learningResult?.latestSemester
-                          ? learningResult.latestSemester
+                        {latestSemester
+                          ? `${latestSemester.code} - ${latestSemester.schoolYear}`
                           : "Chưa có dữ liệu"}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                      {learningResult?.learningResults || 0}
+                      {totalStudents}
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-xs">
-                      đạt chuẩn
+                      Tổng học viên
                     </p>
                   </div>
                 </div>
 
-                {/* Progress Ring */}
-                <div className="flex items-center justify-center mb-3">
-                  <div className="relative w-16 h-16">
-                    <svg
-                      className="w-16 h-16 transform -rotate-90"
-                      viewBox="0 0 100 100"
-                    >
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="none"
-                        className="text-slate-200 dark:text-slate-700"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        stroke="currentColor"
-                        strokeWidth="8"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 40}`}
-                        strokeDashoffset={`${
-                          2 * Math.PI * 40 * (1 - learningProgress / 100)
-                        }`}
-                        className="text-emerald-500 transition-all duration-1000 ease-out"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                        {learningProgress.toFixed(0)}%
-                      </span>
+                {/* 4 Progress Rings */}
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {/* Xuất sắc + Giỏi */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-16 h-16">
+                      <svg
+                        className="w-16 h-16 transform -rotate-90"
+                        viewBox="0 0 100 100"
+                      >
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-slate-200 dark:text-slate-700"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 35}`}
+                          strokeDashoffset={`${
+                            2 *
+                            Math.PI *
+                            35 *
+                            (1 -
+                              (learningStats.excellent + learningStats.good) /
+                                learningStats.total)
+                          }`}
+                          className={`transition-all duration-1000 ease-out ${
+                            learningStats.excellent + learningStats.good > 0
+                              ? "text-emerald-500"
+                              : "text-slate-200 dark:text-slate-700"
+                          }`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {learningStats.total > 0
+                            ? (
+                                ((learningStats.excellent +
+                                  learningStats.good) /
+                                  learningStats.total) *
+                                100
+                              ).toFixed(0)
+                            : 0}
+                          %
+                        </span>
+                      </div>
                     </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      Giỏi/XS
+                    </p>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
-                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      {learningResult?.studentOweSubjects || 0}
+                  {/* Khá */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-16 h-16">
+                      <svg
+                        className="w-16 h-16 transform -rotate-90"
+                        viewBox="0 0 100 100"
+                      >
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-slate-200 dark:text-slate-700"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 35}`}
+                          strokeDashoffset={`${
+                            2 *
+                            Math.PI *
+                            35 *
+                            (1 - learningStats.fair / learningStats.total)
+                          }`}
+                          className={`transition-all duration-1000 ease-out ${
+                            learningStats.fair > 0
+                              ? "text-blue-500"
+                              : "text-slate-200 dark:text-slate-700"
+                          }`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {learningStats.total > 0
+                            ? (
+                                (learningStats.fair / learningStats.total) *
+                                100
+                              ).toFixed(0)
+                            : 0}
+                          %
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      Khá
+                    </p>
+                  </div>
+
+                  {/* TB/Yếu */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-16 h-16">
+                      <svg
+                        className="w-16 h-16 transform -rotate-90"
+                        viewBox="0 0 100 100"
+                      >
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-slate-200 dark:text-slate-700"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 35}`}
+                          strokeDashoffset={`${
+                            2 *
+                            Math.PI *
+                            35 *
+                            (1 -
+                              (learningStats.average + learningStats.poor) /
+                                learningStats.total)
+                          }`}
+                          className={`transition-all duration-1000 ease-out ${
+                            learningStats.average + learningStats.poor > 0
+                              ? "text-orange-500"
+                              : "text-slate-200 dark:text-slate-700"
+                          }`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {learningStats.total > 0
+                            ? (
+                                ((learningStats.average + learningStats.poor) /
+                                  learningStats.total) *
+                                100
+                              ).toFixed(0)
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      TB/Yếu
+                    </p>
+                  </div>
+
+                  {/* Nợ môn */}
+                  <div className="flex flex-col items-center">
+                    <div className="relative w-16 h-16">
+                      <svg
+                        className="w-16 h-16 transform -rotate-90"
+                        viewBox="0 0 100 100"
+                      >
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          className="text-slate-200 dark:text-slate-700"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="35"
+                          stroke="currentColor"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 35}`}
+                          strokeDashoffset={`${
+                            2 *
+                            Math.PI *
+                            35 *
+                            (1 - learningStats.debt / learningStats.total)
+                          }`}
+                          className={`transition-all duration-1000 ease-out ${
+                            learningStats.debt > 0
+                              ? "text-red-500"
+                              : "text-slate-200 dark:text-slate-700"
+                          }`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                          {learningStats.total > 0
+                            ? (
+                                (learningStats.debt / learningStats.total) *
+                                100
+                              ).toFixed(0)
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                       Nợ môn
                     </p>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-1 text-center">
                   <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
                     <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      {learningResult?.learningResults || 0}
+                      {learningStats.excellent + learningStats.good}
                     </div>
                     <p className="text-xs text-slate-600 dark:text-slate-400">
-                      Khá/Giỏi/XS
+                      Giỏi/XS
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {learningStats.fair}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Khá
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {learningStats.average + learningStats.poor}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      TB/Yếu
+                    </p>
+                  </div>
+                  <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-2">
+                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      {learningStats.debt}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Nợ môn
                     </p>
                   </div>
                 </div>

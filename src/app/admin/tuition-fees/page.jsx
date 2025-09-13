@@ -1193,6 +1193,288 @@ const TuitionFees = () => {
           </div>
         </div>
       )}
+      <style jsx global>{`
+        .ant-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        /* Tokens chỉ áp dụng cho chế độ multiple */
+        .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(239 246 255) !important; /* blue-50 */
+          border-color: rgb(191 219 254) !important; /* blue-200 */
+          color: rgb(30 58 138) !important; /* blue-900 */
+        }
+        /* Single select: chữ rõ, không nền */
+        .ant-select-single .ant-select-selector .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(17 24 39) !important; /* gray-900 */
+          font-weight: 600;
+        }
+        .ant-select-arrow,
+        .ant-select-clear {
+          color: rgb(107 114 128);
+        }
+        .ant-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+        }
+        .ant-select-item {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+
+        /* TreeSelect specific styles */
+        .ant-tree-select .ant-select-selector {
+          background-color: rgb(255 255 255) !important;
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+          color: rgb(17 24 39) !important; /* gray-900 */
+        }
+        .ant-tree-select .ant-select-selection-placeholder {
+          color: rgb(107 114 128) !important; /* gray-500 */
+        }
+        .ant-tree-select .ant-select-arrow,
+        .ant-tree-select .ant-select-clear {
+          color: rgb(107 114 128) !important;
+        }
+        .ant-tree-select-dropdown,
+        :where(.css-dev-only-do-not-override-1g7t870).ant-tree-select-dropdown {
+          background-color: rgb(255 255 255) !important;
+          border: 1px solid rgb(229 231 235) !important; /* gray-200 */
+          color: rgb(17 24 39) !important;
+        }
+        .ant-tree-select-tree .ant-tree-node-content-wrapper {
+          color: rgb(17 24 39) !important;
+        }
+        .ant-tree-select-tree .ant-tree-node-content-wrapper:hover {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.12
+          ) !important; /* blue-500/12 */
+          color: rgb(30 58 138) !important;
+        }
+        .ant-tree-select-tree
+          .ant-tree-node-selected
+          .ant-tree-node-content-wrapper {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.18
+          ) !important; /* blue-500/18 */
+          color: rgb(30 58 138) !important;
+          font-weight: 600 !important;
+        }
+        .ant-tree-select-tree .ant-tree-checkbox-inner {
+          border-color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .ant-tree-select-tree
+          .ant-tree-checkbox-checked
+          .ant-tree-checkbox-inner {
+          background-color: rgb(37 99 235) !important; /* blue-600 */
+          border-color: rgb(37 99 235) !important; /* blue-600 */
+        }
+        /* Fix TreeSelect multiple selection display */
+        .ant-tree-select .ant-select-selection-overflow {
+          display: flex !important;
+          flex-wrap: nowrap !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          max-height: 32px !important;
+        }
+        .ant-tree-select .ant-select-selection-overflow-item {
+          flex-shrink: 0 !important;
+          margin-right: 4px !important;
+        }
+        .ant-tree-select .ant-select-selection-overflow::-webkit-scrollbar {
+          height: 4px !important;
+        }
+        .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-track {
+          background: transparent !important;
+        }
+        .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-thumb {
+          background: rgb(209 213 219) !important;
+          border-radius: 2px !important;
+        }
+        .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-thumb:hover {
+          background: rgb(156 163 175) !important;
+        }
+
+        .dark .ant-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        /* Tokens ở chế độ multiple trong dark */
+        .dark .ant-select-multiple .ant-select-selection-item {
+          background-color: rgb(75 85 99) !important; /* gray-600 */
+          border-color: rgb(75 85 99) !important;
+          color: rgb(255 255 255) !important;
+        }
+        /* Single select dark: chữ rõ, không nền */
+        .dark
+          .ant-select-single
+          .ant-select-selector
+          .ant-select-selection-item {
+          background-color: transparent !important;
+          color: rgb(255 255 255) !important;
+          font-weight: 600;
+        }
+        .dark .ant-select-arrow,
+        .dark .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+        }
+        .dark .ant-select-item {
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-select-item-option-selected:not(
+            .ant-select-item-option-disabled
+          ) {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+
+        /* TreeSelect dark mode styles */
+        .dark .ant-tree-select .ant-select-selector {
+          background-color: rgb(55 65 81) !important; /* gray-700 */
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-tree-select .ant-select-selection-placeholder {
+          color: rgb(156 163 175) !important; /* gray-400 */
+        }
+        .dark .ant-tree-select .ant-select-arrow,
+        .dark .ant-tree-select .ant-select-clear {
+          color: rgb(209 213 219) !important; /* gray-300 */
+        }
+        .dark .ant-tree-select-dropdown,
+        .dark
+          :where(
+            .css-dev-only-do-not-override-1g7t870
+          ).ant-tree-select-dropdown {
+          background-color: rgb(31 41 55) !important; /* gray-800 */
+          border-color: rgb(55 65 81) !important; /* gray-700 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-tree-select-tree .ant-tree-node-content-wrapper {
+          color: rgb(255 255 255) !important;
+        }
+        .dark .ant-tree-select-tree .ant-tree-node-content-wrapper:hover {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.25
+          ) !important; /* blue-500/25 */
+          color: rgb(255 255 255) !important;
+        }
+        .dark
+          .ant-tree-select-tree
+          .ant-tree-node-selected
+          .ant-tree-node-content-wrapper {
+          background-color: rgba(
+            59,
+            130,
+            246,
+            0.35
+          ) !important; /* blue-500/35 */
+          color: rgb(255 255 255) !important;
+          font-weight: 600 !important;
+        }
+        .dark .ant-tree-select-tree .ant-tree-checkbox-inner {
+          border-color: rgb(75 85 99) !important; /* gray-600 */
+        }
+        .dark
+          .ant-tree-select-tree
+          .ant-tree-checkbox-checked
+          .ant-tree-checkbox-inner {
+          background-color: rgb(37 99 235) !important; /* blue-600 */
+          border-color: rgb(37 99 235) !important; /* blue-600 */
+        }
+        /* Fix TreeSelect multiple selection display in dark mode */
+        .dark .ant-tree-select .ant-select-selection-overflow {
+          display: flex !important;
+          flex-wrap: nowrap !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          max-height: 32px !important;
+        }
+        .dark .ant-tree-select .ant-select-selection-overflow-item {
+          flex-shrink: 0 !important;
+          margin-right: 4px !important;
+        }
+        .dark
+          .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar {
+          height: 4px !important;
+        }
+        .dark
+          .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-track {
+          background: transparent !important;
+        }
+        .dark
+          .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-thumb {
+          background: rgb(75 85 99) !important;
+          border-radius: 2px !important;
+        }
+        .dark
+          .ant-tree-select
+          .ant-select-selection-overflow::-webkit-scrollbar-thumb:hover {
+          background: rgb(107 114 128) !important;
+        }
+      `}</style>
     </div>
   );
 };

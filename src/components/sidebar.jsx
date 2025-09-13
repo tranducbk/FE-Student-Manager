@@ -224,12 +224,12 @@ const SideBarContent = () => {
                 Thông tin cá nhân
               </Menu.Item>
 
-              {/* <Menu.Item
+              <Menu.Item
                 key="/admin/commander-duty-schedule"
                 icon={<CalendarOutlined />}
               >
                 Lịch trực
-              </Menu.Item> */}
+              </Menu.Item>
 
               <SubMenu
                 key="student-management"
@@ -407,7 +407,7 @@ const SideBarContent = () => {
                   Thống kê theo năm
                 </Menu.Item>
                 <Menu.Item
-                  key="/users/learning-information?tab=tuition"
+                  key="/users/learning-information?tab=tuition-fee"
                   icon={<DollarOutlined />}
                 >
                   Học phí
@@ -418,7 +418,7 @@ const SideBarContent = () => {
                 Lịch cắt cơm
               </Menu.Item>
 
-              <SubMenu
+              {/* <SubMenu
                 key="training-user"
                 icon={<HeartOutlined />}
                 title="Rèn luyện"
@@ -443,7 +443,7 @@ const SideBarContent = () => {
 
               <Menu.Item key="/users/help-cooking" icon={<FireOutlined />}>
                 Giúp bếp
-              </Menu.Item>
+              </Menu.Item> */}
 
               <Menu.Item
                 key="/users/commander-duty-schedule"
@@ -452,9 +452,9 @@ const SideBarContent = () => {
                 Lịch trực chỉ huy
               </Menu.Item>
 
-              <Menu.Item key="/users/guard" icon={<SafetyOutlined />}>
+              {/* <Menu.Item key="/users/guard" icon={<SafetyOutlined />}>
                 Lịch gác đêm
-              </Menu.Item>
+              </Menu.Item> */}
 
               <Menu.Item
                 key="/users/regulatory-regime"

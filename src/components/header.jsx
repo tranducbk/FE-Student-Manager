@@ -209,9 +209,9 @@ const Header = () => {
             doc._id === notificationId ? { ...doc, isRead: true } : doc
           )
         );
-        // TODO: Điều hướng đến trang thông báo
-        // setDropdownOpen(false);
-        // router.push(`/users/notification/${notificationId}`);
+        // Điều hướng đến trang kết quả học tập
+        setDropdownOpen(false);
+        router.push(`/users/learning-information?tab=results`);
       } catch (error) {
         console.log(error);
       }
@@ -295,9 +295,10 @@ const Header = () => {
               style={{
                 margin: "4px 0",
                 backgroundColor: doc.isRead
-                  ? "transparent"
+                  ? themeToken.colorBgContainer
                   : themeToken.colorPrimaryBg,
                 border: `1px solid ${themeToken.colorBorder}`,
+                opacity: doc.isRead ? 0.7 : 1,
               }}
               onClick={(e) => handleUpdateIsRead(e, doc._id)}
             >
@@ -433,9 +434,9 @@ const Header = () => {
       className="theme-button-secondary"
     >
       <Avatar
-        src={userDetail?.avatar}
-        size="small"
+        src={user?.avatar}
         icon={<UserOutlined />}
+        size="small"
         style={{ marginRight: 8 }}
       />
       <div className="flex flex-col items-start mr-2">
@@ -564,7 +565,10 @@ const Header = () => {
         title={
           <div className="flex items-center">
             <Avatar
-              src={userDetail?.avatar}
+              src={
+                userDetail?.avatar ||
+                "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg"
+              }
               size="large"
               icon={<UserOutlined />}
               style={{ marginRight: 12 }}

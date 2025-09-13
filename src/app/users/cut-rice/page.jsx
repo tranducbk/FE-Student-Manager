@@ -457,9 +457,13 @@ const CutRice = () => {
                 </div>
               )} */}
               <div className="flex justify-between font-bold p-5 border-b border-gray-200 dark:border-gray-700">
-                <div className="text-gray-900 dark:text-white text-lg">
-                  LỊCH CẮT CƠM
+                <div className="text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold">LỊCH CẮT CƠM</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Quản lý và xem lịch cắt cơm
+                  </p>
                 </div>
+                <div className="text-gray-900 dark:text-white text-lg"></div>
                 {/* Ẩn các nút chỉnh sửa và thêm mới cho user thường */}
                 {/* <div className="flex space-x-3">
                   <button

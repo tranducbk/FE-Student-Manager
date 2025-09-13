@@ -134,7 +134,10 @@ const CommanderDutySchedule = () => {
         <div className="w-full pt-8 pb-5 pl-5 pr-6 mb-5">
           <div className="bg-white dark:bg-gray-800 rounded-lg w-full shadow-lg">
             <div className="font-bold pt-5 pl-5 pb-5 text-gray-900 dark:text-white">
-              LỊCH TRỰC CHỈ HUY
+              <h1 className="text-2xl font-bold">LỊCH TRỰC CHỈ HUY</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Quản lý và xem lịch trực chỉ huy
+              </p>
             </div>
             <div className="w-full pl-5 pb-5 pr-5">
               <div className="w-full">
