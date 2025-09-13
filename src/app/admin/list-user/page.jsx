@@ -88,6 +88,7 @@ const ListUser = () => {
     username: "",
     password: "",
     studentId: "",
+    avatar: "",
     fullName: "",
     gender: "",
     birthday: "",
@@ -111,6 +112,7 @@ const ListUser = () => {
     fullPartyMember: "",
     probationaryPartyMember: "",
     dateOfEnlistment: "",
+    enrollment: "",
     graduationDate: "",
   });
   const [formData, setFormData] = useState({
@@ -125,6 +127,7 @@ const ListUser = () => {
     currentAddress: "",
     avatar:
       "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+    enrollment: "",
   });
 
   // Disable scroll khi có modal mở
@@ -172,6 +175,21 @@ const ListUser = () => {
 
     if (!selectedClass) {
       handleNotify("warning", "Cảnh báo!", "Vui lòng chọn lớp");
+      return;
+    }
+
+    if (!addFormData.dateOfEnlistment) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn ngày nhập ngũ");
+      return;
+    }
+
+    if (!addFormData.unit) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng chọn đơn vị");
+      return;
+    }
+
+    if (!addFormData.enrollment) {
+      handleNotify("warning", "Cảnh báo!", "Vui lòng nhập năm nhập học");
       return;
     }
 
@@ -1802,6 +1820,28 @@ const ListUser = () => {
 
                             <div>
                               <label
+                                htmlFor="avatar"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Ảnh đại diện
+                              </label>
+                              <input
+                                type="url"
+                                id="avatar"
+                                value={addFormData.avatar}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    avatar: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: https://example.com/avatar.jpg"
+                              />
+                            </div>
+
+                            <div>
+                              <label
                                 htmlFor="fullName"
                                 className="block mb-2 text-sm font-medium dark:text-white"
                               >
@@ -1930,6 +1970,7 @@ const ListUser = () => {
                                   })
                                 }
                                 className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
                               >
                                 <option value="">Chọn đơn vị</option>
                                 <option value="L1 - H5">L1 - H5</option>
@@ -2000,7 +2041,9 @@ const ListUser = () => {
                               </label>
                               <select
                                 id="positionGovernment"
-                                value={addFormData.positionGovernment}
+                                value={
+                                  addFormData.positionGovernment || "Học viên"
+                                }
                                 onChange={(e) =>
                                   setAddFormData({
                                     ...addFormData,
@@ -2009,7 +2052,6 @@ const ListUser = () => {
                                 }
                                 className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               >
-                                <option value="">Chọn chức vụ</option>
                                 <option value="Học viên">Học viên</option>
                                 <option value="Lớp phó">Lớp phó</option>
                                 <option value="Lớp trưởng">Lớp trưởng</option>
@@ -2036,6 +2078,7 @@ const ListUser = () => {
                                 className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 placeholderText="Ngày/Tháng/Năm"
                                 wrapperClassName="w-full"
+                                required
                               />
                             </div>
 
@@ -2235,6 +2278,80 @@ const ListUser = () => {
 
                             <div>
                               <label
+                                htmlFor="graduationDate"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Ngày ra trường
+                              </label>
+                              <DatePicker
+                                id="graduationDate"
+                                selected={addFormData.graduationDate}
+                                onChange={(date) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    graduationDate: date,
+                                  })
+                                }
+                                dateFormat="dd/MM/yyyy"
+                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholderText="Ngày/Tháng/Năm"
+                                wrapperClassName="w-full"
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="enrollment"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Năm nhập học
+                              </label>
+                              <input
+                                type="number"
+                                id="enrollment"
+                                value={addFormData.enrollment}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    enrollment: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: 2020"
+                                min="2000"
+                                max="2030"
+                                required
+                              />
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="class"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Lớp
+                              </label>
+                              <select
+                                id="class"
+                                value={selectedClass || ""}
+                                onChange={(e) => {
+                                  setSelectedClass(e.target.value);
+                                }}
+                                disabled={!selectedLevel}
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                required
+                              >
+                                <option value="">Chọn lớp</option>
+                                {classes.map((cls) => (
+                                  <option key={cls._id} value={cls._id}>
+                                    {cls.className}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label
                                 htmlFor="hometown"
                                 className="block mb-2 text-sm font-medium dark:text-white"
                               >
@@ -2296,29 +2413,6 @@ const ListUser = () => {
                                 }
                                 className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                 placeholder="vd: Không"
-                              />
-                            </div>
-
-                            <div>
-                              <label
-                                htmlFor="graduationDate"
-                                className="block mb-2 text-sm font-medium dark:text-white"
-                              >
-                                Ngày ra trường
-                              </label>
-                              <DatePicker
-                                id="graduationDate"
-                                selected={addFormData.graduationDate}
-                                onChange={(date) =>
-                                  setAddFormData({
-                                    ...addFormData,
-                                    graduationDate: date,
-                                  })
-                                }
-                                dateFormat="dd/MM/yyyy"
-                                className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholderText="Ngày/Tháng/Năm"
-                                wrapperClassName="w-full"
                               />
                             </div>
 
@@ -3328,7 +3422,7 @@ const ListUser = () => {
         </div>
         {showForm && (
           <>
-            <div className="bg-slate-400 z-10 opacity-50 fixed top-0 left-0 right-0 bottom-0"></div>
+            <div className="bg-slate-400 dark:bg-gray-900 z-10 opacity-50 fixed top-0 left-0 right-0 bottom-0"></div>
             <div
               id="authentication-modal"
               tabIndex="-1"
@@ -3340,7 +3434,7 @@ const ListUser = () => {
                   <div className="w-full">
                     <div className="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
                       <h3 className="text-xl font-semibold dark:text-white mx-auto">
-                        CHỈNH SỬA THÔNG TIN QUÂN NHÂN
+                        CHỈNH SỬA THÔNG TIN HỌC VIÊN
                       </h3>
                       <button
                         type="button"
@@ -3405,6 +3499,22 @@ const ListUser = () => {
                               onChange={handleChange}
                               className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               placeholder="vd: 20200001"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="avatar"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Ảnh đại diện
+                            </label>
+                            <input
+                              type="url"
+                              id="avatar"
+                              value={formData.avatar}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: https://example.com/avatar.jpg"
                             />
                           </div>
                           <div>
@@ -3510,6 +3620,24 @@ const ListUser = () => {
                               className="bg-gray-50 border w-full border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                               placeholderText="Ngày/Tháng/Năm"
                               wrapperClassName="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              htmlFor="enrollment"
+                              className="block mb-2 text-sm font-medium dark:text-white"
+                            >
+                              Năm nhập học
+                            </label>
+                            <input
+                              type="number"
+                              id="enrollment"
+                              value={formData.enrollment}
+                              onChange={handleChange}
+                              className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                              placeholder="vd: 2020"
+                              min="2000"
+                              max="2030"
                             />
                           </div>
                           <div>
