@@ -5,6 +5,8 @@ import axios from "axios";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 import { ConfigProvider, theme, Select } from "antd";
 import { useState as useThemeState } from "react";
@@ -14,10 +16,10 @@ const YearlyStatistics = () => {
   const [yearlyResults, setYearlyResults] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("all");
   const [availableUnits, setAvailableUnits] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   const [isDark, setIsDark] = useThemeState(false);
 
@@ -155,14 +157,17 @@ const YearlyStatistics = () => {
   }, []);
 
   useEffect(() => {
-    fetchSchoolYears();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchSchoolYears);
+    };
+    loadData();
+  }, [withLoading]);
 
   useEffect(() => {
     if (selectedSchoolYear) {
-      fetchYearlyResults();
+      withLoading(fetchYearlyResults);
     }
-  }, [selectedSchoolYear]);
+  }, [selectedSchoolYear, withLoading]);
 
   const fetchSchoolYears = async () => {
     const token = localStorage.getItem("token");
@@ -205,7 +210,6 @@ const YearlyStatistics = () => {
     const token = localStorage.getItem("token");
     if (!token || !selectedSchoolYear) return;
 
-    setLoading(true);
     try {
       // Lấy dữ liệu kết quả học tập của user hiện tại
       const decodedToken = jwtDecode(token);
@@ -337,8 +341,6 @@ const YearlyStatistics = () => {
     } catch (error) {
       console.log("Error fetching yearly results:", error);
       setYearlyResults([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -512,6 +514,10 @@ const YearlyStatistics = () => {
 
     return (totalGPA / results.length).toFixed(2);
   };
+
+  if (loading) {
+    return <Loader text="Đang tải thống kê năm học..." />;
+  }
 
   return (
     <>

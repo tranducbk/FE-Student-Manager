@@ -6,10 +6,13 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const VacationSchedule = () => {
   const [vacationSchedule, setVacationSchedule] = useState(null);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchVacationSchedule = async () => {
     const token = localStorage.getItem("token");
@@ -34,8 +37,15 @@ const VacationSchedule = () => {
   };
 
   useEffect(() => {
-    fetchVacationSchedule();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchVacationSchedule);
+    };
+    loadData();
+  }, [withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải lịch nghỉ phép..." />;
+  }
 
   return (
     <div className="flex">

@@ -6,6 +6,8 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const Guard = () => {
@@ -17,10 +19,14 @@ const Guard = () => {
   const yearParam = query?.year || new Date().getFullYear();
   const [month, setMonth] = useState(monthParam);
   const [year, setYear] = useState(yearParam);
+  const { loading, withLoading } = useLoading(true);
 
   useEffect(() => {
-    fetchGuard();
-  }, [index]);
+    const loadData = async () => {
+      await withLoading(fetchGuard);
+    };
+    loadData();
+  }, [index, withLoading]);
 
   const fetchGuard = async () => {
     const token = localStorage.getItem("token");
@@ -71,6 +77,10 @@ const Guard = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải lịch trực..." />;
+  }
 
   return (
     <div className="flex">

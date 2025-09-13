@@ -9,6 +9,8 @@ import { format } from "date-fns";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 
 import { BASE_URL } from "@/configs";
@@ -27,6 +29,7 @@ const Violation = () => {
   const [addFormData, setAddFormData] = useState({
     dateOfViolation: format(new Date(), "yyyy-MM-dd"),
   });
+  const { loading, withLoading } = useLoading(true);
 
   const handleShowFormUpdate = async (violationId) => {
     const token = localStorage.getItem("token");
@@ -163,8 +166,11 @@ const Violation = () => {
   };
 
   useEffect(() => {
-    fetchViolation();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchViolation);
+    };
+    loadData();
+  }, [withLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -190,6 +196,10 @@ const Violation = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu vi phạm..." />;
+  }
 
   return (
     <>

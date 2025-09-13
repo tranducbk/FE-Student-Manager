@@ -5,7 +5,9 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 import { Card, Row, Col, Statistic, Progress, Divider, Typography } from "antd";
 import {
   UserOutlined,
@@ -26,6 +28,7 @@ export default function Home() {
   const [semesters, setSemesters] = useState([]);
   const [detailedLearningResults, setDetailedLearningResults] = useState([]);
   const [dataIsLoaded, setDataIsLoaded] = useState(false);
+  const { loading, withLoading } = useLoading(true);
 
   const currentDate = new Date();
   const currentDayIndex = currentDate.getDay();
@@ -206,24 +209,26 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       console.log("=== STARTING FETCH DATA ===");
-      await Promise.all([
-        fetchLearningResult(),
-        fetchStudent(),
-        fetchCutRice(),
-        fetchAchievement(),
-        fetchTrainingRatings(),
-        fetchSemesters(),
-        fetchDetailedLearningResults(),
-      ]);
-      console.log("=== ALL DATA FETCHED ===");
-      setDataIsLoaded(true);
+      await withLoading(async () => {
+        await Promise.all([
+          fetchLearningResult(),
+          fetchStudent(),
+          fetchCutRice(),
+          fetchAchievement(),
+          fetchTrainingRatings(),
+          fetchSemesters(),
+          fetchDetailedLearningResults(),
+        ]);
+        console.log("=== ALL DATA FETCHED ===");
+        setDataIsLoaded(true);
+      });
     };
 
     fetchData();
-  }, []);
+  }, [withLoading]);
 
-  if (!dataIsLoaded) {
-    return null;
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu dashboard..." />;
   }
 
   const totalStudents = student?.length || 0;
@@ -369,6 +374,10 @@ export default function Home() {
 
   const trainingStats = getTrainingRatingStats();
   const latestSchoolYear = getLatestSchoolYear();
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu dashboard..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

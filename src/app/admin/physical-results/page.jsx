@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 
 import { BASE_URL } from "@/configs";
 const PhysicalResults = () => {
@@ -21,6 +23,7 @@ const PhysicalResults = () => {
   const [showFormEdit, setShowFormEdit] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [addFormData, setAddFormData] = useState({});
+  const { loading, withLoading } = useLoading(true);
 
   const handleShowFormUpdate = async (studentId, id) => {
     const token = localStorage.getItem("token");
@@ -149,9 +152,14 @@ const PhysicalResults = () => {
   };
 
   useEffect(() => {
-    fetchPhysicalResults();
-    fetchSemesters();
-  }, []);
+    const loadData = async () => {
+      await withLoading(async () => {
+        await fetchPhysicalResults();
+        await fetchSemesters();
+      });
+    };
+    loadData();
+  }, [withLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -258,6 +266,10 @@ const PhysicalResults = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu kết quả thể lực..." />;
+  }
 
   return (
     <>

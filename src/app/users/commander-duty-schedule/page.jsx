@@ -6,6 +6,8 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const CommanderDutySchedule = () => {
@@ -17,10 +19,14 @@ const CommanderDutySchedule = () => {
   const yearParam = query?.year || new Date().getFullYear();
   const [month, setMonth] = useState(monthParam);
   const [year, setYear] = useState(yearParam);
+  const { loading, withLoading } = useLoading(true);
 
   useEffect(() => {
-    fetchSchedule();
-  }, [currentPage]);
+    const loadData = async () => {
+      await withLoading(fetchSchedule);
+    };
+    loadData();
+  }, [currentPage, withLoading]);
 
   const fetchSchedule = async () => {
     const token = localStorage.getItem("token");
@@ -79,6 +85,10 @@ const CommanderDutySchedule = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải lịch trực ban..." />;
+  }
 
   return (
     <div className="flex">

@@ -9,6 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { useModalScroll } from "@/hooks/useModalScroll";
 
 import { BASE_URL } from "@/configs";
@@ -28,6 +30,7 @@ const CommanderDutySchedule = () => {
     workDay: format(new Date(), "yyyy-MM-dd"),
   });
   const [commanders, setCommanders] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   useModalScroll(showFormAdd || showFormEdit || showConfirm);
 
@@ -176,9 +179,14 @@ const CommanderDutySchedule = () => {
   };
 
   useEffect(() => {
-    fetchSchedule();
-    fetchCommanders();
-  }, [currentPage]);
+    const loadData = async () => {
+      await withLoading(async () => {
+        await fetchSchedule();
+        await fetchCommanders();
+      });
+    };
+    loadData();
+  }, [currentPage, withLoading]);
 
   const fetchSchedule = async () => {
     const token = localStorage.getItem("token");
@@ -274,6 +282,10 @@ const CommanderDutySchedule = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải lịch trực chỉ huy..." />;
+  }
 
   return (
     <>

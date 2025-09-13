@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
 import { Select } from "antd";
 import { useModalScroll } from "../../../hooks/useModalScroll";
+import { useLoading } from "@/hooks";
 
 import { BASE_URL } from "@/configs";
 
@@ -24,6 +26,7 @@ const Achievement = () => {
   const [addFormData, setAddFormData] = useState({});
   const [selectedStudentForForm, setSelectedStudentForForm] = useState(null);
   const [recommendations, setRecommendations] = useState({});
+  const { loading, withLoading } = useLoading(true);
 
   // Disable scroll when modal is open
   useModalScroll(showFormAdd || showFormEdit);
@@ -66,13 +69,14 @@ const Achievement = () => {
         }
         setAchievements(achievementsData);
 
-        // Fetch recommendations for each student
+        // Fetch recommendations for each student in parallel
         const recommendationsData = {};
         console.log(
           "Fetching recommendations for students:",
           studentsData.length
         );
-        for (const student of studentsData) {
+
+        const recommendationPromises = studentsData.map(async (student) => {
           try {
             console.log(`Fetching recommendations for student: ${student._id}`);
             const recRes = await axios.get(
@@ -82,15 +86,21 @@ const Achievement = () => {
               }
             );
             console.log(`Recommendations for ${student._id}:`, recRes.data);
-            recommendationsData[student._id] = recRes.data;
+            return { studentId: student._id, data: recRes.data };
           } catch (error) {
             console.log(
               `Error fetching recommendations for student ${student._id}:`,
               error
             );
-            recommendationsData[student._id] = { suggestions: [] };
+            return { studentId: student._id, data: { suggestions: [] } };
           }
-        }
+        });
+
+        const recommendationResults = await Promise.all(recommendationPromises);
+        recommendationResults.forEach(({ studentId, data }) => {
+          recommendationsData[studentId] = data;
+        });
+
         console.log("Final recommendations data:", recommendationsData);
         setRecommendations(recommendationsData);
       } catch (error) {
@@ -100,8 +110,11 @@ const Achievement = () => {
   };
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchStudents);
+    };
+    loadData();
+  }, [withLoading]);
 
   useEffect(() => {
     if (showFormAdd) {
@@ -429,6 +442,10 @@ const Achievement = () => {
 
     return hasApprovedScientific;
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu khen thưởng..." />;
+  }
 
   return (
     <>

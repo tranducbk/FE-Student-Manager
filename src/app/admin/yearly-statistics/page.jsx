@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
@@ -12,10 +14,10 @@ const YearlyStatistics = () => {
   const [yearlyResults, setYearlyResults] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("all");
   const [availableUnits, setAvailableUnits] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   const [isDark, setIsDark] = useThemeState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -49,14 +51,16 @@ const YearlyStatistics = () => {
   }, []);
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchInitialData);
+    };
+    loadData();
+  }, [withLoading]);
 
   const fetchInitialData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       // Gọi API để lấy dữ liệu thống kê năm học (không có tham số schoolYear)
       const res = await axios.get(`${BASE_URL}/commander/yearlyStatistics`, {
@@ -115,8 +119,6 @@ const YearlyStatistics = () => {
       setYearlyResults([]);
       setSchoolYears([]);
       setSelectedSchoolYear("");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -126,19 +128,18 @@ const YearlyStatistics = () => {
 
     if (newSchoolYear === "all") {
       // Nếu chọn "Tất cả các năm", gọi lại API để lấy tất cả dữ liệu
-      fetchInitialData();
+      withLoading(fetchInitialData);
       return;
     }
 
     // Nếu chọn năm học cụ thể, gọi API để lấy dữ liệu cho năm đó
-    fetchYearlyResultsForYear(newSchoolYear);
+    withLoading(() => fetchYearlyResultsForYear(newSchoolYear));
   };
 
   const fetchYearlyResultsForYear = async (year) => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/commander/yearlyStatistics?schoolYear=${year}`,
@@ -168,8 +169,6 @@ const YearlyStatistics = () => {
     } catch (error) {
       console.log("Error fetching yearly results for year:", error);
       setYearlyResults([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -177,7 +176,6 @@ const YearlyStatistics = () => {
     const token = localStorage.getItem("token");
     if (!token || !selectedSchoolYear) return;
 
-    setLoading(true);
     try {
       let res;
 
@@ -218,8 +216,6 @@ const YearlyStatistics = () => {
     } catch (error) {
       console.log("Error fetching yearly results:", error);
       setYearlyResults([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -332,9 +328,9 @@ const YearlyStatistics = () => {
         setShowUpdateModal(false);
         // Refresh data
         if (selectedSchoolYear === "all") {
-          fetchInitialData();
+          withLoading(fetchInitialData);
         } else {
-          fetchYearlyResultsForYear(selectedSchoolYear);
+          withLoading(() => fetchYearlyResultsForYear(selectedSchoolYear));
         }
       }
     } catch (error) {
@@ -418,6 +414,10 @@ const YearlyStatistics = () => {
 
     return (totalGPA / results.length).toFixed(2);
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu thống kê năm học..." />;
+  }
 
   return (
     <>
@@ -591,7 +591,7 @@ const YearlyStatistics = () => {
                           setSearchTerm("");
                           setSelectedUnit("all");
                           setSelectedSchoolYear("all");
-                          fetchInitialData();
+                          withLoading(fetchInitialData);
                         }}
                         className="h-9 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm px-4 transition-colors duration-200"
                       >
@@ -1100,38 +1100,7 @@ const YearlyStatistics = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {loading ? (
-                        <tr>
-                          <td
-                            colSpan="9"
-                            className="text-center py-8 text-gray-500 dark:text-gray-400"
-                          >
-                            <div className="flex flex-col items-center">
-                              <svg
-                                className="animate-spin h-8 w-8 text-blue-500 mb-4"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                              <p>Đang tải dữ liệu...</p>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : getFilteredResults().length > 0 ? (
+                      {getFilteredResults().length > 0 ? (
                         getFilteredResults().map((item) => (
                           <tr
                             key={`${item._id}-${item.schoolYear}`}

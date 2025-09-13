@@ -6,7 +6,9 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 
 export default function Home() {
   const [learningResult, setLearningResult] = useState(null);
@@ -22,6 +24,7 @@ export default function Home() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchLearningResult = async () => {
     const token = localStorage.getItem("token");
@@ -302,19 +305,21 @@ export default function Home() {
   const initialLoad = async () => {
     setIsLoading(true);
     try {
-      await Promise.all([
-        fetchLearningResult(),
-        fetchSemesterResults(),
-        fetchTuitionFee(),
-        fetchTimeTable(),
-        fetchCutRice(),
-        fetchPhisicalResult(),
-        fetchVacationSchedule(),
-        fetchAchievement(),
-        fetchHelpCooking(),
-        fetchSchedule(),
-        fetchProfile(),
-      ]);
+      await withLoading(async () => {
+        await Promise.all([
+          fetchLearningResult(),
+          fetchSemesterResults(),
+          fetchTuitionFee(),
+          fetchTimeTable(),
+          fetchCutRice(),
+          fetchPhisicalResult(),
+          fetchVacationSchedule(),
+          fetchAchievement(),
+          fetchHelpCooking(),
+          fetchSchedule(),
+          fetchProfile(),
+        ]);
+      });
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -324,7 +329,7 @@ export default function Home() {
 
   useEffect(() => {
     initialLoad();
-  }, []);
+  }, [withLoading]);
 
   // Tính toán thống kê
   const getLatestSemester = () => {
@@ -509,6 +514,10 @@ export default function Home() {
   const unpaidCount = getUnpaidTuition();
   const todayClasses = getTodayClasses();
   const achievementStats = getAchievementStats();
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu cá nhân..." />;
+  }
 
   return (
     <div className="flex">

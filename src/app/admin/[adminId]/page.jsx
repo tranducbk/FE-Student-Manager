@@ -7,6 +7,8 @@ import Link from "next/link";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 
 import { BASE_URL } from "@/configs";
 const UserProfile = ({ params }) => {
@@ -16,6 +18,7 @@ const UserProfile = ({ params }) => {
     avatar:
       "https://i.pinimg.com/736x/d4/a1/ff/d4a1ff9d0f243e50062e2b21f2f2496d.jpg",
   });
+  const { loading, withLoading } = useLoading(true);
 
   const openForm = () => {
     if (profile) {
@@ -69,8 +72,11 @@ const UserProfile = ({ params }) => {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, [params.adminId]);
+    const loadData = async () => {
+      await withLoading(fetchProfile);
+    };
+    loadData();
+  }, [params.adminId, withLoading]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
@@ -137,6 +143,10 @@ const UserProfile = ({ params }) => {
       [id]: date,
     });
   };
+
+  if (loading) {
+    return <Loader text="Đang tải thông tin quân nhân..." />;
+  }
 
   return (
     <>

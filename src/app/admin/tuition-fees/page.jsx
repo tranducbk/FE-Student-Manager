@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { ConfigProvider, TreeSelect, Select, theme } from "antd";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 
 import { BASE_URL } from "@/configs";
 const TuitionFees = () => {
@@ -35,6 +37,7 @@ const TuitionFees = () => {
     unpaidSum: 0,
   });
   const [isDark, setIsDark] = useState(false);
+  const { loading, withLoading } = useLoading(true);
 
   const getSemesterLabel = (s) => {
     if (!s) return "";
@@ -121,11 +124,13 @@ const TuitionFees = () => {
 
   useEffect(() => {
     const init = async () => {
-      await fetchSemesters();
-      await fetchTuitionFees();
+      await withLoading(async () => {
+        await fetchSemesters();
+        await fetchTuitionFees();
+      });
     };
     init();
-  }, []);
+  }, [withLoading]);
 
   // Theo dõi chế độ dark/light để đồng bộ màu AntD
   useEffect(() => {
@@ -549,6 +554,10 @@ const TuitionFees = () => {
     value: s._id,
     key: s._id,
   }));
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu học phí..." />;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

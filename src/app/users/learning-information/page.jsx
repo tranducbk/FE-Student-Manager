@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
@@ -46,6 +48,7 @@ const LearningInformation = () => {
       grade10: "",
     },
   ]);
+  const { loading, withLoading } = useLoading(true);
   const [gradeSemesterCode, setGradeSemesterCode] = useState("");
   const searchParams = useSearchParams();
   const currentTab = searchParams?.get("tab") || "time-table";
@@ -1066,11 +1069,18 @@ const LearningInformation = () => {
   };
 
   useEffect(() => {
-    fetchLearningResult();
-    fetchSemesterResults();
-    fetchTuitionFee();
-    fetchTimeTable();
-  }, []);
+    const loadData = async () => {
+      await withLoading(async () => {
+        await Promise.all([
+          fetchLearningResult(),
+          fetchSemesterResults(),
+          fetchTuitionFee(),
+          fetchTimeTable(),
+        ]);
+      });
+    };
+    loadData();
+  }, [withLoading]);
 
   // fetch danh sách học kỳ cho user
   useEffect(() => {
@@ -1098,6 +1108,10 @@ const LearningInformation = () => {
   useEffect(() => {
     fetchTuitionFee();
   }, [selectedSemester]);
+
+  if (loading) {
+    return <Loader text="Đang tải thông tin học tập..." />;
+  }
 
   return (
     <>

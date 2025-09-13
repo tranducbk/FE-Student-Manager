@@ -6,10 +6,13 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const HelpCooking = () => {
   const [helpCooking, setHelpCooking] = useState(null);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchHelpCooking = async () => {
     const token = localStorage.getItem("token");
@@ -34,8 +37,15 @@ const HelpCooking = () => {
   };
 
   useEffect(() => {
-    fetchHelpCooking();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchHelpCooking);
+    };
+    loadData();
+  }, [withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải lịch phụ bếp..." />;
+  }
 
   return (
     <div className="flex">

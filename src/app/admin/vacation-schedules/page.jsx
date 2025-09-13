@@ -10,6 +10,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { useTheme } from "@/hooks/useTheme";
 
 import { BASE_URL } from "@/configs";
@@ -27,6 +29,7 @@ const VacationSchedules = () => {
   const [addFormData, setAddFormData] = useState({
     dayoff: format(new Date(), "yyyy-MM-dd"),
   });
+  const { loading, withLoading } = useLoading(true);
 
   const handleShowFormUpdate = (vacationScheduleId) => {
     setVacationScheduleId(vacationScheduleId);
@@ -144,8 +147,11 @@ const VacationSchedules = () => {
   };
 
   useEffect(() => {
-    fetchVacationSchedules();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchVacationSchedules);
+    };
+    loadData();
+  }, [withLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -171,6 +177,10 @@ const VacationSchedules = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu lịch nghỉ phép..." />;
+  }
 
   return (
     <>

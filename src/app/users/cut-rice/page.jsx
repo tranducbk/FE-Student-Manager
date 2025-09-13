@@ -5,6 +5,8 @@ import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { handleNotify } from "../../../components/notify";
 import { BASE_URL } from "@/configs";
 
@@ -32,6 +34,7 @@ const CutRice = () => {
     saturday: "Thứ 7",
     sunday: "Chủ nhật",
   };
+  const { loading, withLoading } = useLoading(true);
 
   const handleAuthenticationModalClick = (event) => {
     if (event.target.id === "authentication-modal") {
@@ -204,8 +207,15 @@ const CutRice = () => {
   };
 
   useEffect(() => {
-    fetchCutRice();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchCutRice);
+    };
+    loadData();
+  }, [withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải lịch cắt cơm..." />;
+  }
 
   return (
     <>

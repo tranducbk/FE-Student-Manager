@@ -3,11 +3,13 @@
 import axios from "axios";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 
 import { BASE_URL } from "@/configs";
 const TimeTableDetail = ({ params }) => {
   const [timeTable, setTimeTable] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchTimeTable = async () => {
     const token = localStorage.getItem("token");
@@ -31,8 +33,11 @@ const TimeTableDetail = ({ params }) => {
   };
 
   useEffect(() => {
-    fetchTimeTable();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchTimeTable);
+    };
+    loadData();
+  }, [withLoading]);
 
   // Hàm sắp xếp và gộp dữ liệu theo thứ và giờ
   const processTimeTableData = (data) => {
@@ -87,6 +92,10 @@ const TimeTableDetail = ({ params }) => {
   };
 
   const processedTimeTable = processTimeTableData(timeTable);
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu lịch học..." />;
+  }
 
   return (
     <div className="flex">

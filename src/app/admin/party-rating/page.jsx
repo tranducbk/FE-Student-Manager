@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
 
@@ -12,8 +14,8 @@ const PartyRating = () => {
   const [partyRatings, setPartyRatings] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { loading, withLoading } = useLoading(true);
   const [selectedUnit, setSelectedUnit] = useState("all");
   const [availableUnits, setAvailableUnits] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -52,14 +54,16 @@ const PartyRating = () => {
   }, []);
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchInitialData);
+    };
+    loadData();
+  }, [withLoading]);
 
   const fetchInitialData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/commander/partyRatings`, {
         headers: { token: `Bearer ${token}` },
@@ -104,8 +108,6 @@ const PartyRating = () => {
       setPartyRatings([]);
       setSchoolYears([]);
       setSelectedSchoolYear("");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -124,7 +126,6 @@ const PartyRating = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       const res = await axios.get(
         `${BASE_URL}/commander/partyRatings?schoolYear=${year}`,
@@ -145,8 +146,6 @@ const PartyRating = () => {
     } catch (error) {
       console.log("Error fetching party ratings for year:", error);
       setPartyRatings([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -329,7 +328,6 @@ const PartyRating = () => {
   };
 
   const schoolYearOptions = [
-    { label: "Tất cả các năm", value: "all" },
     ...schoolYears.map((year) => ({
       label: `Năm học ${year}`,
       value: year,
@@ -373,6 +371,10 @@ const PartyRating = () => {
       return a.fullName.localeCompare(b.fullName, "vi");
     });
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu xếp loại đảng viên..." />;
+  }
 
   return (
     <>

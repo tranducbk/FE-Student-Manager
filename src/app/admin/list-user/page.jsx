@@ -8,7 +8,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 import { useModalScroll } from "@/hooks/useModalScroll";
 import { CarryOutOutlined, TeamOutlined } from "@ant-design/icons";
 import { Select } from "antd";
@@ -36,6 +38,7 @@ const ListUser = () => {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { loading, withLoading } = useLoading(true);
 
   // State cho modal cập nhật đồng loạt ngày ra trường
   const [showGraduationModal, setShowGraduationModal] = useState(false);
@@ -277,12 +280,14 @@ const ListUser = () => {
 
   useEffect(() => {
     const initializeData = async () => {
-      await fetchUniversities();
-      await fetchSchoolYears(); // fetchSchoolYears sẽ tự động load students
+      await withLoading(async () => {
+        await fetchUniversities();
+        await fetchSchoolYears(); // fetchSchoolYears sẽ tự động load students
+      });
     };
 
     initializeData();
-  }, [currentPage]);
+  }, [currentPage, withLoading]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
@@ -1273,6 +1278,10 @@ const ListUser = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải danh sách học viên..." />;
+  }
 
   return (
     <>

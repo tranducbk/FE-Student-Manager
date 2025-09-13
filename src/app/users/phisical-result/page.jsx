@@ -5,10 +5,13 @@ import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const PhysicalResultsPage = () => {
   const [physicalResults, setPhysicalResults] = useState(null);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchPhysicalResults = async () => {
     const token = localStorage.getItem("token");
@@ -33,8 +36,15 @@ const PhysicalResultsPage = () => {
   };
 
   useEffect(() => {
-    fetchPhysicalResults();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchPhysicalResults);
+    };
+    loadData();
+  }, [withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải kết quả thể lực..." />;
+  }
 
   return (
     <div className="flex">

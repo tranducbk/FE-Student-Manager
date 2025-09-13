@@ -5,11 +5,14 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const DocumentDetail = ({ params }) => {
   const [documentDetail, setDocumentDetail] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchDocumentDetail = async () => {
     const token = localStorage.getItem("token");
@@ -33,8 +36,11 @@ const DocumentDetail = ({ params }) => {
   };
 
   useEffect(() => {
-    fetchDocumentDetail();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchDocumentDetail);
+    };
+    loadData();
+  }, [withLoading]);
 
   useEffect(() => {
     if (documentDetail?.attachments) {
@@ -53,6 +59,10 @@ const DocumentDetail = ({ params }) => {
       return () => URL.revokeObjectURL(url);
     }
   }, [documentDetail]);
+
+  if (loading) {
+    return <Loader text="Đang tải thông báo..." />;
+  }
 
   return (
     <div className="flex">

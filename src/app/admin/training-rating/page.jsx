@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
 
@@ -12,8 +14,8 @@ const TrainingRating = () => {
   const [trainingRatings, setTrainingRatings] = useState([]);
   const [schoolYears, setSchoolYears] = useState([]);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const { loading, withLoading } = useLoading(true);
   const [selectedUnit, setSelectedUnit] = useState("all");
   const [availableUnits, setAvailableUnits] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -50,14 +52,16 @@ const TrainingRating = () => {
   }, []);
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchInitialData);
+    };
+    loadData();
+  }, [withLoading]);
 
   const fetchInitialData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/commander/trainingRatings`, {
         headers: { token: `Bearer ${token}` },
@@ -102,8 +106,6 @@ const TrainingRating = () => {
       setTrainingRatings([]);
       setSchoolYears([]);
       setSelectedSchoolYear("");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -143,8 +145,6 @@ const TrainingRating = () => {
     } catch (error) {
       console.log("Error fetching training ratings for year:", error);
       setTrainingRatings([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -365,6 +365,10 @@ const TrainingRating = () => {
       return a.fullName.localeCompare(b.fullName, "vi");
     });
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu xếp loại rèn luyện..." />;
+  }
 
   return (
     <>

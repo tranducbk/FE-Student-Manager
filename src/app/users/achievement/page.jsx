@@ -6,12 +6,15 @@ import { jwtDecode } from "jwt-decode";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const AchievementContent = () => {
   const [achievement, setAchievement] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const searchParams = useSearchParams();
+  const { loading, withLoading } = useLoading(true);
 
   const fetchAchievement = async () => {
     const token = localStorage.getItem("token");
@@ -51,10 +54,17 @@ const AchievementContent = () => {
   };
 
   useEffect(() => {
-    fetchAchievement();
+    const loadData = async () => {
+      await withLoading(fetchAchievement);
+    };
+    loadData();
     // Re-fetch when the query changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu thành tích..." />;
+  }
 
   return (
     <div className="flex">

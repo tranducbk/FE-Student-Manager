@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SideBar from "@/components/sidebar";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { Select } from "antd";
 
 import { BASE_URL } from "@/configs";
@@ -15,86 +17,89 @@ const TimeTable = () => {
   const [timeTable, setTimeTable] = useState([]);
   const [fullName, setFullName] = useState("");
   const [unit, setUnit] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [allStudents, setAllStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchTimeTable = async () => {
     const token = localStorage.getItem("token");
 
-    if (token) {
-      try {
-        setIsLoading(true);
-        const res = await axios.get(`${BASE_URL}/commander/timeTables`, {
-          headers: {
-            token: `Bearer ${token}`,
-          },
-        });
+    if (!token) {
+      handleNotify("danger", "Lỗi!", "Không tìm thấy token xác thực");
+      return;
+    }
 
-        setTimeTable(res.data);
+    try {
+      const res = await axios.get(`${BASE_URL}/commander/timeTables`, {
+        headers: {
+          token: `Bearer ${token}`,
+        },
+      });
 
-        // Nhóm dữ liệu theo học viên
-        const studentsMap = new Map();
-        res.data.forEach((item) => {
-          if (!studentsMap.has(item.studentId)) {
-            studentsMap.set(item.studentId, {
-              studentId: item.studentId,
-              fullName: item.fullName,
-              unit: item.unit,
-              scheduleCount: 0,
-              subjects: [],
-              classrooms: [],
-              weeks: [],
-            });
-          }
+      setTimeTable(res.data);
 
-          const student = studentsMap.get(item.studentId);
-          student.scheduleCount++;
-          if (item.subject) student.subjects.push(item.subject);
-          if (item.classroom) student.classrooms.push(item.classroom);
-          if (item.schoolWeek) student.weeks.push(item.schoolWeek);
+      // Nhóm dữ liệu theo học viên
+      const studentsMap = new Map();
+      res.data.forEach((item) => {
+        if (!studentsMap.has(item.studentId)) {
+          studentsMap.set(item.studentId, {
+            studentId: item.studentId,
+            fullName: item.fullName,
+            unit: item.unit,
+            scheduleCount: 0,
+            subjects: [],
+            classrooms: [],
+            weeks: [],
+          });
+        }
 
-          // Debug log để kiểm tra dữ liệu
-          console.log(
-            `Student: ${item.fullName}, Classroom: ${item.classroom}, All classrooms:`,
-            student.classrooms
-          );
-        });
+        const student = studentsMap.get(item.studentId);
+        student.scheduleCount++;
+        if (item.subject) student.subjects.push(item.subject);
+        if (item.classroom) student.classrooms.push(item.classroom);
+        if (item.schoolWeek) student.weeks.push(item.schoolWeek);
 
-        const students = Array.from(studentsMap.values()).map((student) => ({
-          ...student,
-          subjects: [...new Set(student.subjects)], // Loại bỏ trùng lặp cho môn học
-          classrooms: [...new Set(student.classrooms)], // Loại bỏ trùng lặp cho phòng học
-          weeks: [...new Set(student.weeks)], // Loại bỏ trùng lặp cho tuần học
-        }));
+        // Debug log để kiểm tra dữ liệu
+        console.log(
+          `Student: ${item.fullName}, Classroom: ${item.classroom}, All classrooms:`,
+          student.classrooms
+        );
+      });
 
-        // Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
-        const sortedStudents = students.sort((a, b) => {
-          const unitOrder = {
-            "L1 - H5": 1,
-            "L2 - H5": 2,
-            "L3 - H5": 3,
-            "L4 - H5": 4,
-            "L5 - H5": 5,
-            "L6 - H5": 6,
-          };
-          return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
-        });
+      const students = Array.from(studentsMap.values()).map((student) => ({
+        ...student,
+        subjects: [...new Set(student.subjects)], // Loại bỏ trùng lặp cho môn học
+        classrooms: [...new Set(student.classrooms)], // Loại bỏ trùng lặp cho phòng học
+        weeks: [...new Set(student.weeks)], // Loại bỏ trùng lặp cho tuần học
+      }));
 
-        setAllStudents(sortedStudents);
-        setFilteredStudents(sortedStudents);
-      } catch (error) {
-        console.log(error);
-        handleNotify("danger", "Lỗi!", "Không thể tải dữ liệu lịch học");
-      } finally {
-        setIsLoading(false);
-      }
+      // Sắp xếp theo đơn vị từ L1-H5 đến L6-H5
+      const sortedStudents = students.sort((a, b) => {
+        const unitOrder = {
+          "L1 - H5": 1,
+          "L2 - H5": 2,
+          "L3 - H5": 3,
+          "L4 - H5": 4,
+          "L5 - H5": 5,
+          "L6 - H5": 6,
+        };
+        return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
+      });
+
+      setAllStudents(sortedStudents);
+      setFilteredStudents(sortedStudents);
+    } catch (error) {
+      console.log(error);
+      handleNotify("danger", "Lỗi!", "Không thể tải dữ liệu lịch học");
     }
   };
 
   useEffect(() => {
-    fetchTimeTable();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchTimeTable);
+    };
+    loadData();
+  }, [withLoading]);
 
   // Hàm lọc dữ liệu theo tên và đơn vị
   const filterData = () => {
@@ -210,6 +215,10 @@ const TimeTable = () => {
     }
   };
 
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu thời khóa biểu..." />;
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex-1">
@@ -273,11 +282,11 @@ const TimeTable = () => {
                   <button
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 border border-blue-600 hover:border-blue-700 rounded-lg transition-colors duration-200 flex items-center"
                     onClick={fetchTimeTable}
-                    disabled={isLoading}
+                    disabled={loading}
                   >
                     <svg
                       className={`w-4 h-4 mr-2 ${
-                        isLoading ? "animate-spin" : ""
+                        loading ? "animate-spin" : ""
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -290,7 +299,7 @@ const TimeTable = () => {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    {isLoading ? "Đang tải..." : "Làm mới"}
+                    {loading ? "Đang tải..." : "Làm mới"}
                   </button>
                   <button
                     className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 border border-green-600 hover:border-green-700 rounded-lg transition-colors duration-200 flex items-center"

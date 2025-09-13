@@ -6,10 +6,13 @@ import dayjs from "dayjs";
 import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import SideBar from "@/components/sidebar";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const ViolationsPage = () => {
   const [violations, setViolations] = useState(null);
+  const { loading, withLoading } = useLoading(true);
 
   const fetchViolations = async () => {
     const token = localStorage.getItem("token");
@@ -34,8 +37,15 @@ const ViolationsPage = () => {
   };
 
   useEffect(() => {
-    fetchViolations();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchViolations);
+    };
+    loadData();
+  }, [withLoading]);
+
+  if (loading) {
+    return <Loader text="Đang tải vi phạm..." />;
+  }
 
   return (
     <div className="flex">

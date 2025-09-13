@@ -8,11 +8,14 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import SideBar from "../../../components/sidebar";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 
 const UserProfile = ({ params }) => {
   const [profile, setProfile] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const { loading, withLoading } = useLoading(true);
   // State cho cascading dropdowns
   const [universities, setUniversities] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState(null);
@@ -473,8 +476,11 @@ const UserProfile = ({ params }) => {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchProfile);
+    };
+    loadData();
+  }, [withLoading]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
@@ -683,6 +689,16 @@ const UserProfile = ({ params }) => {
       foreignRelations.filter((relation) => relation.id !== id)
     );
   };
+
+  if (loading) {
+    return (
+      <Loader
+        text="Đang tải thông tin học viên..."
+        overlay={true}
+        className="z-[9999]"
+      />
+    );
+  }
 
   return (
     <>

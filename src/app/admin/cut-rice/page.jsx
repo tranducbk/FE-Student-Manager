@@ -6,6 +6,8 @@ import { jwtDecode } from "jwt-decode";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { Select, ConfigProvider, theme } from "antd";
 
 import { BASE_URL } from "@/configs";
@@ -43,6 +45,7 @@ const CutRice = () => {
   const [unit, setUnit] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const { loading, withLoading } = useLoading(true);
   const [formData, setFormData] = useState({
     monday: { breakfast: false, lunch: false, dinner: false },
     tuesday: { breakfast: false, lunch: false, dinner: false },
@@ -168,44 +171,52 @@ const CutRice = () => {
   };
 
   useEffect(() => {
-    fetchCutRice();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchCutRice);
+    };
+    loadData();
+  }, [withLoading]);
 
   const handleUnitChange = async (newUnit) => {
     setUnit(newUnit);
     router.push(`/admin/cut-rice?unit=${newUnit}`);
-    const token = localStorage.getItem("token");
 
-    if (token) {
-      try {
-        const res = await axios.get(
-          `${BASE_URL}/commander/cutRice?unit=${newUnit}`,
-          {
-            headers: {
-              token: `Bearer ${token}`,
-            },
-          }
-        );
+    const fetchDataForUnit = async () => {
+      const token = localStorage.getItem("token");
 
-        if (res.status === 404) setCutRice([]);
+      if (token) {
+        try {
+          const res = await axios.get(
+            `${BASE_URL}/commander/cutRice?unit=${newUnit}`,
+            {
+              headers: {
+                token: `Bearer ${token}`,
+              },
+            }
+          );
 
-        // Sắp xếp theo thứ tự lớp từ 1 đến 6
-        const sortedData = res.data.sort((a, b) => {
-          const unitOrder = {
-            "L1 - H5": 1,
-            "L2 - H5": 2,
-            "L3 - H5": 3,
-            "L4 - H5": 4,
-            "L5 - H5": 5,
-            "L6 - H5": 6,
-          };
-          return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
-        });
-        setCutRice(sortedData);
-      } catch (error) {
-        console.log(error);
+          if (res.status === 404) setCutRice([]);
+
+          // Sắp xếp theo thứ tự lớp từ 1 đến 6
+          const sortedData = res.data.sort((a, b) => {
+            const unitOrder = {
+              "L1 - H5": 1,
+              "L2 - H5": 2,
+              "L3 - H5": 3,
+              "L4 - H5": 4,
+              "L5 - H5": 5,
+              "L6 - H5": 6,
+            };
+            return (unitOrder[a.unit] || 999) - (unitOrder[b.unit] || 999);
+          });
+          setCutRice(sortedData);
+        } catch (error) {
+          console.log(error);
+        }
       }
-    }
+    };
+
+    withLoading(fetchDataForUnit);
   };
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -417,7 +428,7 @@ const CutRice = () => {
         if (response.status === 200) {
           handleNotify("success", "Thành công!", response.data.message);
           setShowEditModal(false);
-          fetchCutRice(); // Refresh data
+          withLoading(fetchCutRice); // Refresh data
         }
       } catch (error) {
         handleNotify(
@@ -453,7 +464,7 @@ const CutRice = () => {
 
         if (response.status === 200) {
           handleNotify("success", "Thành công!", response.data.message);
-          fetchCutRice(); // Refresh data
+          withLoading(fetchCutRice); // Refresh data
         }
       } catch (error) {
         handleNotify(
@@ -490,7 +501,7 @@ const CutRice = () => {
 
         if (response.status === 200) {
           handleNotify("success", "Thành công!", response.data.message);
-          fetchCutRice(); // Refresh data
+          withLoading(fetchCutRice); // Refresh data
         }
       } catch (error) {
         handleNotify(
@@ -502,6 +513,10 @@ const CutRice = () => {
       }
     }
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu cắt cơm..." />;
+  }
 
   return (
     <>

@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
 import { BASE_URL } from "@/configs";
+import { useLoading } from "@/hooks";
 import { TreeSelect, ConfigProvider, theme, Input, Select } from "antd";
 import { useState as useThemeState } from "react";
 
@@ -12,10 +14,10 @@ const LearningResults = () => {
   const [learningResults, setLearningResults] = useState([]);
   const [semesters, setSemesters] = useState([]);
   const [selectedSemesters, setSelectedSemesters] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("all");
   const [availableUnits, setAvailableUnits] = useState([]);
+  const { loading, withLoading } = useLoading(true);
 
   const [isDark, setIsDark] = useThemeState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -49,8 +51,11 @@ const LearningResults = () => {
   }, []);
 
   useEffect(() => {
-    fetchSemesters();
-  }, []);
+    const loadSemesters = async () => {
+      await withLoading(fetchSemesters);
+    };
+    loadSemesters();
+  }, [withLoading]);
 
   useEffect(() => {
     if (selectedSemesters.length > 0) {
@@ -84,7 +89,6 @@ const LearningResults = () => {
     const token = localStorage.getItem("token");
     if (!token || selectedSemesters.length === 0) return;
 
-    setLoading(true);
     try {
       // Xử lý khi chọn "Tất cả học kỳ"
       let semesterData = [];
@@ -136,10 +140,8 @@ const LearningResults = () => {
       ];
       setAvailableUnits(units);
     } catch (error) {
-      console.log("Error fetching learning results:", error);
+      console.error("Error fetching learning results:", error);
       setLearningResults([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -373,6 +375,10 @@ const LearningResults = () => {
       );
     }).length;
   };
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu kết quả học tập..." />;
+  }
 
   return (
     <>

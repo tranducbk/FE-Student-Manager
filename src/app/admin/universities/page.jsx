@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { handleNotify } from "../../../components/notify";
+import Loader from "@/components/loader";
+import { useLoading } from "@/hooks";
 import { BASE_URL } from "@/configs";
 import {
   PlusOutlined,
@@ -24,9 +26,8 @@ export default function Universities() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [universityToDelete, setUniversityToDelete] = useState(null);
-  const [isLoadingData, setIsLoadingData] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState("");
+  const { loading, withLoading } = useLoading(true);
 
   // Add form data (for simple add/edit)
   const [addFormData, setAddFormData] = useState({
@@ -41,8 +42,11 @@ export default function Universities() {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const loadData = async () => {
+      await withLoading(fetchData);
+    };
+    loadData();
+  }, [withLoading]);
 
   const handleAddInputChange = (field, value) => {
     setAddFormData((prev) => ({ ...prev, [field]: value }));
@@ -291,6 +295,10 @@ export default function Universities() {
         .includes(searchTerm.toLowerCase()) ||
       university.universityCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return <Loader text="Đang tải dữ liệu trường đại học..." />;
+  }
 
   return (
     <>
