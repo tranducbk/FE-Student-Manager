@@ -1727,7 +1727,7 @@ const LearningInformation = () => {
                                     type="number"
                                     min="0"
                                     max="10"
-                                    step="0.1"
+                                    step="0.01"
                                     value={row.grade10 || ""}
                                     onChange={(e) =>
                                       updateSubjectField(
