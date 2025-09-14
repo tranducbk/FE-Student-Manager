@@ -185,7 +185,7 @@ const UserProfile = ({ params }) => {
           profile.educationLevel?._id || profile.educationLevel || "",
         avatar:
           profile.avatar ||
-          "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+          "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
       });
 
       // Khởi tạo các select động từ dữ liệu đã populate

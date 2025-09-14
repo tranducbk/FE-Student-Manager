@@ -126,7 +126,7 @@ const ListUser = () => {
     religion: "",
     currentAddress: "",
     avatar:
-      "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+      "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
     enrollment: "",
   });
 
@@ -273,7 +273,7 @@ const ListUser = () => {
       positionParty: "Không",
       currentAddress: "",
       avatar:
-        "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+        "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
     });
     // Reset thông tin gia đình và yếu tố nước ngoài
     setFamilyMembers([]);
@@ -472,14 +472,23 @@ const ListUser = () => {
           },
         })
         .then(() => {
-          setProfile(profile?.students?.filter((student) => student.id !== id));
+          setProfile((prevProfile) => ({
+            ...prevProfile,
+            students: prevProfile?.students?.filter(
+              (student) => student._id !== id
+            ),
+          }));
           handleNotify("success", "Thành công!", "Xóa học viên thành công");
-          fetchProfile();
+          setShowConfirm(false);
+          reloadStudents();
         })
-        .catch((error) => handleNotify("danger", "Lỗi!", error));
+        .catch((error) => {
+          handleNotify("danger", "Lỗi!", error);
+          setShowConfirm(false);
+        });
+    } else {
+      setShowConfirm(false);
     }
-
-    setShowConfirm(false);
   };
 
   const editStudent = async (studentId) => {
@@ -538,7 +547,7 @@ const ListUser = () => {
           currentAddress: res.data.currentAddress || "",
           avatar:
             res.data.avatar ||
-            "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
+            "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
         });
 
         // Khởi tạo các select động từ dữ liệu có sẵn
@@ -760,6 +769,10 @@ const ListUser = () => {
       organization: selectedOrganization, // Tên khoa/viện đã chọn
       educationLevel: selectedLevel, // Trình độ đã chọn
       class: selectedClass?._id || selectedClass, // Lớp đã chọn - gửi ObjectId
+      // Xử lý avatar mặc định nếu trống
+      avatar:
+        formData.avatar ||
+        "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
       // Thêm thông tin gia đình và yếu tố nước ngoài
       familyMembers: familyMembers.map((member) => ({
         relationship: member.relationship,
@@ -2301,31 +2314,6 @@ const ListUser = () => {
 
                             <div>
                               <label
-                                htmlFor="enrollment"
-                                className="block mb-2 text-sm font-medium dark:text-white"
-                              >
-                                Năm nhập học
-                              </label>
-                              <input
-                                type="number"
-                                id="enrollment"
-                                value={addFormData.enrollment}
-                                onChange={(e) =>
-                                  setAddFormData({
-                                    ...addFormData,
-                                    enrollment: e.target.value,
-                                  })
-                                }
-                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                placeholder="vd: 2020"
-                                min="2000"
-                                max="2030"
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <label
                                 htmlFor="class"
                                 className="block mb-2 text-sm font-medium dark:text-white"
                               >
@@ -2348,6 +2336,31 @@ const ListUser = () => {
                                   </option>
                                 ))}
                               </select>
+                            </div>
+
+                            <div>
+                              <label
+                                htmlFor="enrollment"
+                                className="block mb-2 text-sm font-medium dark:text-white"
+                              >
+                                Năm nhập học
+                              </label>
+                              <input
+                                type="number"
+                                id="enrollment"
+                                value={addFormData.enrollment}
+                                onChange={(e) =>
+                                  setAddFormData({
+                                    ...addFormData,
+                                    enrollment: e.target.value,
+                                  })
+                                }
+                                className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                placeholder="vd: 2020"
+                                min="2000"
+                                max="2030"
+                                required
+                              />
                             </div>
 
                             <div>
@@ -2825,66 +2838,154 @@ const ListUser = () => {
           )}
           <div className="w-full pt-8 pb-5 pl-5 pr-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg w-full pr-5 shadow-lg">
-              {showConfirm && (
-                <div className="fixed top-0 left-0 w-full h-full bg-slate-400 bg-opacity-50 flex justify-center items-center">
-                  <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-                    <button
-                      onClick={handleCancelDelete}
-                      type="button"
-                      class="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                      data-modal-toggle="deleteModal"
-                    >
-                      <svg
-                        aria-hidden="true"
-                        class="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clip-rule="evenodd"
-                        ></path>
-                      </svg>
-                      <span class="sr-only">Close modal</span>
-                    </button>
-                    <svg
-                      class="w-11 h-11 mb-3.5 mx-auto"
-                      aria-hidden="true"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                    <p class="mb-4 dark:text-gray-300">
-                      Bạn có chắc chắn muốn xóa?
-                    </p>
-                    <div class="flex justify-center items-center space-x-4">
-                      <button
-                        onClick={handleCancelDelete}
-                        data-modal-toggle="deleteModal"
-                        type="button"
-                        class="py-2 px-3 text-sm font-medium bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        onClick={() => handleConfirmDelete(id)}
-                        type="submit"
-                        class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
-                      >
-                        Xóa
-                      </button>
+              {showConfirm &&
+                (() => {
+                  const studentToDelete = profile?.students?.find(
+                    (student) => student._id === id
+                  );
+                  return (
+                    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                      <div className="relative p-6 text-center bg-gray-800 rounded-lg shadow-lg sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <button
+                          onClick={handleCancelDelete}
+                          type="button"
+                          className="absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-600 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center text-white hover:text-white"
+                        >
+                          <svg
+                            aria-hidden="true"
+                            className="w-5 h-5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            ></path>
+                          </svg>
+                          <span className="sr-only">Close modal</span>
+                        </button>
+
+                        <div className="flex flex-col items-center mb-6">
+                          <div className="w-16 h-16 mb-4 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <img
+                              src={
+                                studentToDelete?.avatar ||
+                                "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg"
+                              }
+                              alt="Avatar"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          <svg
+                            className="w-12 h-12 mb-4 text-red-500"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            ></path>
+                          </svg>
+
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            Xác nhận xóa học viên
+                          </h3>
+
+                          {studentToDelete && (
+                            <div className="bg-gray-700 rounded-lg p-4 w-full text-left">
+                              <div className="space-y-2">
+                                <div>
+                                  <span className="font-medium text-gray-300">
+                                    Họ tên:
+                                  </span>
+                                  <span className="ml-2 text-white">
+                                    {studentToDelete.fullName}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-300">
+                                    Mã HV:
+                                  </span>
+                                  <span className="ml-2 text-white">
+                                    {studentToDelete.studentId}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-300">
+                                    Đơn vị:
+                                  </span>
+                                  <span className="ml-2 text-white">
+                                    {studentToDelete.unit}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-300">
+                                    Năm nhập học:
+                                  </span>
+                                  <span className="ml-2 text-white">
+                                    {studentToDelete.enrollment}
+                                  </span>
+                                </div>
+                                {studentToDelete.dateOfEnlistment && (
+                                  <div>
+                                    <span className="font-medium text-gray-300">
+                                      Ngày nhập ngũ:
+                                    </span>
+                                    <span className="ml-2 text-white">
+                                      {dayjs(
+                                        studentToDelete.dateOfEnlistment
+                                      ).format("DD/MM/YYYY")}
+                                    </span>
+                                  </div>
+                                )}
+                                {studentToDelete.graduationDate && (
+                                  <div>
+                                    <span className="font-medium text-gray-300">
+                                      Ngày ra trường:
+                                    </span>
+                                    <span className="ml-2 text-white">
+                                      {dayjs(
+                                        studentToDelete.graduationDate
+                                      ).format("DD/MM/YYYY")}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          <p className="text-sm text-gray-400 mt-4">
+                            Bạn có chắc chắn muốn xóa học viên này? Hành động
+                            này không thể hoàn tác.
+                          </p>
+                        </div>
+
+                        <div className="flex justify-center items-center space-x-4">
+                          <button
+                            onClick={handleCancelDelete}
+                            type="button"
+                            className="py-2 px-4 text-sm font-medium bg-gray-700 rounded-lg border border-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-600 text-gray-300 hover:text-white focus:z-10"
+                          >
+                            Hủy
+                          </button>
+                          <button
+                            onClick={() => handleConfirmDelete(id)}
+                            type="submit"
+                            className="py-2 px-4 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+                          >
+                            Xóa học viên
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  );
+                })()}
               <div className="font-bold pt-5 pl-5 pb-5 flex justify-between border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white">
                   DANH SÁCH HỌC VIÊN {`- NĂM HỌC ${schoolYear}`}
@@ -4581,7 +4682,7 @@ const ListUser = () => {
                               <img
                                 src={
                                   student.avatar ||
-                                  "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg"
+                                  "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg"
                                 }
                                 alt="avatar"
                                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-3 flex-shrink-0"
