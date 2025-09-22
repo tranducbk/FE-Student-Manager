@@ -19,6 +19,9 @@ const TimeTable = () => {
   const [unit, setUnit] = useState("");
   const [allStudents, setAllStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedUnits, setSelectedUnits] = useState([]);
+  const [availableUnits, setAvailableUnits] = useState([]);
   const { loading, withLoading } = useLoading(true);
 
   const fetchTimeTable = async () => {
@@ -37,6 +40,10 @@ const TimeTable = () => {
       });
 
       setTimeTable(res.data);
+
+      // Lấy danh sách đơn vị duy nhất
+      const units = [...new Set(res.data.map((item) => item.unit))].sort();
+      setAvailableUnits(units);
 
       // Nhóm dữ liệu theo học viên
       const studentsMap = new Map();
@@ -171,6 +178,10 @@ const TimeTable = () => {
   };
 
   const handleExportTimeTableWithCutRice = async () => {
+    setShowExportModal(true);
+  };
+
+  const handleConfirmExport = async () => {
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -182,7 +193,12 @@ const TimeTable = () => {
           "Đang tạo file Excel thời khóa biểu kèm lịch cắt cơm"
         );
 
-        const unitParam = unit ? `?unit=${encodeURIComponent(unit)}` : "";
+        const unitParam =
+          selectedUnits.length > 0
+            ? `?unit=${selectedUnits
+                .map((unit) => encodeURIComponent(unit))
+                .join(",")}`
+            : "";
 
         const response = await axios.get(
           `${BASE_URL}/commander/time-table-with-cut-rice/excel${unitParam}`,
@@ -194,10 +210,35 @@ const TimeTable = () => {
           }
         );
 
+        // Lấy tên file từ response header hoặc tạo tên file động
+        const contentDisposition = response.headers["content-disposition"];
+        console.log("Response headers:", response.headers);
+        console.log("Content-Disposition:", contentDisposition);
+
+        let fileName = "thoikhoabieu.xlsx";
+
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+          );
+          console.log("Filename match:", fileNameMatch);
+          if (fileNameMatch && fileNameMatch[1]) {
+            fileName = fileNameMatch[1].replace(/['"]/g, "");
+            console.log("Using filename from header:", fileName);
+          }
+        } else if (selectedUnits.length > 0) {
+          // Tạo tên file động nếu không có header
+          const unitNames = selectedUnits
+            .map((unit) => unit.replace(/[^a-zA-Z0-9]/g, ""))
+            .join("_");
+          fileName = `thoikhoabieu_${unitNames}.xlsx`;
+          console.log("Using generated filename:", fileName);
+        }
+
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", "thoikhoabieu.xlsx");
+        link.setAttribute("download", fileName);
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
@@ -207,6 +248,9 @@ const TimeTable = () => {
           "Thành công!",
           "Xuất file Excel thời khóa biểu kèm lịch cắt cơm thành công"
         );
+
+        setShowExportModal(false);
+        setSelectedUnits([]);
       } catch (error) {
         const errorMessage =
           error.response?.data?.message || "Có lỗi xảy ra khi xuất file Excel";
@@ -747,6 +791,56 @@ const TimeTable = () => {
           font-weight: 600 !important;
         }
       `}</style>
+
+      {/* Modal chọn đơn vị xuất file */}
+      {showExportModal && (
+        <>
+          <div className="bg-black opacity-50 fixed inset-0 z-30"></div>
+          <div className="fixed inset-0 z-40 flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Chọn đơn vị xuất file
+                </h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Đơn vị (có thể chọn nhiều):
+                  </label>
+                  <Select
+                    mode="multiple"
+                    placeholder="Chọn đơn vị..."
+                    value={selectedUnits}
+                    onChange={setSelectedUnits}
+                    style={{ width: "100%" }}
+                    options={availableUnits.map((unit) => ({
+                      value: unit,
+                      label: unit,
+                    }))}
+                    allowClear
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowExportModal(false);
+                      setSelectedUnits([]);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleConfirmExport}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  >
+                    Xuất file
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

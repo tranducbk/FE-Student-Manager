@@ -57,6 +57,13 @@ const YearlyStatistics = () => {
     loadData();
   }, [withLoading]);
 
+  // Cleanup scroll khi component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   const fetchInitialData = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -284,6 +291,8 @@ const YearlyStatistics = () => {
   const handleViewDetail = async (row) => {
     setSelectedStudent(row);
     setShowDetailModal(true);
+    // Ngăn scroll body khi modal mở
+    document.body.style.overflow = "hidden";
     await fetchStudentDetail(row.studentId, row.semesterCount, row.schoolYear);
   };
 
@@ -295,6 +304,8 @@ const YearlyStatistics = () => {
       decisionNumber: row.partyRating?.decisionNumber || "",
     });
     setShowUpdateModal(true);
+    // Ngăn scroll body khi modal mở
+    document.body.style.overflow = "hidden";
   };
 
   const handleSubmitUpdate = async () => {
@@ -1089,9 +1100,6 @@ const YearlyStatistics = () => {
                           CPA
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          TC TÍCH LŨY
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           MÔN NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
@@ -1166,11 +1174,6 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-medium">
-                                {item.cumulativeCredit || 0}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-red-600 dark:text-red-400">
                                 {item.failedSubjects || 0}
                               </div>
@@ -1237,7 +1240,7 @@ const YearlyStatistics = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="9"
+                            colSpan="8"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -1277,9 +1280,9 @@ const YearlyStatistics = () => {
 
       {/* Modal chi tiết điểm */}
       {showDetailModal && selectedStudent && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 mt-14 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden mx-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Chi tiết điểm năm học {selectedStudent.schoolYear} -{" "}
@@ -1290,6 +1293,8 @@ const YearlyStatistics = () => {
                   setShowDetailModal(false);
                   setSelectedStudent(null);
                   setStudentDetail(null);
+                  // Khôi phục scroll body khi đóng modal
+                  document.body.style.overflow = "unset";
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
@@ -1399,33 +1404,26 @@ const YearlyStatistics = () => {
 
                   {/* Bảng chi tiết môn học */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Chi tiết các môn học năm học {studentDetail.schoolYear}{" "}
-                        - {selectedStudent?.fullName} (
-                        {selectedStudent?.studentCode})
-                      </h3>
-                    </div>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-h-96 overflow-y-auto">
                       <table className="min-w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 mb-4">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Mã môn
                             </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Tên môn học
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Tín chỉ
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Điểm chữ
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Điểm hệ 4
                             </th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            <th className="px-4 py-4 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                               Điểm hệ 10
                             </th>
                           </tr>
@@ -1510,6 +1508,8 @@ const YearlyStatistics = () => {
                     trainingRating: "",
                     decisionNumber: "",
                   });
+                  // Khôi phục scroll body khi đóng modal
+                  document.body.style.overflow = "unset";
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >

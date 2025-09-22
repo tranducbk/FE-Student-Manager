@@ -63,6 +63,13 @@ const LearningResults = () => {
     }
   }, [selectedSemesters]);
 
+  // Cleanup scroll khi component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
   const fetchSemesters = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -191,6 +198,8 @@ const LearningResults = () => {
   const handleViewDetail = async (row) => {
     setSelectedStudent(row);
     setShowDetailModal(true);
+    // Ngăn scroll body khi modal mở
+    document.body.style.overflow = "hidden";
     await fetchStudentDetail(row.studentId, row.semester, row.schoolYear);
   };
 
@@ -202,6 +211,8 @@ const LearningResults = () => {
       decisionNumber: row.yearlyResults?.[0]?.partyRating?.decisionNumber || "",
     });
     setShowUpdateModal(true);
+    // Ngăn scroll body khi modal mở
+    document.body.style.overflow = "hidden";
   };
 
   const handleSubmitUpdate = async () => {
@@ -231,6 +242,8 @@ const LearningResults = () => {
       if (response.status === 200) {
         handleNotify("success", "Thành công", "Cập nhật xếp loại thành công");
         setShowUpdateModal(false);
+        // Khôi phục scroll body khi đóng modal
+        document.body.style.overflow = "unset";
         // Refresh data
         fetchLearningResults();
       }
@@ -963,6 +976,8 @@ const LearningResults = () => {
                   setShowDetailModal(false);
                   setSelectedStudent(null);
                   setStudentDetail(null);
+                  // Khôi phục scroll body khi đóng modal
+                  document.body.style.overflow = "unset";
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
@@ -985,36 +1000,36 @@ const LearningResults = () => {
               {studentDetail ? (
                 <>
                   {/* Thông tin tổng quan */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {studentDetail.totalCredits || 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Tổng tín chỉ
                       </div>
                     </div>
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-green-600 dark:text-green-400">
                         {studentDetail.averageGrade4?.toFixed(2) || "0.00"}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         GPA (Hệ 4)
                       </div>
                     </div>
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
                         {studentDetail.averageGrade10?.toFixed(2) || "0.00"}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         GPA (Hệ 10)
                       </div>
                     </div>
-                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-orange-600 dark:text-orange-400">
                         {studentDetail.subjects?.length || 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         Số môn học
                       </div>
                     </div>
@@ -1132,6 +1147,8 @@ const LearningResults = () => {
                     trainingRating: "",
                     decisionNumber: "",
                   });
+                  // Khôi phục scroll body khi đóng modal
+                  document.body.style.overflow = "unset";
                 }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
@@ -1184,7 +1201,7 @@ const LearningResults = () => {
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Xếp loại đảng viên
+                    Xếp loại Đảng viên
                     {selectedStudent &&
                       selectedStudent.positionParty &&
                       selectedStudent.positionParty !== "Không" && (
@@ -1217,8 +1234,8 @@ const LearningResults = () => {
                         selectedStudent &&
                         selectedStudent.positionParty &&
                         selectedStudent.positionParty !== "Không"
-                          ? "Chọn xếp loại đảng viên"
-                          : "Chỉ cập nhật được khi là đảng viên"
+                          ? "Chọn xếp loại Đảng viên"
+                          : "Chỉ cập nhật được khi là Đảng viên"
                       }
                       style={{ width: "100%" }}
                       disabled={
@@ -1257,7 +1274,7 @@ const LearningResults = () => {
                       selectedStudent.positionParty &&
                       selectedStudent.positionParty !== "Không"
                         ? "Nhập số quyết định"
-                        : "Chỉ cập nhật được khi là đảng viên"
+                        : "Chỉ cập nhật được khi là Đảng viên"
                     }
                     disabled={
                       !selectedStudent ||
@@ -1281,6 +1298,8 @@ const LearningResults = () => {
                       trainingRating: "",
                       decisionNumber: "",
                     });
+                    // Khôi phục scroll body khi đóng modal
+                    document.body.style.overflow = "unset";
                   }}
                 >
                   Hủy

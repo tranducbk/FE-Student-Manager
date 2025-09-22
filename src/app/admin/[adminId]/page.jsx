@@ -418,7 +418,7 @@ const UserProfile = ({ params }) => {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-semibold text-gray-700 dark:text-gray-300">
-                              Số thẻ đảng viên:
+                              Số thẻ Đảng viên:
                             </span>
                             <span className="text-gray-900 dark:text-white">
                               {profile?.partyCardNumber}
@@ -803,7 +803,7 @@ const UserProfile = ({ params }) => {
                             htmlFor="partyCardNumber"
                             className="block mb-2 text-sm font-medium dark:text-white"
                           >
-                            Số thẻ đảng viên
+                            Số thẻ Đảng viên
                           </label>
                           <input
                             type="text"

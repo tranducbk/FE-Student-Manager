@@ -62,9 +62,12 @@ const TrainingRating = () => {
     if (!token) return;
 
     try {
-      const res = await axios.get(`${BASE_URL}/commander/trainingRatings`, {
-        headers: { token: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${BASE_URL}/commander/allStudentsForTrainingRating`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
 
       console.log("Training ratings data:", res.data);
 
@@ -72,7 +75,11 @@ const TrainingRating = () => {
 
       const allSchoolYears = new Set();
       processedData.forEach((item) => {
-        if (item.schoolYear && item.schoolYear !== "Tất cả") {
+        if (
+          item.schoolYear &&
+          item.schoolYear !== "Tất cả" &&
+          item.schoolYear !== "Chưa có dữ liệu"
+        ) {
           allSchoolYears.add(item.schoolYear);
         }
       });
@@ -80,8 +87,8 @@ const TrainingRating = () => {
       const uniqueSchoolYears = Array.from(allSchoolYears).sort((a, b) =>
         b.localeCompare(a)
       );
-      setSchoolYears(uniqueSchoolYears);
 
+      setSchoolYears(uniqueSchoolYears);
       setTrainingRatings(processedData);
 
       const units = [
@@ -94,10 +101,12 @@ const TrainingRating = () => {
       setAvailableUnits(units);
 
       if (uniqueSchoolYears.length > 0) {
+        // Tự động chọn năm học mới nhất
         const latest = uniqueSchoolYears[0];
         setSelectedSchoolYear(latest);
         await fetchTrainingRatingsForYear(latest);
       } else {
+        // Nếu không có năm học nào, hiển thị tất cả sinh viên
         setSelectedSchoolYear("all");
       }
     } catch (error) {
@@ -110,12 +119,6 @@ const TrainingRating = () => {
 
   const handleSchoolYearChange = (newSchoolYear) => {
     setSelectedSchoolYear(newSchoolYear);
-
-    if (newSchoolYear === "all") {
-      fetchInitialData();
-      return;
-    }
-
     fetchTrainingRatingsForYear(newSchoolYear);
   };
 
@@ -125,7 +128,7 @@ const TrainingRating = () => {
 
     try {
       const res = await axios.get(
-        `${BASE_URL}/commander/trainingRatings?schoolYear=${year}`,
+        `${BASE_URL}/commander/allStudentsForTrainingRating?schoolYear=${year}`,
         {
           headers: { token: `Bearer ${token}` },
         }
@@ -319,7 +322,6 @@ const TrainingRating = () => {
   };
 
   const schoolYearOptions = [
-    { label: "Tất cả các năm", value: "all" },
     ...schoolYears.map((year) => ({
       label: `Năm học ${year}`,
       value: year,
@@ -340,7 +342,10 @@ const TrainingRating = () => {
         item.unit === selectedUnit ||
         item.className === selectedUnit;
 
-      return matchesSearch && matchesUnit;
+      // Lọc theo năm học được chọn
+      const matchesSchoolYear = item.schoolYear === selectedSchoolYear;
+
+      return matchesSearch && matchesUnit && matchesSchoolYear;
     });
 
     return filtered.sort((a, b) => {
@@ -570,10 +575,10 @@ const TrainingRating = () => {
                           LỚP
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          NĂM HỌC
+                          TRƯỜNG
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          SỐ HỌC KỲ
+                          NĂM HỌC
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           XẾP LOẠI RÈN LUYỆN
@@ -603,10 +608,10 @@ const TrainingRating = () => {
                               {item.className || "Chưa có lớp"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.schoolYear}
+                              {item.university || "Chưa có trường"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.semesterCount || 0}
+                              {item.schoolYear}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               {(() => {
@@ -702,7 +707,7 @@ const TrainingRating = () => {
       {showUpdateModal && selectedStudent && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Cập nhật xếp loại rèn luyện - {selectedStudent.fullName}

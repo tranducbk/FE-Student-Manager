@@ -65,9 +65,12 @@ const PartyRating = () => {
     if (!token) return;
 
     try {
-      const res = await axios.get(`${BASE_URL}/commander/partyRatings`, {
-        headers: { token: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${BASE_URL}/commander/allStudentsForPartyRating`,
+        {
+          headers: { token: `Bearer ${token}` },
+        }
+      );
 
       console.log("Party ratings data:", res.data);
 
@@ -75,7 +78,11 @@ const PartyRating = () => {
 
       const allSchoolYears = new Set();
       processedData.forEach((item) => {
-        if (item.schoolYear && item.schoolYear !== "Tất cả") {
+        if (
+          item.schoolYear &&
+          item.schoolYear !== "Tất cả" &&
+          item.schoolYear !== "Chưa có dữ liệu"
+        ) {
           allSchoolYears.add(item.schoolYear);
         }
       });
@@ -83,8 +90,8 @@ const PartyRating = () => {
       const uniqueSchoolYears = Array.from(allSchoolYears).sort((a, b) =>
         b.localeCompare(a)
       );
-      setSchoolYears(uniqueSchoolYears);
 
+      setSchoolYears(uniqueSchoolYears);
       setPartyRatings(processedData);
 
       const units = [
@@ -97,10 +104,12 @@ const PartyRating = () => {
       setAvailableUnits(units);
 
       if (uniqueSchoolYears.length > 0) {
+        // Tự động chọn năm học mới nhất
         const latest = uniqueSchoolYears[0];
         setSelectedSchoolYear(latest);
         await fetchPartyRatingsForYear(latest);
       } else {
+        // Nếu không có năm học nào, hiển thị tất cả sinh viên
         setSelectedSchoolYear("all");
       }
     } catch (error) {
@@ -113,12 +122,6 @@ const PartyRating = () => {
 
   const handleSchoolYearChange = (newSchoolYear) => {
     setSelectedSchoolYear(newSchoolYear);
-
-    if (newSchoolYear === "all") {
-      fetchInitialData();
-      return;
-    }
-
     fetchPartyRatingsForYear(newSchoolYear);
   };
 
@@ -128,7 +131,7 @@ const PartyRating = () => {
 
     try {
       const res = await axios.get(
-        `${BASE_URL}/commander/partyRatings?schoolYear=${year}`,
+        `${BASE_URL}/commander/allStudentsForPartyRating?schoolYear=${year}`,
         {
           headers: { token: `Bearer ${token}` },
         }
@@ -186,7 +189,7 @@ const PartyRating = () => {
         handleNotify(
           "success",
           "Thành công",
-          "Cập nhật xếp loại đảng viên thành công"
+          "Cập nhật xếp loại Đảng viên thành công"
         );
         setShowUpdateModal(false);
         if (selectedSchoolYear === "all") {
@@ -197,7 +200,7 @@ const PartyRating = () => {
       }
     } catch (error) {
       console.log("Error updating party rating:", error);
-      handleNotify("error", "Lỗi", "Không thể cập nhật xếp loại đảng viên");
+      handleNotify("error", "Lỗi", "Không thể Cập nhật xếp loại Đảng viên");
     }
   };
 
@@ -260,7 +263,7 @@ const PartyRating = () => {
     }
 
     if (!bulkUpdateData.partyRating) {
-      handleNotify("warning", "Cảnh báo", "Vui lòng chọn xếp loại đảng viên");
+      handleNotify("warning", "Cảnh báo", "Vui lòng chọn xếp loại Đảng viên");
       return;
     }
 
@@ -348,7 +351,10 @@ const PartyRating = () => {
         item.unit === selectedUnit ||
         item.className === selectedUnit;
 
-      return matchesSearch && matchesUnit;
+      // Lọc theo năm học được chọn
+      const matchesSchoolYear = item.schoolYear === selectedSchoolYear;
+
+      return matchesSearch && matchesUnit && matchesSchoolYear;
     });
 
     return filtered.sort((a, b) => {
@@ -373,7 +379,7 @@ const PartyRating = () => {
   };
 
   if (loading) {
-    return <Loader text="Đang tải dữ liệu xếp loại đảng viên..." />;
+    return <Loader text="Đang tải dữ liệu xếp loại Đảng viên..." />;
   }
 
   return (
@@ -418,7 +424,7 @@ const PartyRating = () => {
                       />
                     </svg>
                     <div className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Xếp loại đảng viên
+                      Xếp loại Đảng viên
                     </div>
                   </div>
                 </li>
@@ -431,7 +437,7 @@ const PartyRating = () => {
               <div className="font-bold p-5 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
                 <div className="text-gray-900 dark:text-white">
                   <h1 className="text-2xl font-bold">
-                    XẾP LOẠI ĐẢNG VIÊN THEO NĂM
+                    XẾP LOẠI Đảng viên THEO NĂM
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Quản lý và xem xếp loại Đảng viên
@@ -578,13 +584,13 @@ const PartyRating = () => {
                           LỚP
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          TRƯỜNG
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           NĂM HỌC
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          SỐ HỌC KỲ
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                          XẾP LOẠI ĐẢNG VIÊN
+                          XẾP LOẠI Đảng viên
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                           THAO TÁC
@@ -642,10 +648,10 @@ const PartyRating = () => {
                               {item.className || "Chưa có lớp"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.schoolYear}
+                              {item.university || "Chưa có trường"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              {item.semesterCount || 0}
+                              {item.schoolYear}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="font-medium text-orange-600 dark:text-orange-400">
@@ -669,7 +675,7 @@ const PartyRating = () => {
                               <div className="flex justify-center space-x-2">
                                 <button
                                   className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                  title="Cập nhật xếp loại đảng viên"
+                                  title="Cập nhật xếp loại Đảng viên"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleUpdateRating(item);
@@ -718,7 +724,7 @@ const PartyRating = () => {
                                 Không có dữ liệu
                               </p>
                               <p className="text-sm">
-                                Không tìm thấy dữ liệu xếp loại đảng viên nào
+                                Không tìm thấy dữ liệu xếp loại Đảng viên nào
                               </p>
                             </div>
                           </td>
@@ -733,14 +739,14 @@ const PartyRating = () => {
         </div>
       </div>
 
-      {/* Modal cập nhật xếp loại đảng viên */}
+      {/* Modal Cập nhật xếp loại Đảng viên */}
       {showUpdateModal && selectedStudent && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
-          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+          <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Cập nhật xếp loại đảng viên - {selectedStudent.fullName}
+                Cập nhật xếp loại Đảng viên - {selectedStudent.fullName}
               </h2>
               <button
                 onClick={() => {
@@ -1000,7 +1006,7 @@ const PartyRating = () => {
 
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Xếp loại đảng viên
+                      Xếp loại Đảng viên
                     </label>
                     <ConfigProvider
                       theme={{
@@ -1017,7 +1023,7 @@ const PartyRating = () => {
                             partyRating: value,
                           }))
                         }
-                        placeholder="Chọn xếp loại đảng viên"
+                        placeholder="Chọn xếp loại Đảng viên"
                         size="large"
                         style={{ width: "100%" }}
                         options={[
@@ -1042,7 +1048,7 @@ const PartyRating = () => {
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                      Danh sách sinh viên đảng viên (
+                      Danh sách sinh viên Đảng viên (
                       {getFilteredStudentsForBulk().length})
                     </h3>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -1089,7 +1095,7 @@ const PartyRating = () => {
                         ))
                       ) : (
                         <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                          Không có sinh viên đảng viên nào phù hợp với bộ lọc
+                          Không có sinh viên Đảng viên nào phù hợp với bộ lọc
                         </div>
                       )}
                     </div>

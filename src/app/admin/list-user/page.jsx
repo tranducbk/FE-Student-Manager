@@ -19,6 +19,7 @@ const ListUser = () => {
   const [profile, setProfile] = useState([]);
   const [profileDetail, setProfileDetail] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showForm, setShowForm] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -200,6 +201,9 @@ const ListUser = () => {
       organization: selectedOrganization, // Tên khoa/viện đã chọn
       educationLevel: selectedLevel, // Trình độ đã chọn
       class: selectedClass, // Lớp đã chọn
+      avatar:
+        (addFormData.avatar && addFormData.avatar.trim()) ||
+        "https://i.pinimg.com/736x/81/09/3a/81093a0429e25b0ff579fa41aa96c421.jpg",
     };
 
     setIsLoading(true);
@@ -296,6 +300,20 @@ const ListUser = () => {
     });
   };
 
+  // Đọc URL parameters khi component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = urlParams.get("page");
+    const pageSizeParam = urlParams.get("pageSize");
+
+    if (page) {
+      setCurrentPage(parseInt(page));
+    }
+    if (pageSizeParam) {
+      setPageSize(parseInt(pageSizeParam));
+    }
+  }, []);
+
   useEffect(() => {
     const initializeData = async () => {
       await withLoading(async () => {
@@ -305,24 +323,30 @@ const ListUser = () => {
     };
 
     initializeData();
-  }, [currentPage, withLoading]);
+  }, [withLoading]);
+
+  // useEffect riêng để xử lý phân trang
+  useEffect(() => {
+    if (schoolYear) {
+      loadStudentsWithSchoolYear(schoolYear);
+    } else {
+      fetchProfile();
+    }
+  }, [currentPage, pageSize, schoolYear, fullName, unit, enrollmentYear]);
 
   const fetchProfile = async () => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        // Chỉ gọi API nếu chưa có schoolYear (để tránh gọi 2 lần)
-        if (!schoolYear) {
-          const res = await axios.get(
-            `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}&graduated=false`,
-            {
-              headers: {
-                token: `Bearer ${token}`,
-              },
-            }
-          );
-          setProfile(res.data);
-        }
+        const res = await axios.get(
+          `${BASE_URL}/commander/student?page=${currentPage}&pageSize=${pageSize}&fullName=${fullName}&unit=${unit}&enrollment=${enrollmentYear}&graduated=false`,
+          {
+            headers: {
+              token: `Bearer ${token}`,
+            },
+          }
+        );
+        setProfile(res.data);
       } catch (error) {
         console.log(error);
       }
@@ -380,7 +404,7 @@ const ListUser = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `${BASE_URL}/commander/student?page=${currentPage}&schoolYear=${schoolYearValue}&graduated=false`,
+          `${BASE_URL}/commander/student?page=${currentPage}&pageSize=${pageSize}&schoolYear=${schoolYearValue}&graduated=false`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -1262,7 +1286,7 @@ const ListUser = () => {
     if (token) {
       try {
         const res = await axios.get(
-          `${BASE_URL}/commander/student?page=${currentPage}&fullName=${fullName}&unit=${unit}&enrollment=${enrollmentYear}&schoolYear=${schoolYear}&graduated=false`,
+          `${BASE_URL}/commander/student?page=${currentPage}&pageSize=${pageSize}&fullName=${fullName}&unit=${unit}&enrollment=${enrollmentYear}&schoolYear=${schoolYear}&graduated=false`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -1294,7 +1318,7 @@ const ListUser = () => {
       try {
         const latestYear = schoolYears[0] || "";
         const res = await axios.get(
-          `${BASE_URL}/commander/student?page=${currentPage}&schoolYear=${latestYear}&graduated=false`,
+          `${BASE_URL}/commander/student?page=1&pageSize=${pageSize}&schoolYear=${latestYear}&graduated=false`,
           {
             headers: {
               token: `Bearer ${token}`,
@@ -1308,6 +1332,17 @@ const ListUser = () => {
         handleNotify("danger", "Lỗi!", error);
       }
     }
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    const size = Number(newPageSize);
+    setPageSize(size);
+    setCurrentPage(1); // Reset về trang đầu khi thay đổi pageSize
+    // Cập nhật URL để đồng bộ với state
+    const url = new URL(window.location);
+    url.searchParams.set("page", "1");
+    url.searchParams.set("pageSize", size.toString());
+    window.history.replaceState({}, "", url);
   };
 
   if (loading) {
@@ -3298,7 +3333,7 @@ const ListUser = () => {
                               className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center"
                             >
                               <div className="text-sm font-medium">
-                                {(currentPage - 1) * 10 + index + 1}
+                                {(currentPage - 1) * pageSize + index + 1}
                               </div>
                             </td>
                             <td
@@ -3427,96 +3462,149 @@ const ListUser = () => {
                   </table>
                 </div>
               </div>
-              <div className="flex justify-center mr-5 pb-5 mt-2">
-                <nav aria-label="Page navigation example">
-                  <ul className="list-style-none flex">
-                    <li>
-                      <Link
-                        className={`relative mr-1 block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
-                          currentPage <= 1
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-blue-200"
-                        }`}
-                        href={
-                          currentPage <= 1
-                            ? `/admin/list-user?page=1`
-                            : `/admin/list-user?page=${currentPage - 1}`
-                        }
-                        onClick={() => {
-                          if (currentPage > 1) setCurrentPage(currentPage - 1);
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="w-5 h-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15.75 19.5 8.25 12l7.5-7.5"
-                          />
-                        </svg>
-                      </Link>
-                    </li>
-                    {Array.from(
-                      { length: profile?.totalPages },
-                      (_, index) => index + 1
-                    ).map((pageNumber) => (
-                      <li key={pageNumber}>
+              <div className="flex justify-between items-center mr-5 pb-5 mt-2">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm ml-6 text-gray-700 dark:text-gray-300">
+                    Hiển thị:
+                  </span>
+                  <Select
+                    value={pageSize}
+                    onChange={handlePageSizeChange}
+                    style={{ width: 80 }}
+                    options={[
+                      { value: 5, label: "5" },
+                      { value: 10, label: "10" },
+                      { value: 20, label: "20" },
+                      { value: 50, label: "50" },
+                      { value: 100, label: "100" },
+                    ]}
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    học viên/trang
+                  </span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Trang {currentPage} / {profile?.totalPages || 1}(
+                    {profile?.totalStudents || 0} học viên)
+                  </span>
+                  <nav aria-label="Page navigation example">
+                    <ul className="list-style-none flex">
+                      <li>
                         <Link
                           className={`relative mr-1 block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
-                            currentPage === pageNumber
-                              ? "bg-blue-200"
+                            currentPage <= 1
+                              ? "opacity-50 cursor-not-allowed"
                               : "hover:bg-blue-200"
                           }`}
-                          href={`/admin/list-user?page=${pageNumber}`}
-                          onClick={() => {
-                            setCurrentPage(pageNumber);
+                          href={
+                            currentPage <= 1
+                              ? `/admin/list-user?page=1`
+                              : `/admin/list-user?page=${currentPage - 1}`
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) {
+                              setCurrentPage(currentPage - 1);
+                              // Cập nhật URL
+                              const url = new URL(window.location);
+                              url.searchParams.set(
+                                "page",
+                                (currentPage - 1).toString()
+                              );
+                              window.history.pushState({}, "", url);
+                            }
                           }}
                         >
-                          {pageNumber}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15.75 19.5 8.25 12l7.5-7.5"
+                            />
+                          </svg>
                         </Link>
                       </li>
-                    ))}
-                    <li>
-                      <Link
-                        className={`relative block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
-                          currentPage >= profile?.totalPages
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-blue-200"
-                        }`}
-                        href={
-                          currentPage >= profile?.totalPages
-                            ? `/admin/list-user?page=${profile?.totalPages}`
-                            : `/admin/list-user?page=${currentPage + 1}`
-                        }
-                        onClick={() => {
-                          if (currentPage < profile?.totalPages)
-                            setCurrentPage(currentPage + 1);
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="w-5 h-5"
+                      {Array.from(
+                        { length: profile?.totalPages },
+                        (_, index) => index + 1
+                      ).map((pageNumber) => (
+                        <li key={pageNumber}>
+                          <Link
+                            className={`relative mr-1 block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
+                              currentPage === pageNumber
+                                ? "bg-blue-200"
+                                : "hover:bg-blue-200"
+                            }`}
+                            href={`/admin/list-user?page=${pageNumber}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(pageNumber);
+                              // Cập nhật URL
+                              const url = new URL(window.location);
+                              url.searchParams.set(
+                                "page",
+                                pageNumber.toString()
+                              );
+                              window.history.pushState({}, "", url);
+                            }}
+                          >
+                            {pageNumber}
+                          </Link>
+                        </li>
+                      ))}
+                      <li>
+                        <Link
+                          className={`relative block rounded bg-transparent px-3 py-1.5 font-bold text-sm transition-all duration-300 ${
+                            currentPage >= profile?.totalPages
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-blue-200"
+                          }`}
+                          href={
+                            currentPage >= profile?.totalPages
+                              ? `/admin/list-user?page=${profile?.totalPages}`
+                              : `/admin/list-user?page=${currentPage + 1}`
+                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < profile?.totalPages) {
+                              setCurrentPage(currentPage + 1);
+                              // Cập nhật URL
+                              const url = new URL(window.location);
+                              url.searchParams.set(
+                                "page",
+                                (currentPage + 1).toString()
+                              );
+                              window.history.pushState({}, "", url);
+                            }
+                          }}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                          />
-                        </svg>
-                      </Link>
-                    </li>
-                  </ul>
-                </nav>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                            />
+                          </svg>
+                        </Link>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
               </div>
             </div>
           </div>
