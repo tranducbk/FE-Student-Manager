@@ -1100,6 +1100,9 @@ const YearlyStatistics = () => {
                           CPA
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                          TỔNG TÍN CHỈ NĂM
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 whitespace-nowrap">
                           MÔN NỢ
                         </th>
                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
@@ -1158,19 +1161,34 @@ const YearlyStatistics = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
-                              <div className="font-medium text-green-600 dark:text-green-400">
-                                {item.cumulativeGPA &&
-                                !isNaN(parseFloat(item.cumulativeGPA))
-                                  ? parseFloat(item.cumulativeGPA).toFixed(2)
-                                  : "0.00"}
+                              <div className="flex flex-col">
+                                <div className="font-medium text-green-600 dark:text-green-400">
+                                  {item.cumulativeGPA &&
+                                  !isNaN(parseFloat(item.cumulativeGPA))
+                                    ? parseFloat(item.cumulativeGPA).toFixed(2)
+                                    : item.cumulativeGrade4 &&
+                                      !isNaN(parseFloat(item.cumulativeGrade4))
+                                    ? parseFloat(item.cumulativeGrade4).toFixed(
+                                        2
+                                      )
+                                    : "Chưa có điểm"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.cumulativeGrade10 &&
+                                  !isNaN(parseFloat(item.cumulativeGrade10))
+                                    ? parseFloat(
+                                        item.cumulativeGrade10
+                                      ).toFixed(2)
+                                    : "0.00"}
+                                </div>
                               </div>
-                              <div className="font-medium text-green-600 dark:text-green-400">
-                                {item.cumulativeGrade10 &&
-                                !isNaN(parseFloat(item.cumulativeGrade10))
-                                  ? parseFloat(item.cumulativeGrade10).toFixed(
-                                      2
-                                    )
-                                  : "0.00"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
+                              <div className="font-medium">
+                                {item.totalCredits || 0} tín chỉ
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Năm {item.studentLevel || 1}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
@@ -1240,7 +1258,7 @@ const YearlyStatistics = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan="8"
+                            colSpan="9"
                             className="text-center py-8 text-gray-500 dark:text-gray-400"
                           >
                             <div className="flex flex-col items-center">
@@ -1317,7 +1335,7 @@ const YearlyStatistics = () => {
               {studentDetail ? (
                 <>
                   {/* Thông tin tổng quan */}
-                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mb-6">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {studentDetail.totalCredits || 0}
@@ -1340,6 +1358,24 @@ const YearlyStatistics = () => {
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         GPA năm học (Hệ 10)
+                      </div>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {studentDetail.cumulativeGPA?.toFixed(2) ||
+                          studentDetail.cumulativeGrade4?.toFixed(2) ||
+                          "Chưa có điểm"}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        CPA tích lũy (Hệ 4)
+                      </div>
+                    </div>
+                    <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg">
+                      <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                        {studentDetail.cumulativeGrade10?.toFixed(2) || "0.00"}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        CPA tích lũy (Hệ 10)
                       </div>
                     </div>
                     <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">

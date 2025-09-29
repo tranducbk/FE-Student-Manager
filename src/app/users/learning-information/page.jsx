@@ -1393,13 +1393,13 @@ const LearningInformation = () => {
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            GPA (Hệ 4)
+                            GPA
                           </th>
                           <th
                             scope="col"
                             className="border-r border-gray-200 dark:border-gray-600 py-3 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider"
                           >
-                            GPA (Hệ 10)
+                            CPA
                           </th>
                           <th
                             scope="col"
@@ -1441,10 +1441,28 @@ const LearningInformation = () => {
                               {item.schoolYear}
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.averageGrade4?.toFixed(2) || "0.00"}
+                              <div className="flex flex-col">
+                                <div className="font-medium text-blue-600 dark:text-blue-400">
+                                  {item.averageGrade4 || "0.00"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.averageGrade10 || "0.00"}
+                                </div>
+                              </div>
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
-                              {item.averageGrade10?.toFixed(2) || "0.00"}
+                              <div className="flex flex-col">
+                                <div className="font-medium text-green-600 dark:text-green-400">
+                                  {item.semesterCPA ||
+                                    item.cumulativeGrade4?.toFixed(2) ||
+                                    "0.00"}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {item.semesterCPA10 ||
+                                    item.cumulativeGrade10?.toFixed(2) ||
+                                    "0.00"}
+                                </div>
+                              </div>
                             </td>
                             <td className="whitespace-nowrap font-medium border-r border-gray-200 dark:border-gray-600 py-4 px-4">
                               {item.totalCredits || 0} tín chỉ
@@ -1548,7 +1566,7 @@ const LearningInformation = () => {
 
             {/* Modal nhập KQ học tập theo môn */}
             {showGradeModal && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 flex items-center justify-center z-50 pt-10 p-4">
                 <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
                   <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -1833,7 +1851,7 @@ const LearningInformation = () => {
 
             {/* Modal xem chi tiết kết quả học tập */}
             {showDetailModal && viewingSemester && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 flex items-center justify-center z-50 pt-10 p-4">
                 <div className="bg-black bg-opacity-50 inset-0 fixed"></div>
                 <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
                   <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -1865,7 +1883,7 @@ const LearningInformation = () => {
                   </div>
                   <div className="overflow-y-auto max-h-[calc(95vh-120px)] p-6">
                     {/* Thông tin tổng quan */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                           {viewingSemester.totalCredits || 0}
@@ -1888,6 +1906,24 @@ const LearningInformation = () => {
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           GPA (Hệ 10)
+                        </div>
+                      </div>
+                      <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {viewingSemester.cumulativeGrade4?.toFixed(2) ||
+                            "0.00"}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          CPA (Hệ 4)
+                        </div>
+                      </div>
+                      <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                          {viewingSemester.cumulativeGrade10?.toFixed(2) ||
+                            "0.00"}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          CPA (Hệ 10)
                         </div>
                       </div>
                       <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
@@ -2013,6 +2049,16 @@ const LearningInformation = () => {
                             <div>
                               Trung bình hệ 10:{" "}
                               {viewingSemester.averageGrade10?.toFixed(2) ||
+                                "0.00"}
+                            </div>
+                            <div>
+                              CPA hệ 4:{" "}
+                              {viewingSemester.cumulativeGrade4?.toFixed(2) ||
+                                "0.00"}
+                            </div>
+                            <div>
+                              CPA hệ 10:{" "}
+                              {viewingSemester.cumulativeGrade10?.toFixed(2) ||
                                 "0.00"}
                             </div>
                             <div>

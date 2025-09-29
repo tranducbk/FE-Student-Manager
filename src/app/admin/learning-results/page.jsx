@@ -686,8 +686,8 @@ const LearningResults = () => {
                         Sinh viên nợ môn
                       </div>
                     </div>
-                    <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded-lg">
-                      <div className="text-xl font-bold text-pink-600 dark:text-pink-400">
+                    <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-red-600 dark:text-red-400">
                         {getFilteredResults().reduce(
                           (sum, item) => sum + (item.failedSubjects || 0),
                           0
@@ -697,8 +697,8 @@ const LearningResults = () => {
                         Tổng số môn nợ
                       </div>
                     </div>
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
-                      <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                    <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-red-600 dark:text-red-400">
                         {getFilteredResults().reduce(
                           (sum, item) => sum + (item.debtCredits || 0),
                           0
@@ -825,20 +825,29 @@ const LearningResults = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="flex flex-col">
                                 <div className="font-medium text-blue-600 dark:text-blue-400">
-                                  {item.GPA || "Chưa có điểm"}
+                                  {item.semesterGPA ||
+                                    item.GPA ||
+                                    item.averageGrade4 ||
+                                    "Chưa có điểm"}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  {item.averageGrade10 || "Chưa có điểm"}
+                                  {item.semesterGPA10 ||
+                                    item.averageGrade10 ||
+                                    item.cumulativeGrade10 ||
+                                    "Chưa có điểm"}
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="flex flex-col">
                                 <div className="font-medium text-green-600 dark:text-green-400">
-                                  {item.CPA || "Chưa có điểm"}
+                                  {item.CPA ||
+                                    item.cumulativeGrade4 ||
+                                    "Chưa có điểm"}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  {item.cumulativeGrade10FromCpa4 ||
+                                  {item.cumulativeGrade10 ||
+                                    item.cumulativeGrade10FromCpa4 ||
                                     "Chưa có điểm"}
                                 </div>
                               </div>
@@ -855,10 +864,10 @@ const LearningResults = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-600 text-center">
                               <div className="flex flex-col items-center leading-tight">
-                                <span className="font-medium">
+                                <span className="font-medium text-red-600 dark:text-red-400">
                                   {item.failedSubjects || 0}
                                 </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                <span className="text-xs text-red-500 dark:text-red-400">
                                   {item.debtCredits || 0} TC
                                 </span>
                               </div>
@@ -1000,7 +1009,7 @@ const LearningResults = () => {
               {studentDetail ? (
                 <>
                   {/* Thông tin tổng quan */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mb-4">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                       <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {studentDetail.totalCredits || 0}
@@ -1023,6 +1032,26 @@ const LearningResults = () => {
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-400">
                         GPA (Hệ 10)
+                      </div>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {studentDetail.semesterCPA ||
+                          studentDetail.cumulativeGrade4 ||
+                          "0.00"}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        CPA (Hệ 4)
+                      </div>
+                    </div>
+                    <div className="bg-teal-50 dark:bg-teal-900/20 p-3 rounded-lg">
+                      <div className="text-xl font-bold text-teal-600 dark:text-teal-400">
+                        {studentDetail.semesterCPA10 ||
+                          studentDetail.cumulativeGrade10 ||
+                          "0.00"}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        CPA (Hệ 10)
                       </div>
                     </div>
                     <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
